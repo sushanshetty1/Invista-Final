@@ -88,11 +88,13 @@ export default function CompanyProfilePage() {
   }, [user]);
   const fetchCompanyProfile = async () => {
     try {      // First try to find company where user is owner
-      let { data, error: initialError } = await supabase
+      const { data: initialData, error: initialError } = await supabase
         .from('companies')
         .select('*')
         .eq('createdBy', user?.id)
         .single();
+
+      let data = initialData;
 
       // If no company found as owner, check if user is a member
       if (initialError && initialError.code === 'PGRST116') {
@@ -291,10 +293,9 @@ export default function CompanyProfilePage() {
       console.error('Error updating company profile:', error);
     }
   };
-  const removeTeamMember = async (memberId: string) => {
-    try {
+  const removeTeamMember = async (memberId: string) => {    try {
       // First try to remove from company_invites (for pending invites)
-      const { data: invite, error: _inviteError } = await supabase
+      const { data: invite } = await supabase
         .from('company_invites')
         .select('id')
         .eq('id', memberId)

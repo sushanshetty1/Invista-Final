@@ -33,7 +33,6 @@ interface LowStockAlertsProps {
 }
 
 export function LowStockAlerts({ alerts }: LowStockAlertsProps) {
-  const criticalAlerts = alerts.filter(alert => alert.severity === 'CRITICAL')
   const highPriorityAlerts = alerts.filter(alert => alert.severity === 'HIGH')
   const mediumPriorityAlerts = alerts.filter(alert => alert.severity === 'MEDIUM')
   const lowPriorityAlerts = alerts.filter(alert => alert.severity === 'LOW')

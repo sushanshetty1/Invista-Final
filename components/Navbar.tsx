@@ -648,8 +648,7 @@ const Navbar = () => {
                   </div>
 
                   {/* Mobile Navigation */}
-                  <div className="space-y-3">
-                    {dashboardNavItems.map((item, index) => (
+                  <div className="space-y-3">                    {dashboardNavItems.map((item) => (
                       <div key={item.href} className="space-y-2">
                         <Link
                           href={item.href}
@@ -669,10 +668,8 @@ const Navbar = () => {
                               <div className="ml-auto w-3 h-3 bg-primary rounded-full animate-pulse" />
                             )}
                           </div>
-                        </Link>
-
-                        <div className="ml-8 space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-purple-500/30 pl-6">
-                          {item.items.map((subItem, subIndex) => (
+                        </Link>                        <div className="ml-8 space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-purple-500/30 pl-6">
+                          {item.items.map((subItem) => (
                             <Link
                               key={subItem.href}
                               href={subItem.href}
@@ -796,13 +793,12 @@ const Navbar = () => {
               ) : (
                 <>
                   {/* Marketing Mobile Menu */}
-                  <div className="space-y-3">
-                    {[
+                  <div className="space-y-3">                    {[
                       { href: "#features", title: "Features" },
                       { href: "#how-it-works", title: "How it Works" },
                       { href: "/pricing", title: "Pricing" },
                       { href: "/contact", title: "Contact" }
-                    ].map((link, index) => (
+                    ].map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}

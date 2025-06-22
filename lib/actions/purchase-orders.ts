@@ -143,7 +143,7 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderData) {
 
     revalidatePath('/purchase-orders');
     return { success: true, data: purchaseOrder };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to create purchase order' };
   }
@@ -202,7 +202,7 @@ export async function getPurchaseOrders(filters: PurchaseOrderFilters = {}) {
     });
 
     return { success: true, data: purchaseOrders };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch purchase orders' };
   }
@@ -232,7 +232,7 @@ export async function getPurchaseOrderById(id: string) {
     }
 
     return { success: true, data: purchaseOrder };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch purchase order' };
   }
@@ -276,7 +276,7 @@ export async function updatePurchaseOrderStatus(data: UpdatePurchaseOrderStatusD
 
     revalidatePath('/purchase-orders');
     return { success: true, data: purchaseOrder };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to update purchase order status' };
   }
@@ -302,7 +302,7 @@ export async function approvePurchaseOrder(purchaseOrderId: string, approvedBy: 
 
     revalidatePath('/purchase-orders');
     return { success: true, data: purchaseOrder };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to approve purchase order' };
   }
@@ -464,7 +464,7 @@ export async function createGoodsReceipt(data: GoodsReceiptData) {
 
     revalidatePath('/purchase-orders');
     return { success: true, data: goodsReceipt };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to create goods receipt' };
   }
@@ -520,7 +520,7 @@ export async function getReorderSuggestions(): Promise<{ success: boolean; data?
     }
 
     return { success: true, data: suggestions };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch reorder suggestions' };
   }
@@ -557,7 +557,7 @@ export async function createPurchaseOrderFromSuggestion(suggestion: ReorderSugge
     };
 
     return await createPurchaseOrder(createData);
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to create purchase order from suggestion' };
   }
@@ -610,7 +610,7 @@ export async function getPurchaseOrderStats() {
         avgOrderValue
       }
     };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch purchase order statistics' };
   }

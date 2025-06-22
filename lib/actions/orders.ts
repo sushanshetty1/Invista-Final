@@ -145,7 +145,7 @@ export async function createOrder(data: CreateOrderData) {
 
     revalidatePath('/orders');
     return actionSuccess(order);
-  } catch (error) {
+  } catch {
     return actionError('Failed to create order');
   }
 }
@@ -206,7 +206,7 @@ export async function getOrders(filters: OrderFilters = {}) {
     });
 
     return { success: true, data: orders };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch orders' };
   }
@@ -236,7 +236,7 @@ export async function getOrderById(id: string) {
     }
 
     return { success: true, data: order };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch order' };
   }
@@ -287,7 +287,7 @@ export async function updateOrderStatus(data: UpdateOrderStatusData) {
 
     revalidatePath('/orders');
     return { success: true, data: order };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to update order status' };
   }
@@ -342,7 +342,7 @@ export async function getOrderStats() {
         averageOrderValue
       }
     };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch order statistics' };
   }

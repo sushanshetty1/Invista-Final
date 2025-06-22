@@ -78,12 +78,11 @@ export async function authenticate(request: NextRequest): Promise<Authentication
           role: profile.role || 'user',
           permissions: Array.isArray(profile.permissions)
             ? profile.permissions
-            : ['inventory:read']
-        }
+            : ['inventory:read']        }
       }
-    } catch (jwtError) {      return { success: false, error: 'Authentication service unavailable' }
+    } catch {      return { success: false, error: 'Authentication service unavailable' }
     }
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Authentication failed' }
   }
 }
@@ -155,11 +154,10 @@ export async function authenticateApiKey(request: NextRequest): Promise<Authenti
           role: 'api',
           permissions: Array.isArray(keyRecord.permissions)
             ? keyRecord.permissions
-            : ['inventory:read', 'inventory:write']
-        }      }
-    } catch (dbError) {
+            : ['inventory:read', 'inventory:write']        }      }
+    } catch {
       return { success: false, error: 'API key validation service unavailable' }
-    }} catch (error) {
+    }} catch {
     return { success: false, error: 'API key authentication failed' }
   }
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthRedirect() {
-  const { user, userType, hasCompanyAccess, loading, checkUserAccess } = useAuth();
+  const { user, hasCompanyAccess, loading, checkUserAccess } = useAuth();
   const router = useRouter();
   const [hasRedirected, setHasRedirected] = useState(false);
 

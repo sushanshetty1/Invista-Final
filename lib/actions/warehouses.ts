@@ -76,7 +76,7 @@ export async function getWarehouses(input: WarehouseQueryInput): Promise<ActionR
     return actionSuccess({
       warehouses,
       pagination: { page, limit, total, totalPages }
-    }, `Retrieved ${warehouses.length} warehouses`)  } catch (error) {
+    }, `Retrieved ${warehouses.length} warehouses`)  } catch {
     return actionError('Failed to fetch warehouses')
   }
 }
@@ -99,7 +99,7 @@ export async function getWarehouse(id: string): Promise<ActionResponse<unknown>>
       return actionError('Warehouse not found')
     }
 
-    return actionSuccess(warehouse, 'Warehouse retrieved successfully')  } catch (error) {
+    return actionSuccess(warehouse, 'Warehouse retrieved successfully')  } catch {
     return actionError('Failed to fetch warehouse')
   }
 }

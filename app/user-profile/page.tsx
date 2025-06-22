@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardGuard from "@/components/DashboardGuard";
 import { Button } from "@/components/ui/button";
@@ -13,14 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   User, 
-  Mail, 
-  Phone, 
-  Calendar, 
   Building2, 
   Shield,
   Settings,
-  Bell,
-  Globe,
   Moon,
   Sun,
   Monitor
@@ -84,17 +79,9 @@ export default function UserProfilePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [companyMemberships, setCompanyMemberships] = useState<CompanyMembership[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("profile");
+  const [saving, setSaving] = useState(false);  const [activeTab, setActiveTab] = useState("profile");
 
-  useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-      fetchCompanyMemberships();
-    }
-  }, [user]);
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -109,7 +96,7 @@ export default function UserProfilePage() {
     } finally {
       setLoading(false);
     }
-  };  const fetchCompanyMemberships = async () => {
+  }, [user?.id]);  const fetchCompanyMemberships = useCallback(async () => {
     try {
       console.log('Fetching company memberships for user:', user?.id, user?.email);
       
@@ -130,7 +117,7 @@ export default function UserProfilePage() {
 
       // Get company details for the user memberships
       const companyIds = (companyUsers || []).map(cu => cu.companyId);
-      let companyDetails: any[] = [];
+      let companyDetails: { id: string; name: string }[] = [];
       
       if (companyIds.length > 0) {
         const { data: companies, error: companiesError } = await supabase
@@ -161,7 +148,7 @@ export default function UserProfilePage() {
 
       // Get company details for invites
       const inviteCompanyIds = (acceptedInvites || []).map(invite => invite.companyId);
-      let inviteCompanyDetails: any[] = [];
+      let inviteCompanyDetails: { id: string; name: string }[] = [];
       
       if (inviteCompanyIds.length > 0) {
         const { data: inviteCompanies, error: inviteCompaniesError } = await supabase
@@ -179,7 +166,7 @@ export default function UserProfilePage() {
       // Combine both sources
       const memberships: CompanyMembership[] = [
         // Active company users
-        ...(companyUsers || []).map((companyUser: any) => {
+        ...(companyUsers || []).map((companyUser: { id: string; role: string; companyId: string; joinedAt: string }) => {
           const company = companyDetails.find(c => c.id === companyUser.companyId);
           return {
             id: companyUser.id,
@@ -190,7 +177,7 @@ export default function UserProfilePage() {
           };
         }),
         // Accepted invites (that might not be converted yet)
-        ...(acceptedInvites || []).map((invite: any) => {
+        ...(acceptedInvites || []).map((invite: { id: string; role: string; companyId: string; acceptedAt: string }) => {
           const company = inviteCompanyDetails.find(c => c.id === invite.companyId);
           return {
             id: invite.id,
@@ -210,9 +197,15 @@ export default function UserProfilePage() {
       console.log('Final memberships:', uniqueMemberships);
       setCompanyMemberships(uniqueMemberships);
     } catch (error) {
-      console.error('Error fetching company memberships:', error);
+      console.error('Error fetching company memberships:', error);    }
+  }, [user?.id, user?.email]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+      fetchCompanyMemberships();
     }
-  };
+  }, [user, fetchUserProfile, fetchCompanyMemberships]);
 
   const updateUserProfile = async (updatedProfile: Partial<UserProfile>) => {
     setSaving(true);

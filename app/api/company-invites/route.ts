@@ -100,9 +100,8 @@ export async function POST(request: NextRequest) {  try {
 
     const isCompanyOwner = company.createdBy === invitedById;    // If not the owner, check company_users table
     let hasPermission = isCompanyOwner;
-    
-    if (!isCompanyOwner) {
-      const { data: companyUser, error: _authError } = await supabase
+      if (!isCompanyOwner) {
+      const { data: companyUser } = await supabase
         .from('company_users')
         .select('role, isOwner')
         .eq('companyId', companyId)

@@ -33,7 +33,7 @@ export async function getCustomers(filters: CustomerFilters = {}) {
     });
 
     return { success: true, data: customers };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch customers' };
   }
@@ -51,7 +51,7 @@ export async function getCustomerById(customerId: string) {
     }
 
     return { success: true, data: customer };
-  } catch (error) {
+  } catch {
     // Error handled silently in production
     return { success: false, error: 'Failed to fetch customer' };
   }

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Mail, Building2, AlertCircle, CheckCircle, XCircle, LogOut } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic';
 
 interface CompanyInvite {
   id: string;
@@ -24,31 +26,9 @@ export default function WaitingPage() {
   const { user, logout, hasCompanyAccess, checkUserAccess } = useAuth();
   const router = useRouter();
   const [invites, setInvites] = useState<CompanyInvite[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false);
-  
-  // Initialize once when component mounts
-  useEffect(() => {
-    if (!hasInitialized && user && !hasCompanyAccess) {
-      setHasInitialized(true);
-      fetchInvites();
-    } else if (!hasInitialized && (!user || hasCompanyAccess)) {
-      setHasInitialized(true);
-      setLoading(false);
-    }
-  }, [user, hasCompanyAccess, hasInitialized]);
+  const [loading, setLoading] = useState(true);  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Simplified access check - only check once every 30 seconds to avoid excessive polling
-  useEffect(() => {
-    if (!user || hasCompanyAccess) return;
-    
-    const accessCheckInterval = setInterval(async () => {
-      console.log('WaitingPage - Periodic access check');
-      await checkUserAccess(0);
-    }, 30000); // Check every 30 seconds instead of 10
-
-    return () => clearInterval(accessCheckInterval);
-  }, [user, hasCompanyAccess, checkUserAccess]);const fetchInvites = async () => {
+  const fetchInvites = useCallback(async () => {
     if (!user?.email) {
       setLoading(false);
       return;
@@ -62,7 +42,14 @@ export default function WaitingPage() {
         throw new Error(result.error || 'Failed to fetch invites');
       }
 
-      const formattedInvites = result.invites?.map((invite: any) => ({
+      const formattedInvites = result.invites?.map((invite: {
+        id: string;
+        role: string;
+        status: string;
+        createdAt: string;
+        expiresAt: string;
+        company?: { displayName?: string; name?: string };
+      }) => ({
         id: invite.id,
         companyName: invite.company?.displayName || invite.company?.name || 'Unknown Company',
         role: invite.role,
@@ -77,7 +64,31 @@ export default function WaitingPage() {
     } finally {
       setLoading(false);
     }
-  };  const handleInviteResponse = async (inviteId: string, response: 'ACCEPTED' | 'DECLINED') => {
+  }, [user?.email]);
+  
+  // Initialize once when component mounts
+  useEffect(() => {
+    if (!hasInitialized && user && !hasCompanyAccess) {
+      setHasInitialized(true);
+      fetchInvites();
+    } else if (!hasInitialized && (!user || hasCompanyAccess)) {
+      setHasInitialized(true);
+      setLoading(false);
+    }
+  }, [user, hasCompanyAccess, hasInitialized, fetchInvites]);
+  // Simplified access check - only check once every 30 seconds to avoid excessive polling
+  useEffect(() => {
+    if (!user || hasCompanyAccess) return;
+    
+    const accessCheckInterval = setInterval(async () => {
+      console.log('WaitingPage - Periodic access check');
+      await checkUserAccess(0);
+    }, 30000); // Check every 30 seconds instead of 10
+
+    return () => clearInterval(accessCheckInterval);
+  }, [user, hasCompanyAccess, checkUserAccess]);
+
+  const handleInviteResponse = async (inviteId: string, response: 'ACCEPTED' | 'DECLINED') => {
     try {
       const apiResponse = await fetch('/api/company-invites', {
         method: 'PUT',

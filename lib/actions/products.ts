@@ -1,6 +1,7 @@
 'use server'
 
 import { neonClient } from '@/lib/db'
+import { supabase } from '@/lib/supabaseClient'
 import {
   createProductSchema,
   updateProductSchema,
@@ -23,6 +24,24 @@ import { revalidatePath } from 'next/cache'
 // Create a new product
 export async function createProduct(input: CreateProductInput): Promise<ActionResponse> {
   try {
+    // Get current user session from Supabase
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError || !session?.user?.id) {
+      return actionError('Authentication required')
+    }
+
+    // Get user's company from Supabase
+    const { data: companyUser, error: companyError } = await supabase
+      .from('company_users')
+      .select('companyId')
+      .eq('userId', session.user.id)
+      .eq('isActive', true)
+      .single()
+
+    if (companyError || !companyUser) {
+      return actionError('User not associated with any company')
+    }
+
     const validatedData = createProductSchema.parse(input)
 
     // Generate slug if not provided
@@ -37,7 +56,7 @@ export async function createProduct(input: CreateProductInput): Promise<ActionRe
     const { categoryId, brandId, ...productData } = validatedData
     
     // Create the base data object without category and brand
-    const createData: any = {
+    const createData = {
       name: productData.name,
       description: productData.description,
       sku: productData.sku,
@@ -66,16 +85,9 @@ export async function createProduct(input: CreateProductInput): Promise<ActionRe
       leadTimeSupply: productData.leadTimeSupply,
       shelfLife: productData.shelfLife,
       createdBy: productData.createdBy,
-    }
-
-    // Only add categoryId if it's provided
-    if (categoryId) {
-      createData.categoryId = categoryId
-    }
-
-    // Only add brandId if it's provided  
-    if (brandId) {
-      createData.brandId = brandId
+      companyId: companyUser.companyId, // Use the user's company ID
+      ...(categoryId && { categoryId }),
+      ...(brandId && { brandId })
     }
 
     const product = await neonClient.product.create({
