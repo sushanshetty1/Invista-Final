@@ -1,14 +1,42 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Package } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function LogoutPage() {
-    const { logout } = useAuth()
+    const { logout, user } = useAuth()
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const router = useRouter()
 
     useEffect(() => {
-        logout()
-    }, [logout])
+        const performLogout = async () => {
+            if (isLoggingOut) return // Prevent multiple logout attempts
+            
+            setIsLoggingOut(true)
+            
+            try {
+                if (user) {
+                    console.log('Logout page - User found, performing logout')
+                    await logout()
+                } else {
+                    console.log('Logout page - No user found, redirecting to home')
+                    // If no user, just redirect to home
+                    setTimeout(() => {
+                        router.push('/')
+                    }, 1000)
+                }
+            } catch (error) {
+                console.error('Logout page - Error during logout:', error)
+                // Even on error, redirect to home after a delay
+                setTimeout(() => {
+                    router.push('/')
+                }, 2000)
+            }
+        }
+        
+        performLogout()
+    }, [logout, user, router, isLoggingOut])
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50/90 via-blue-50/40 to-indigo-50/60 dark:from-background dark:via-muted/20 dark:to-chart-3/10 flex items-center justify-center px-4">

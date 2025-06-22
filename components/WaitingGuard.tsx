@@ -13,86 +13,72 @@ export default function WaitingGuard({ children }: WaitingGuardProps) {
   const { user, hasCompanyAccess, loading } = useAuth();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [loadingDelay, setLoadingDelay] = useState(true);
+  const [hasCheckedInitialAccess, setHasCheckedInitialAccess] = useState(false);
 
-  // Add a small delay to avoid flickering
+  // Check if user has ever been granted access (persists through page reloads)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoadingDelay(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);  // Check if user has ever been granted access (persists through page reloads)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && user) {
+    if (typeof window !== 'undefined' && user && !hasCheckedInitialAccess) {
+      setHasCheckedInitialAccess(true);
+      
       // Check for permanent access flag - this means we never show waiting page again
       const hasBeenGrantedAccess = localStorage.getItem(`invista_has_access_${user.id}`) === 'true';
       
       // Check if user has recently accepted an invite
       const inviteAccepted = localStorage.getItem('invista_invite_accepted') === 'true';
+      const inviteAcceptedTime = parseInt(localStorage.getItem('invista_invite_accepted_time') || '0', 10);
+      const oneHourMs = 60 * 60 * 1000;
       
-      // If user was ever granted access or accepted an invite, redirect to dashboard
-      if (hasBeenGrantedAccess || inviteAccepted) {
+      // If user was ever granted access or accepted an invite recently, redirect to dashboard
+      if (hasBeenGrantedAccess || (inviteAccepted && (Date.now() - inviteAcceptedTime < oneHourMs))) {
         // Always set the permanent access flag
         if (user?.id) {
           localStorage.setItem(`invista_has_access_${user.id}`, 'true');
-          // Also store the timestamp when this was granted
           localStorage.setItem(`invista_has_access_time_${user.id}`, Date.now().toString());
         }
         
-        console.log('WaitingGuard - user previously had access, redirecting to dashboard');
+        console.log('WaitingGuard - User previously had access or recently accepted invite, redirecting to dashboard');
         setIsRedirecting(true);
         router.push('/dashboard');
       }
     }
-  }, [router, user]);
-  // Handle navigation based on auth state
+  }, [user, hasCheckedInitialAccess, router]);
+
+  // Handle navigation based on auth state - simplified logic
   useEffect(() => {
-    if (isRedirecting) return; // Avoid multiple redirects
+    if (isRedirecting || !hasCheckedInitialAccess) return; // Avoid multiple redirects
     
     // Only make navigation decisions after initial loading is complete
-    if (!loading && !loadingDelay) {
+    if (!loading) {
       console.log('WaitingGuard - user:', user?.email, 'hasAccess:', hasCompanyAccess);
-      
-      // Check if user has recently accepted an invite
-      if (typeof window !== 'undefined') {
-        const inviteAccepted = localStorage.getItem('invista_invite_accepted') === 'true';
-        const inviteAcceptedTime = parseInt(localStorage.getItem('invista_invite_accepted_time') || '0', 10);
-        const oneHourMs = 60 * 60 * 1000;
-        
-        // If invite was accepted within the last hour, immediately redirect to dashboard
-        if (inviteAccepted && (Date.now() - inviteAcceptedTime < oneHourMs)) {
-          console.log('WaitingGuard - found recent invite acceptance, redirecting to dashboard');
-          setIsRedirecting(true);
-          router.push('/dashboard');
-          return;
-        }
-      }
       
       // User has company access - redirect to dashboard
       if (user && hasCompanyAccess) {
-        console.log('WaitingGuard - user has access, redirecting to dashboard');
+        console.log('WaitingGuard - User has access, redirecting to dashboard');
+        // Set permanent access flag
+        if (user?.id) {
+          localStorage.setItem(`invista_has_access_${user.id}`, 'true');
+          localStorage.setItem(`invista_has_access_time_${user.id}`, Date.now().toString());
+        }
         setIsRedirecting(true);
         router.push('/dashboard');
       }
       
       // Only redirect to login if we're sure user is not authenticated
-      // and not just in a loading state
-      if (!user && !loading) {
-        console.log('WaitingGuard - no user, redirecting to login');
+      if (!user) {
+        console.log('WaitingGuard - No user, redirecting to login');
         setIsRedirecting(true);
         router.push('/auth/login');
       }
     }
-  }, [user, hasCompanyAccess, loading, loadingDelay, router, isRedirecting]);
-
+  }, [user, hasCompanyAccess, loading, router, isRedirecting, hasCheckedInitialAccess]);
   // Show loading state while auth is initializing
-  if (loading || loadingDelay || isRedirecting) {
+  if (loading || isRedirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Mail className="h-16 w-16 mx-auto mb-4 text-primary animate-pulse" />
           <p className="text-muted-foreground text-lg">
-            {loading || loadingDelay ? "Loading..." : "Redirecting..."}
+            {loading ? "Loading..." : "Redirecting..."}
           </p>
         </div>
       </div>

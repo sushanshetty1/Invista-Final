@@ -46,17 +46,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/use-user-role";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, logout, loading, userType, hasCompanyAccess } = useAuth();
+  const router = useRouter();  const { user, logout, loading, userType, hasCompanyAccess, refreshAccess } = useAuth();
+  const { userRole, canAccessCompanyProfile } = useUserRole();
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Handle scroll effect
+  // Refresh access status when user or location changes
+  useEffect(() => {
+    if (user && refreshAccess) {
+      refreshAccess();
+    }
+  }, [user, pathname, refreshAccess]);  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -190,12 +196,8 @@ const Navbar = () => {
       ]
     }
   ];  // Check if we're in dashboard routes - include ALL authenticated pages
-  // Check for permanent access flag for consistent navbar display
-  const hasPermanentAccess = typeof window !== 'undefined' && user?.id && 
-    localStorage.getItem(`invista_has_access_${user.id}`) === 'true';
-  
-  // Show dashboard navbar if user has company access OR has ever had access (permanent flag)
-  const isDashboard = user && (hasCompanyAccess || hasPermanentAccess) && (pathname?.startsWith("/dashboard") ||
+  // Show dashboard navbar if user has company access OR has permanent access flag
+  const isDashboard = user && hasCompanyAccess && (pathname?.startsWith("/dashboard") ||
     pathname?.startsWith("/inventory") ||
     pathname?.startsWith("/orders") ||
     pathname?.startsWith("/profile") ||
@@ -214,13 +216,35 @@ const Navbar = () => {
     pathname?.startsWith("/user-profile") ||
     pathname?.startsWith("/company-profile"));
 
+  // Handle body padding for navbar layout
+  useEffect(() => {
+    const body = document.body;
+    if (isDashboard) {
+      body.classList.add('dashboard-layout');
+      body.classList.remove('single-deck-layout');
+    } else {
+      body.classList.add('single-deck-layout');
+      body.classList.remove('dashboard-layout');
+    }
+    
+    return () => {
+      body.classList.remove('dashboard-layout', 'single-deck-layout');
+    };
+  }, [isDashboard]);
+
   const handleAuthAction = async (action: string) => {
     if (action === "login") {
       router.push("/auth/login");
     } else if (action === "signup") {
       router.push("/auth/signUp");
     } else if (action === "logout") {
-      await logout();
+      try {
+        await logout();
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Fallback: navigate to logout page
+        router.push("/auth/logout");
+      }
     }
   };
 
@@ -242,45 +266,43 @@ const Navbar = () => {
           }
         }}
       >        {/* Glow effect on hover */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-all duration-300" /><button
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-all duration-300" />        <button
           onClick={() => onToggle(item.href)}
-          className={`relative flex items-center h-8 px-3 text-xs rounded-lg transition-all duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary/20 border group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/10 font-medium ${isOpen
+          className={`relative flex items-center h-9 lg:h-10 px-3 lg:px-4 text-xs lg:text-sm rounded-lg transition-all duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary/20 border group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/10 font-medium ${isOpen
             ? 'bg-primary/10 dark:bg-primary/20 border-primary/50 text-primary shadow-lg shadow-primary/20'
             : 'bg-background/60 dark:bg-background/40 border-border/30 dark:border-border/20 hover:bg-accent/60 dark:hover:bg-accent/40'
             }`}
         >
-          <item.icon className="h-4 w-4 mr-2 flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
-          <span className="hidden md:inline font-medium">{item.title}</span>
-          <span className="md:hidden font-medium">{item.title.substring(0, 1)}</span>
-          <ChevronDown className={`h-3 w-3 ml-2 hidden sm:block flex-shrink-0 transition-all duration-300 ${isOpen ? 'rotate-180 text-primary' : 'group-hover:rotate-12'
+          <item.icon className="h-4 w-4 lg:h-5 lg:w-5 mr-2 lg:mr-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
+          <span className="hidden sm:inline md:hidden lg:inline font-medium">{item.title}</span>
+          <span className="sm:hidden md:inline lg:hidden font-medium">{item.title.substring(0, 1)}</span>
+          <ChevronDown className={`h-3 w-3 lg:h-4 lg:w-4 ml-2 lg:ml-3 hidden sm:block flex-shrink-0 transition-all duration-300 ${isOpen ? 'rotate-180 text-primary' : 'group-hover:rotate-12'
             }`} />
 
           {/* Active indicator */}
           {pathname?.startsWith(item.href) && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
           )}
-        </button>
-
-        {isOpen && (
-          <div className="absolute top-full left-0 mt-2 p-2 min-w-[220px] sm:min-w-[240px] max-w-[320px] bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/40 z-50 animate-in fade-in-0 zoom-in-95 duration-300">
+        </button>        {isOpen && (
+          <div className="absolute top-full left-0 mt-2 p-2 lg:p-3 min-w-[200px] sm:min-w-[220px] lg:min-w-[240px] xl:min-w-[260px] max-w-[300px] lg:max-w-[340px] bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/40 z-50 dropdown-enter">
             {/* Subtle glow inside dropdown */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 rounded-xl pointer-events-none" />
 
-            <div className="relative grid gap-1 w-full">
+            <div className="relative grid gap-1 lg:gap-2 w-full">
               {item.items.map((subItem: SubNavItem, index: number) => (
                 <Link
                   key={subItem.href}
                   href={subItem.href}
                   onClick={() => setOpenDropdown(null)}
-                  className="group/item block px-3 py-2.5 text-sm rounded-lg hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 border border-transparent hover:border-primary/20 relative overflow-hidden"
+                  className="group/item block px-3 lg:px-4 py-2.5 lg:py-3.5 text-xs lg:text-sm rounded-lg hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 border border-transparent hover:border-primary/20 relative overflow-hidden"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
-                  <span className="relative text-foreground/80 group-hover/item:text-primary transition-colors duration-300">
+                  <span className="relative text-foreground/80 group-hover/item:text-primary transition-colors duration-300 font-medium">
                     {subItem.title}
                   </span>
                   {pathname === subItem.href && (
-                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-primary rounded-full" />
+                    <div className="absolute right-2 lg:right-3 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 lg:w-2 lg:h-2 bg-primary rounded-full" />
                   )}
                 </Link>
               ))}
@@ -298,8 +320,8 @@ const Navbar = () => {
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
-      )}      {/* Single Line Futuristic Navbar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+      )}        {/* Single Line Futuristic Navbar */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isDashboard ? 'double-decker-navbar' : 'single-deck-navbar'} ${isScrolled
         ? "bg-background/95 dark:bg-background/85 backdrop-blur-2xl border-b border-border/80 dark:border-border/40 shadow-2xl shadow-primary/10 dark:shadow-primary/20"
         : "bg-background/80 dark:bg-background/70 backdrop-blur-xl border-b border-border/40 dark:border-border/20"
         }`}>
@@ -312,198 +334,209 @@ const Navbar = () => {
           <div className="absolute w-1 h-1 bg-purple-500/20 rounded-full animate-ping" style={{ top: '60%', left: '80%', animationDelay: '2s' }} />
           <div className="absolute w-1.5 h-1.5 bg-cyan-500/20 rounded-full animate-ping" style={{ top: '40%', left: '60%', animationDelay: '4s' }} />        
         </div>
-        
-        {/* Show minimal navbar while loading auth state */}
+          {/* Show minimal navbar while loading auth state */}
         {showLoadingState ? (
-          <div className="relative mx-4 md:mx-8 px-2 sm:px-4">
-            <div className="flex items-center justify-between h-12">
-              {/* Logo */}
-              <Link href="/" className="flex items-center space-x-3 group flex-shrink-0 relative">
+          <div className="relative mx-6 md:mx-12 px-4 sm:px-6">
+            <div className="flex items-center justify-between h-16">{/* Logo */}
+              <Link href="/" className="flex items-center space-x-4 group flex-shrink-0 relative">
                 <div className="relative">
-                  <div className="absolute inset-0 w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 group-hover:scale-150" />
-                  <div className="absolute inset-0 w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-125" />
-                  <div className="relative w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 border-2 border-white/20 dark:border-white/10 shadow-2xl">
-                    <Package className="h-6 w-6 text-white drop-shadow-lg" />
+                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 group-hover:scale-150" />
+                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-125" />
+                  <div className="relative w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 border-2 border-white/20 dark:border-white/10 shadow-2xl">
+                    <Package className="h-7 w-7 text-white drop-shadow-lg" />
                   </div>
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                   Invista
                 </span>
               </Link>
               {/* Right side */}
-              <div className="flex items-center space-x-2 md:space-x-3">
+              <div className="flex items-center space-x-4 md:space-x-6">
                 <ThemeToggle />
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-muted rounded-full animate-pulse" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full animate-pulse" />
               </div>
             </div>
-          </div>
-        ) : isDashboard ? (
-          /* SINGLE LINE LAYOUT FOR DASHBOARD */          <div className="relative mx-4 md:mx-8 px-2 sm:px-4">
-            <div className="flex items-center justify-between h-12 gap-4">
-
+          </div>        ) : isDashboard ? (
+          /* DOUBLE DECKER LAYOUT FOR DASHBOARD */
+          <div className="relative mx-6 md:mx-12 px-4 sm:px-6">
+            {/* TOP DECK - Logo, Search, User Controls */}
+            <div className="flex items-center justify-between h-20 border-b border-border/20 dark:border-border/10">
+              
               {/* Enhanced Logo */}
-              <Link href="/" className="flex items-center space-x-3 group flex-shrink-0 relative">
+              <Link href="/" className="flex items-center space-x-4 group flex-shrink-0 relative">
                 <div className="relative">
-                  <div className="absolute inset-0 w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 group-hover:scale-150" />
-                  <div className="absolute inset-0 w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-125" />
+                  <div className="absolute inset-0 w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 group-hover:scale-150" />
+                  <div className="absolute inset-0 w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-125" />
 
-                  <div className="relative w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 border-2 border-white/20 dark:border-white/10 shadow-2xl">
-                    <Package className="h-6 w-6 text-white drop-shadow-lg" />
+                  <div className="relative w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 border-2 border-white/20 dark:border-white/10 shadow-2xl">
+                    <Package className="h-8 w-8 text-white drop-shadow-lg" />
+                  </div>                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-background shadow-lg">
+                    <div className="absolute inset-0 w-4 h-4 bg-emerald-400 rounded-full status-pulse" />
+                    <div className="absolute inset-1 w-2 h-2 bg-white rounded-full animate-pulse" />
                   </div>
-
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-background shadow-lg">
-                    <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-75" />
-                    <div className="absolute inset-1 w-1 h-1 bg-white rounded-full animate-pulse" />
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
+                </div>                <div className="relative">
+                  <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
                     Invista
                   </span>
-                  <div className="text-xs text-muted-foreground font-medium tracking-wider">
+                  <div className="text-xs text-muted-foreground font-medium tracking-wider mt-1 hidden md:block">
                     Supply Chain Intelligence
                   </div>
                   <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-500" />
                 </div>
-              </Link>
-
-              {/* Search Bar - COMMENTED OUT */}
-              {/* 
-              <div className="hidden lg:flex relative group flex-shrink-0 w-80">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                <div className="relative w-full bg-background/60 dark:bg-background/40 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl overflow-hidden group-hover:border-primary/50 transition-all duration-300">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
-                  <Input
+              </Link>              {/* Enhanced Search Bar */}
+              <div className="hidden lg:flex relative group flex-1 max-w-2xl mx-12">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                <div className="relative w-full bg-background/60 dark:bg-background/40 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-2xl overflow-hidden group-hover:border-primary/50 transition-all duration-300 shadow-lg search-enhanced">
+                  <Search className="absolute left-7 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />                  <Input
                     placeholder="Search products, orders, suppliers..."
-                    className="pl-12 pr-20 h-12 bg-transparent border-0 focus:ring-0 focus:border-0 text-sm placeholder:text-muted-foreground/60 font-medium w-full"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-                    <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                      <span className="text-xs">⌘</span>K
+                    className="pl-16 pr-28 h-14 lg:h-16 bg-transparent border-0 focus:ring-0 focus:border-0 text-sm lg:text-base placeholder:text-muted-foreground/60 font-medium w-full"
+                  />                  <div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex items-center space-x-3">
+                    <kbd className="pointer-events-none inline-flex h-6 lg:h-8 select-none items-center gap-1 rounded-lg border bg-muted px-2 lg:px-3 font-mono text-xs lg:text-sm font-medium text-muted-foreground opacity-100">
+                      <span className="text-sm lg:text-base">⌘</span>K
                     </kbd>
                   </div>
                 </div>
-              </div>
-              */}              {/* Main Navigation */}
-              <div className="hidden lg:flex items-center justify-center flex-1">
-                <div className="flex items-center space-x-1 bg-muted/30 dark:bg-muted/20 rounded-xl px-2 py-1 border border-border/40 dark:border-border/20 backdrop-blur-sm">
-                  {dashboardNavItems.map((item) => (
-                    <CustomDropdown
-                      key={item.href}
-                      item={item}
-                      isOpen={openDropdown === item.href}
-                      onToggle={handleDropdownToggle}
-                    />
-                  ))}
-                </div>
               </div>              {/* Right Actions - Notifications, Theme, User Menu, Mobile Menu */}
-              <div className="flex items-center space-x-4 flex-shrink-0">
+              <div className="flex items-center space-x-3 lg:space-x-6 flex-shrink-0">
                 {/* Notifications */}
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                  <Button variant="ghost" size="sm" className="relative h-10 w-10 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 flex-shrink-0 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl">
-                    <Bell className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[9px] bg-gradient-to-r from-red-500 to-orange-500 border-2 border-background shadow-lg animate-pulse font-bold">
+                  <Button variant="ghost" size="sm" className="relative h-12 w-12 lg:h-14 lg:w-14 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 flex-shrink-0 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl">
+                    <Bell className="h-5 w-5 lg:h-7 lg:w-7 group-hover:scale-110 transition-transform duration-300" />
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 lg:h-7 lg:w-7 rounded-full p-0 flex items-center justify-center text-xs lg:text-sm bg-gradient-to-r from-red-500 to-orange-500 border-2 border-background shadow-lg animate-pulse font-bold">
                       3
                     </Badge>
                   </Button>
                 </div>
 
                 {/* Theme Toggle */}
-                <ThemeToggle />
-
-                {/* User Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-10 px-3 space-x-2 hover:bg-accent/60 dark:hover:bg-accent/40 flex-shrink-0 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 group rounded-xl">
+                <div className="scale-110 lg:scale-125">
+                  <ThemeToggle />
+                </div>{/* User Menu */}
+                <DropdownMenu>                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-12 lg:h-14 px-3 lg:px-5 space-x-2 lg:space-x-3 hover:bg-accent/60 dark:hover:bg-accent/40 flex-shrink-0 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 group rounded-xl">
                       <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-150" />
-                        <div className="relative w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-white/20 shadow-lg">
-                          <User className="h-4 w-4 text-white" />
+                        <div className="relative w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-white/20 shadow-lg">
+                          <User className="h-4 w-4 lg:h-6 lg:w-6 text-white" />
                         </div>
                       </div>
                       <div className="hidden xl:block text-left min-w-0">
-                        <div className="text-sm font-medium truncate max-w-[120px]">
+                        <div className="text-xs lg:text-sm font-medium truncate max-w-[120px] lg:max-w-[140px]">
                           {user?.email?.split('@')[0] || 'User'}
                         </div>
                         <div className="text-xs text-muted-foreground truncate">
-                          {userType === 'company' ? 'Company Admin' : 'Individual User'}
+                          {userRole ? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()}` : (userType === 'company' ? 'Company User' : 'Individual User')}
                         </div>
                       </div>
-                      <ChevronDown className="h-3 w-3 group-hover:rotate-180 transition-transform duration-300" />
+                      <ChevronDown className="h-4 w-4 lg:h-5 lg:w-5 group-hover:rotate-180 transition-transform duration-300" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64 mt-2 bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 shadow-2xl rounded-xl">
-                    <div className="px-3 py-2 border-b border-border/30">
+                  </DropdownMenuTrigger><DropdownMenuContent align="end" className="w-72 mt-2 bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 shadow-2xl rounded-xl">
+                    <div className="px-4 py-3 border-b border-border/30">
                       <div className="text-sm font-medium">{user?.email}</div>
-                      <div className="text-xs text-muted-foreground">{userType === 'company' ? 'Company Administrator' : 'Individual User'}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {userRole ? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()} Role` : (userType === 'company' ? 'Company Administrator' : 'Individual User')}
+                      </div>
                     </div>
-                    <DropdownMenuItem
-                      className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-1 my-1 rounded-lg"
-                      onClick={() => router.push(userType === 'company' ? '/company-profile' : '/user-profile')}
-                    >
-                      <User className="mr-3 h-4 w-4" />
-                      {userType === 'company' ? 'Company Profile' : 'User Profile'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-1 my-1 rounded-lg">
-                      <Settings className="mr-3 h-4 w-4" />
+                    
+                    {/* Show both profile options for OWNER, ADMIN, MANAGER */}
+                    {canAccessCompanyProfile ? (                      <>
+                        <DropdownMenuItem
+                          className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
+                          onClick={() => router.push('/company-profile')}
+                        >
+                          <Building2 className="mr-4 h-5 w-5" />
+                          Company Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
+                          onClick={() => router.push('/user-profile')}
+                        >
+                          <User className="mr-4 h-5 w-5" />
+                          User Profile
+                        </DropdownMenuItem>
+                      </>                    ) : (
+                      <DropdownMenuItem
+                        className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
+                        onClick={() => router.push('/user-profile')}
+                      >
+                        <User className="mr-4 h-5 w-5" />
+                        User Profile
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3">
+                      <Settings className="mr-4 h-5 w-5" />
                       Settings & Preferences
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="mx-1" />
+                    <DropdownMenuSeparator className="mx-2" />
                     <DropdownMenuItem
-                      onClick={() => handleAuthAction("logout")}
-                      className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mx-1 my-1 rounded-lg"
+                      className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mx-2 my-1 rounded-lg py-3"
+                      onClick={async () => {
+                        try {
+                          await logout();
+                        } catch (error) {
+                          console.error('Logout error:', error);
+                          router.push("/auth/logout");
+                        }
+                      }}
                     >
-                      <LogOut className="mr-3 h-4 w-4" />
+                      <LogOut className="mr-4 h-5 w-5" />
                       Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Mobile Menu Button */}
+                </DropdownMenu>                {/* Mobile Menu Button */}
                 <div className="relative group lg:hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="relative lg:hidden h-10 w-10 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
+                    className="relative lg:hidden h-12 w-12 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
                     onClick={() => setIsOpen(!isOpen)}
                   >
                     {isOpen ? (
-                      <X className="h-4 w-4 rotate-90 group-hover:rotate-180 transition-transform duration-300" />
+                      <X className="h-5 w-5 rotate-90 group-hover:rotate-180 transition-transform duration-300" />
                     ) : (
-                      <Menu className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />)}
+                      <Menu className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />)}
                   </Button>
                 </div>
               </div>
+            </div>            {/* BOTTOM DECK - Main Navigation */}
+            <div className="hidden lg:flex items-center justify-center h-14 xl:h-16">
+              <div className="flex items-center space-x-2 xl:space-x-3 bg-muted/30 dark:bg-muted/20 rounded-2xl px-4 xl:px-6 py-2 xl:py-3 border border-border/40 dark:border-border/20 backdrop-blur-sm">
+                {dashboardNavItems.map((item) => (
+                  <CustomDropdown
+                    key={item.href}
+                    item={item}
+                    isOpen={openDropdown === item.href}
+                    onToggle={handleDropdownToggle}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          /* SINGLE DECK LAYOUT FOR MARKETING PAGES */
-          <div className="relative mx-4 md:mx-8 px-2 sm:px-4">
-            <div className="flex items-center justify-between h-20">
+          </div>        ) : (
+          /* SINGLE DECK LAYOUT FOR MARKETING PAGES */          <div className="relative mx-6 md:mx-12 px-4 sm:px-6">
+            <div className="flex items-center justify-between h-20 lg:h-24">
 
               {/* Logo */}
-              <Link href="/" className="flex items-center space-x-3 group flex-shrink-0 relative">
+              <Link href="/" className="flex items-center space-x-3 lg:space-x-4 group flex-shrink-0 relative">
                 <div className="relative">
-                  <div className="absolute inset-0 w-9 h-9 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-125" />
-                  <div className="relative w-9 h-9 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-white/20 dark:border-white/10">
-                    <Package className="h-6 w-6 text-white drop-shadow-sm" />
+                  <div className="absolute inset-0 w-10 h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-125" />
+                  <div className="relative w-10 h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-white/20 dark:border-white/10">
+                    <Package className="h-6 w-6 lg:h-7 lg:w-7 text-white drop-shadow-sm" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full border border-background shadow-lg">
-                    <div className="absolute inset-0 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-75" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-background shadow-lg">
+                    <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-75" />
                   </div>
                 </div>
                 <div className="relative">
-                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent truncate group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
+                  <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent truncate group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
                     Invista
                   </span>
                   <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300" />
                 </div>
               </Link>              {/* Marketing Navigation */}
-              <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
-                <div className="flex items-center gap-8 bg-muted/20 dark:bg-muted/10 rounded-full px-10 py-4 border border-border/30 dark:border-border/20 backdrop-blur-sm">
+              <div className="hidden md:flex items-center gap-6 lg:gap-8 xl:gap-10 flex-1 justify-center">
+                <div className="flex items-center gap-6 lg:gap-8 xl:gap-10 bg-muted/20 dark:bg-muted/10 rounded-full px-8 lg:px-10 xl:px-12 py-4 lg:py-5 border border-border/30 dark:border-border/20 backdrop-blur-sm">
                   <Link href="#features" className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap">
                     Features
                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
@@ -521,18 +554,16 @@ const Navbar = () => {
                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
                   </Link>
                 </div>
-              </div>
-
-              {/* Auth Actions */}
-              <div className="flex items-center space-x-3 flex-shrink-0">
+              </div>              {/* Auth Actions */}
+              <div className="flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
                 <ThemeToggle />
 
-                <div className="hidden sm:flex items-center space-x-2">
+                <div className="hidden sm:flex items-center space-x-2 lg:space-x-3">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleAuthAction("login")}
-                    className="h-9 px-4 text-sm hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
+                    className="h-10 lg:h-11 px-4 lg:px-5 text-sm hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
                   >
                     Sign In
                   </Button>
@@ -540,43 +571,41 @@ const Navbar = () => {
                     <DropdownMenuTrigger asChild>
                       <Button
                         size="sm"
-                        className="h-9 px-4 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 border border-primary/20 shadow-lg hover:shadow-primary/25 transition-all duration-300 group relative overflow-hidden rounded-xl"
+                        className="h-10 lg:h-11 px-4 lg:px-5 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 border border-primary/20 shadow-lg hover:shadow-primary/25 transition-all duration-300 group relative overflow-hidden rounded-xl"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <span className="relative hidden sm:inline-flex items-center">
                           Get Started
-                          <Zap className="ml-2 h-3 w-3" />
+                          <Zap className="ml-2 h-3 w-3 lg:h-4 lg:w-4" />
                         </span>
                         <span className="relative sm:hidden">Start</span>
-                        <ChevronDown className="ml-2 h-3 w-3 group-hover:rotate-180 transition-transform duration-300" />
+                        <ChevronDown className="ml-2 h-3 w-3 lg:h-4 lg:w-4 group-hover:rotate-180 transition-transform duration-300" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 shadow-xl rounded-xl">
+                    <DropdownMenuContent align="end" className="w-56 lg:w-64 bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 shadow-xl rounded-xl">
                       <DropdownMenuItem
                         onClick={() => router.push("/auth/company-signup")}
-                        className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-1 my-1 rounded-lg"
+                        className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-2 lg:py-3"
                       >
-                        <Building2 className="mr-3 h-4 w-4" />
+                        <Building2 className="mr-3 lg:mr-4 h-4 w-4 lg:h-5 lg:w-5" />
                         Create Company Account
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleAuthAction("signup")}
-                        className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-1 my-1 rounded-lg"
+                        className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-2 lg:py-3"
                       >
-                        <User className="mr-3 h-4 w-4" />
+                        <User className="mr-3 lg:mr-4 h-4 w-4 lg:h-5 lg:w-5" />
                         Join as Individual
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
-
-                {/* Mobile Menu Button */}
+                </div>                {/* Mobile Menu Button */}
                 <div className="relative group md:hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="relative md:hidden h-9 w-9 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
+                    className="relative md:hidden h-10 w-10 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
                     onClick={() => setIsOpen(!isOpen)}
                   >
                     {isOpen ? (
@@ -599,19 +628,18 @@ const Navbar = () => {
           <div className="relative mx-4 md:mx-8 px-2 py-6">
             <div className="space-y-6">
               {isDashboard ? (
-                <>
-                  {/* Mobile Search */}
+                <>                  {/* Mobile Search */}
                   <div className="px-2 py-3">
                     <div className="relative group">
                       <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
                       <div className="relative bg-background/60 dark:bg-background/40 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-2xl overflow-hidden group-hover:border-primary/50 transition-all duration-300">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+                        <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
                         <Input
-                          placeholder="Search everything..."
-                          className="pl-12 pr-16 bg-transparent border-0 focus:ring-0 focus:border-0 h-14 w-full text-base placeholder:text-muted-foreground/60 font-medium"
+                          placeholder="Search products, orders, suppliers..."
+                          className="pl-16 pr-20 bg-transparent border-0 focus:ring-0 focus:border-0 h-16 w-full text-base placeholder:text-muted-foreground/60 font-medium"
                         />
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                          <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-xs font-medium text-muted-foreground opacity-100">
+                          <kbd className="pointer-events-none inline-flex h-7 select-none items-center gap-1 rounded-lg border bg-muted px-2 font-mono text-xs font-medium text-muted-foreground opacity-100">
                             ⌘K
                           </kbd>
                         </div>
@@ -674,28 +702,64 @@ const Navbar = () => {
                           <User className="h-6 w-6 text-white" />
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-base font-semibold truncate">{user?.email?.split('@')[0] || 'User'}</div>
+                      <div className="flex-1 min-w-0">                        <div className="text-base font-semibold truncate">{user?.email?.split('@')[0] || 'User'}</div>
                         <div className="text-sm text-muted-foreground truncate">{user?.email}</div>
-                        <div className="text-xs text-primary font-medium">{userType === 'company' ? 'Company Admin' : 'Individual User'}</div>
+                        <div className="text-xs text-primary font-medium">
+                          {userRole ? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()} Role` : (userType === 'company' ? 'Company Admin' : 'Individual User')}
+                        </div>
                       </div>
                     </div>
 
                     <div className="space-y-2 mt-4">
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
-                        onClick={() => {
-                          router.push(userType === 'company' ? '/company-profile' : '/user-profile');
-                          setIsOpen(false);
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <User className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                        <span className="group-hover:translate-x-1 transition-transform duration-300">
-                          {userType === 'company' ? 'Company Profile' : 'User Profile'}
-                        </span>
-                      </Button>
+                      {/* Show both profile options for OWNER, ADMIN, MANAGER */}
+                      {canAccessCompanyProfile ? (
+                        <>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+                            onClick={() => {
+                              router.push('/company-profile');
+                              setIsOpen(false);
+                            }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <Building2 className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                            <span className="group-hover:translate-x-1 transition-transform duration-300">
+                              Company Profile
+                            </span>
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+                            onClick={() => {
+                              router.push('/user-profile');
+                              setIsOpen(false);
+                            }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <User className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                            <span className="group-hover:translate-x-1 transition-transform duration-300">
+                              User Profile
+                            </span>
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+                          onClick={() => {
+                            router.push('/user-profile');
+                            setIsOpen(false);
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <User className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                          <span className="group-hover:translate-x-1 transition-transform duration-300">
+                            User Profile
+                          </span>
+                        </Button>
+                      )}
 
                       <Button
                         variant="ghost"
@@ -708,14 +772,18 @@ const Navbar = () => {
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <Settings className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                         <span className="group-hover:translate-x-1 transition-transform duration-300">Settings & Preferences</span>
-                      </Button>
-
-                      <Button
+                      </Button>                      <Button
                         variant="ghost"
                         className="w-full justify-start text-base h-14 rounded-2xl text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-transparent hover:border-red-200 dark:hover:border-red-800 group relative overflow-hidden"
-                        onClick={() => {
-                          handleAuthAction("logout");
-                          setIsOpen(false);
+                        onClick={async () => {
+                          try {
+                            await logout();
+                            setIsOpen(false);
+                          } catch (error) {
+                            console.error('Logout error:', error);
+                            router.push("/auth/logout");
+                            setIsOpen(false);
+                          }
                         }}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

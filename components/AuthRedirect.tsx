@@ -1,33 +1,49 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthRedirect() {
   const { user, userType, hasCompanyAccess, loading, checkUserAccess } = useAuth();
   const router = useRouter();
+  const [hasRedirected, setHasRedirected] = useState(false);
+
   useEffect(() => {
     const handleRedirect = async () => {
+      if (hasRedirected) return;
+      
       if (!loading && user) {
-        // Refresh user access status with retry support
-        await checkUserAccess(0);
+        console.log('AuthRedirect - User found, checking access');
         
-        if (hasCompanyAccess) {
-          // User has company access - redirect to dashboard
-          router.push('/dashboard');
-        } else {
-          // User without company access - redirect to waiting page
-          router.push('/waiting');
+        // Only check user access once if we don't already have access
+        if (!hasCompanyAccess) {
+          await checkUserAccess(0);
         }
+        
+        // Wait a moment for the access check to complete
+        setTimeout(() => {
+          if (hasCompanyAccess) {
+            console.log('AuthRedirect - User has company access, redirecting to dashboard');
+            setHasRedirected(true);
+            router.push('/dashboard');
+          } else {
+            console.log('AuthRedirect - User without company access, redirecting to waiting');
+            setHasRedirected(true);
+            router.push('/waiting');
+          }
+        }, 1000);
+        
       } else if (!loading && !user) {
         // Not authenticated - redirect to login
+        console.log('AuthRedirect - No user, redirecting to login');
+        setHasRedirected(true);
         router.push('/auth/login');
       }
     };
 
     handleRedirect();
-  }, [user, hasCompanyAccess, loading, router, checkUserAccess]);
+  }, [user, hasCompanyAccess, loading, router, checkUserAccess, hasRedirected]);
 
   // Show loading while determining redirect
   return (

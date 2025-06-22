@@ -125,6 +125,32 @@
   }
 }
 
+/* Body padding for navbar layouts */
+body {
+  padding-top: 120px; /* Default padding for double-decker */
+}
+
+/* For marketing pages with single deck navbar */
+.single-deck-layout {
+  padding-top: 80px !important;
+}
+
+/* Override for specific dashboard layouts */
+.dashboard-layout {
+  padding-top: 120px !important;
+}
+
+/* Mobile responsive padding */
+@media (max-width: 1024px) {
+  body {
+    padding-top: 80px; /* Single deck on mobile */
+  }
+  
+  .dashboard-layout {
+    padding-top: 80px !important; /* Mobile always uses single deck */
+  }
+}
+
 /* Super Thin Clean Scrollbar - General (Y-axis) */
 ::-webkit-scrollbar {
   width: 4px;
@@ -489,4 +515,72 @@
   background-image: 
     linear-gradient(theme('colors.border / 0.05') 1px, transparent 1px),
     linear-gradient(90deg, theme('colors.border / 0.05') 1px, transparent 1px);
+}
+
+/* Double-decker navbar styles */
+.double-decker-navbar {
+  min-height: 120px; /* 16px top + 14px bottom for dashboard */
+}
+
+.single-deck-navbar {
+  min-height: 80px; /* 20px height for marketing pages */
+}
+
+/* Enhanced mobile menu scrolling */
+.mobile-menu-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.primary.DEFAULT / 0.3') transparent;
+}
+
+.mobile-menu-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mobile-menu-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mobile-menu-scroll::-webkit-scrollbar-thumb {
+  background: theme('colors.primary.DEFAULT / 0.3');
+  border-radius: 2px;
+}
+
+.mobile-menu-scroll::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.primary.DEFAULT / 0.5');
+}
+
+/* Enhanced dropdown animations */
+.dropdown-enter {
+  animation: dropdown-slide-in 0.3s ease-out;
+}
+
+@keyframes dropdown-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Search bar enhanced focus effect */
+.search-enhanced:focus-within {
+  transform: scale(1.02);
+  box-shadow: 0 20px 40px -12px theme('colors.primary.DEFAULT / 0.25');
+}
+
+/* Logo pulse effect for status indicator */
+.status-pulse {
+  animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }

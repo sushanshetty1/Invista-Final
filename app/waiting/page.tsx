@@ -25,33 +25,27 @@ export default function WaitingPage() {
   const router = useRouter();
   const [invites, setInvites] = useState<CompanyInvite[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pageLoaded, setPageLoaded] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   
-  // Mark page as loaded once
+  // Initialize once when component mounts
   useEffect(() => {
-    setPageLoaded(true);
-  }, []);
-
-  // Fetch invites once we have user data and know they don't have company access
-  useEffect(() => {
-    if (pageLoaded && user && !hasCompanyAccess) {
+    if (!hasInitialized && user && !hasCompanyAccess) {
+      setHasInitialized(true);
       fetchInvites();
-    } else if (pageLoaded && !loading && (!user || hasCompanyAccess)) {
-      // If we have loaded and either no user or user has access already,
-      // don't show loading state for invites
+    } else if (!hasInitialized && (!user || hasCompanyAccess)) {
+      setHasInitialized(true);
       setLoading(false);
     }
-  }, [user, hasCompanyAccess, pageLoaded]);
+  }, [user, hasCompanyAccess, hasInitialized]);
 
-  // Periodically check for company access (useful for recently created companies)
+  // Simplified access check - only check once every 30 seconds to avoid excessive polling
   useEffect(() => {
     if (!user || hasCompanyAccess) return;
     
     const accessCheckInterval = setInterval(async () => {
-      if (!hasCompanyAccess) {
-        await checkUserAccess(0);
-      }
-    }, 10000); // Check every 10 seconds
+      console.log('WaitingPage - Periodic access check');
+      await checkUserAccess(0);
+    }, 30000); // Check every 30 seconds instead of 10
 
     return () => clearInterval(accessCheckInterval);
   }, [user, hasCompanyAccess, checkUserAccess]);const fetchInvites = async () => {
@@ -101,9 +95,12 @@ export default function WaitingPage() {
 
       if (!apiResponse.ok) {
         throw new Error(result.error || 'Failed to update invite');
-      }      if (response === 'ACCEPTED') {
-        // Store in local storage that user has accepted an invitation before redirecting
-        // This helps prevent going back to waiting page after accepting
+      }
+
+      if (response === 'ACCEPTED') {
+        console.log('WaitingPage - Invite accepted, setting localStorage flags and redirecting');
+        
+        // Store in local storage that user has accepted an invitation
         localStorage.setItem('invista_invite_accepted', 'true');
         localStorage.setItem('invista_invite_accepted_time', Date.now().toString());
         
@@ -114,13 +111,14 @@ export default function WaitingPage() {
           localStorage.setItem(`invista_access_source_${user.id}`, 'invite_acceptance');
         }
         
-        // Refresh user access check and redirect to dashboard
+        // Force refresh access check immediately
         await checkUserAccess(0);
         
-        // Force redirect to dashboard regardless of checkUserAccess result
-        // The stored flag will keep the user on dashboard until access is updated
-        router.push('/dashboard');
-      }else {
+        // Small delay to ensure state updates, then redirect
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 500);
+      } else {
         // Refresh invites after declining
         fetchInvites();
       }

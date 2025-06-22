@@ -15,6 +15,7 @@ type AuthContextType = {
     resetPassword: (email: string) => Promise<any>
     deleteAccount: () => Promise<any>
     checkUserAccess: (retryCount?: number) => Promise<void>
+    refreshAccess: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -25,12 +26,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [userType, setUserType] = useState<'company' | 'individual' | null>(null)
     const [hasCompanyAccess, setHasCompanyAccess] = useState(false)
     const router = useRouter()
-      const checkUserAccess = async (retryCount = 0) => {
+    
+    const checkUserAccess = async (retryCount = 0) => {
         if (!user?.email || !user?.id) {
             setUserType(null);
             setHasCompanyAccess(false);
             return;
         }
+        
+        console.log(`AuthContext - Checking user access (attempt ${retryCount + 1})`);
         
         // First check if user previously had access (permanent flag)
         if (typeof window !== 'undefined') {
@@ -185,27 +189,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 }
                 
                 return;
-            }
-
-            // If we reach here, no company access was found
+            }            // If we reach here, no company access was found
             setUserType('individual');
             setHasCompanyAccess(false);
             
-            // Retry logic for newly created companies (max 3 retries with increasing delays)
-            if (retryCount < 3) {
-                const delay = (retryCount + 1) * 1000; // 1s, 2s, 3s delays
+            console.log(`AuthContext - No access found for user ${user.email} (attempt ${retryCount + 1})`);
+            
+            // Retry logic for newly created companies (max 2 retries with increasing delays)
+            if (retryCount < 2) {
+                const delay = (retryCount + 1) * 2000; // 2s, 4s delays
+                console.log(`AuthContext - Retrying in ${delay}ms`);
                 setTimeout(() => {
                     checkUserAccess(retryCount + 1);
                 }, delay);
             }        } catch (error) {
+            console.error('AuthContext - Error checking user access:', error);
             setUserType('individual')
             setHasCompanyAccess(false)
             
-            // Retry on error (max 3 retries)
-            if (retryCount < 3) {
-                const delay = (retryCount + 1) * 1000;
+            // Retry on error (max 2 retries)
+            if (retryCount < 2) {
+                const delay = (retryCount + 1) * 2000;
+                console.log(`AuthContext - Retrying after error in ${delay}ms`);
                 setTimeout(() => {
-                    checkUserAccess(retryCount + 1);                }, delay);
+                    checkUserAccess(retryCount + 1);
+                }, delay);
             }
         }
     }
@@ -250,28 +258,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         setLoading(false);
                     }
                 }
-                
-                // Set up the auth state change listener
+                  // Set up the auth state change listener
                 const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
                     if (!isMounted) return;
                     
                     console.log('AuthContext - Auth state change:', event);
                     
-                    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {                    if (session?.user) {
+                    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                        if (session?.user) {
                             console.log('AuthContext - User signed in or token refreshed:', session.user.email);
                             setUser(session.user);
-                            
-                            // Check for invite acceptance flag and force check user access if found
-                            if (typeof window !== 'undefined') {
-                                const inviteAccepted = localStorage.getItem('invista_invite_accepted') === 'true';
-                                const inviteAcceptedTime = parseInt(localStorage.getItem('invista_invite_accepted_time') || '0', 10);
-                                const oneHourMs = 60 * 60 * 1000;
-                                
-                                if (inviteAccepted && (Date.now() - inviteAcceptedTime < oneHourMs)) {
-                                    console.log('AuthContext - Found invite acceptance flag, forcing access check');
-                                    await checkUserAccess(0);
-                                }
-                            }
                             
                             // Handle Google sign-in user creation
                             const { data: existingUser } = await supabase
@@ -302,15 +298,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                                         isVerified: true,
                                         emailVerified: session.user.email_confirmed_at ? true : false,
                                         twoFactorEnabled: false,
-                                        failedLoginCount: 0,
-                                        createdAt: new Date().toISOString(),
+                                        failedLoginCount: 0,                                        createdAt: new Date().toISOString(),
                                         updatedAt: new Date().toISOString()
                                     });
                             }
                             
-                            // Check user access after sign in
-                            if (isMounted) {
-                                await checkUserAccess();
+                            // Only check user access for new sign-ins, not token refreshes
+                            if (event === 'SIGNED_IN' && isMounted) {
+                                // Small delay to allow user creation to complete
+                                setTimeout(() => {
+                                    checkUserAccess(0);
+                                }, 500);
                             }
                         }
                     } else if (event === 'SIGNED_OUT') {
@@ -358,10 +356,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
         })
     }
-
+    
     const logout = async () => {
-        await supabase.auth.signOut()
-        router.push('/')
+        try {
+            console.log('AuthContext - Starting logout process');
+            
+            // Clear localStorage access flags
+            if (typeof window !== 'undefined' && user?.id) {
+                localStorage.removeItem(`invista_has_access_${user.id}`);
+                console.log('AuthContext - Cleared localStorage access flags');
+            }
+            
+            // Sign out from Supabase
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error('AuthContext - Error during signout:', error);
+                throw error;
+            }
+            
+            console.log('AuthContext - Successfully signed out from Supabase');
+            
+            // Clear local state immediately
+            setUser(null);
+            setUserType(null);
+            setHasCompanyAccess(false);
+            
+            // Redirect to home page
+            router.push('/');
+        } catch (error) {
+            console.error('AuthContext - Logout error:', error);
+            // Even if there's an error, clear local state and redirect
+            setUser(null);
+            setUserType(null);
+            setHasCompanyAccess(false);
+            router.push('/');
+        }
     }
 
     const resetPassword = async (email: string) => {
@@ -381,7 +410,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         return { error: { message: 'No user found' } }
-    }
+    }    
+    const refreshAccess = async () => {
+        console.log('AuthContext - Manual refresh access requested');
+        await checkUserAccess(0);
+    };
 
     return (
         <AuthContext.Provider value={{ 
@@ -395,7 +428,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             logout, 
             resetPassword, 
             deleteAccount,
-            checkUserAccess
+            checkUserAccess,
+            refreshAccess
         }}>
             {children}
         </AuthContext.Provider>

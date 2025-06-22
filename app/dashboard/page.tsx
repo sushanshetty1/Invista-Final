@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardGuard>
-    <div className="min-h-screen bg-background pt-20">      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <div className="min-h-screen bg-background">      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 lg:mb-10">
           <div className="flex-1">
