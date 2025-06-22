@@ -98,12 +98,11 @@ export async function POST(request: NextRequest) {  try {
       );
     }
 
-    const isCompanyOwner = company.createdBy === invitedById;
-
-    // If not the owner, check company_users table
+    const isCompanyOwner = company.createdBy === invitedById;    // If not the owner, check company_users table
     let hasPermission = isCompanyOwner;
+    
     if (!isCompanyOwner) {
-      const { data: companyUser, error: authError } = await supabase
+      const { data: companyUser, error: _authError } = await supabase
         .from('company_users')
         .select('role, isOwner')
         .eq('companyId', companyId)
@@ -155,12 +154,12 @@ export async function POST(request: NextRequest) {  try {
       .select(`
         userId,
         user:users!inner(email)
-      `)
-      .eq('companyId', companyId);
-
-    const existingEmails = new Set([
+      `)      .eq('companyId', companyId);    const existingEmails = new Set([
       ...(existingInvites || []).map(invite => invite.email),
-      ...(existingUsers || []).map((user: any) => user.user.email)
+      ...(existingUsers || []).map((userRecord: { user: { email: string }[] | { email: string } }) => {
+        const user = userRecord.user;
+        return Array.isArray(user) ? user[0]?.email : user?.email;
+      }).filter(Boolean)
     ]);
 
     const newEmails = emailList.filter((email: string) => !existingEmails.has(email));
@@ -260,10 +259,14 @@ export async function PUT(request: NextRequest) {
         { error: 'Invite has already been processed' },
         { status: 400 }
       );
-    }
-
-    // Update invite status
-    const updateData: any = {
+    }    // Update invite status
+    const updateData: { 
+      status: string; 
+      updatedAt: string; 
+      acceptedAt?: string; 
+      rejectedAt?: string;
+      declinedAt?: string;
+    } = {
       status,
       updatedAt: new Date().toISOString()
     };

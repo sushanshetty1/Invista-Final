@@ -108,7 +108,7 @@ export async function getWarehouse(id: string): Promise<ActionResponse<unknown>>
 export async function createWarehouse(input: CreateWarehouseInput): Promise<ActionResponse<unknown>> {
   try {
     const validatedInput = createWarehouseSchema.parse(input)
-    const { name, code, description, type, address, contactName, contactEmail, contactPhone, isActive } = validatedInput
+    const { name, code, description, type, address, contactName, contactEmail, contactPhone, isActive, companyId } = validatedInput
 
     // Check if warehouse code already exists
     const existingWarehouse = await neonClient.warehouse.findUnique({
@@ -121,6 +121,7 @@ export async function createWarehouse(input: CreateWarehouseInput): Promise<Acti
 
     const warehouse = await neonClient.warehouse.create({
       data: {
+        companyId,
         name,
         code,
         description,

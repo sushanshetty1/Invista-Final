@@ -35,10 +35,11 @@ export async function PATCH(
         return NextResponse.json(
           { error: `Cannot change status from ${existingAudit.status} to ${status}` },
           { status: 400 }
-        )
-      }
-    }    // Build update data
-    const updateData: Record<string, any> = {}
+        )      }
+    }
+
+    // Build update data
+    const updateData: Record<string, unknown> = {}
     if (plannedDate) updateData.plannedDate = new Date(plannedDate)
     if (supervisedBy !== undefined) updateData.supervisedBy = supervisedBy
     if (notes !== undefined) updateData.notes = notes

@@ -2,24 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { neonClient } from '@/lib/db'
 
 // This API manages cycle counting schedules by creating recurring audits
-export async function GET(request: NextRequest) {
-  try {
+export async function GET(request: NextRequest) {  try {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
     const status = searchParams.get('status')
     const warehouseId = searchParams.get('warehouseId')
 
-    const where: Record<string, any> = {
-      type: 'CYCLE_COUNT'
-    }
-    
-    if (status) {
-      where.status = status
-    }
-    
-    if (warehouseId) {
-      where.warehouseId = warehouseId
+    const where = {
+      type: 'CYCLE_COUNT' as const,
+      ...(status && { status: status as 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' }),
+      ...(warehouseId && { warehouseId })
     }
 
     const [audits, total] = await Promise.all([
@@ -49,8 +42,7 @@ export async function GET(request: NextRequest) {
             }
           }
         }
-      }),
-      neonClient.inventoryAudit.count({ where })
+      }),      neonClient.inventoryAudit.count({ where })
     ])
 
     // Transform audits to include schedule-like information

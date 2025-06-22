@@ -5,7 +5,7 @@
  * overstock, and expiry alerts.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { neonClient } from '@/lib/db'
 import { authenticate } from '@/lib/auth'
 import { errorResponse, successResponse } from '@/lib/api-utils'
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
             }
         })
 
-        const alerts: any[] = []
+        const alerts: Record<string, unknown>[] = []
         const now = new Date()
 
         for (const item of stockItems) {
@@ -151,15 +151,13 @@ export async function GET(request: NextRequest) {
 
         if (severity) {
             filteredAlerts = filteredAlerts.filter(alert => alert.severity === severity)
-        }
-
-        // Sort by severity and creation date
+        }        // Sort by severity and creation date
         const severityOrder = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 }
         filteredAlerts.sort((a, b) => {
             const severityDiff = (severityOrder[b.severity as keyof typeof severityOrder] || 0) -
                 (severityOrder[a.severity as keyof typeof severityOrder] || 0)
             if (severityDiff !== 0) return severityDiff
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            return new Date((b.createdAt as string) || '1970-01-01').getTime() - new Date((a.createdAt as string) || '1970-01-01').getTime()
         })
 
         return successResponse({

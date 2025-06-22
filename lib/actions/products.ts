@@ -31,13 +31,55 @@ export async function createProduct(input: CreateProductInput): Promise<ActionRe
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
-    }    const product = await neonClient.product.create({
-      data: {
-        ...validatedData,
-        dimensions: validatedData.dimensions || undefined,
-        images: validatedData.images || undefined,
-        tags: validatedData.tags || undefined,
-      },
+    }
+
+    // Prepare the data for Prisma creation
+    const { categoryId, brandId, ...productData } = validatedData
+    
+    // Create the base data object without category and brand
+    const createData: any = {
+      name: productData.name,
+      description: productData.description,
+      sku: productData.sku,
+      barcode: productData.barcode,
+      slug: productData.slug,
+      weight: productData.weight,
+      dimensions: productData.dimensions || undefined,
+      color: productData.color,
+      size: productData.size,
+      material: productData.material,
+      costPrice: productData.costPrice,
+      sellingPrice: productData.sellingPrice,
+      wholesalePrice: productData.wholesalePrice,
+      minStockLevel: productData.minStockLevel,
+      maxStockLevel: productData.maxStockLevel,
+      reorderPoint: productData.reorderPoint,
+      reorderQuantity: productData.reorderQuantity,
+      status: productData.status,
+      isTrackable: productData.isTrackable,
+      isSerialized: productData.isSerialized,
+      images: productData.images || undefined,
+      primaryImage: productData.primaryImage,
+      metaTitle: productData.metaTitle,
+      metaDescription: productData.metaDescription,
+      tags: productData.tags || undefined,
+      leadTimeSupply: productData.leadTimeSupply,
+      shelfLife: productData.shelfLife,
+      createdBy: productData.createdBy,
+    }
+
+    // Only add categoryId if it's provided
+    if (categoryId) {
+      createData.categoryId = categoryId
+    }
+
+    // Only add brandId if it's provided  
+    if (brandId) {
+      createData.brandId = brandId
+    }
+
+    const product = await neonClient.product.create({
+      data: createData,
       include: {
         category: true,
         brand: true,

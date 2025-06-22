@@ -21,12 +21,11 @@ export async function GET(
           select: {
             name: true
           }
-        }
-      },
+        }      },
       orderBy: { createdAt: 'asc' }
     })
 
-    const transformedItems = auditItems.map((item: Record<string, any>) => ({
+    const transformedItems = auditItems.map(item => ({
       id: item.id,
       productId: item.productId,
       productName: item.product.name,

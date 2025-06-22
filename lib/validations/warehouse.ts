@@ -22,8 +22,10 @@ export const baseWarehouseSchema = z.object({
   isActive: z.boolean().default(true),
 })
 
-// Create warehouse schema (no createdBy field as it's not in the DB schema)
-export const createWarehouseSchema = baseWarehouseSchema
+// Create warehouse schema (requires companyId)
+export const createWarehouseSchema = baseWarehouseSchema.extend({
+  companyId: z.string().uuid('Invalid company ID'),
+})
 
 // Update warehouse schema
 export const updateWarehouseSchema = baseWarehouseSchema.partial().extend({

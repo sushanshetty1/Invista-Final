@@ -50,12 +50,10 @@ export async function GET(request: NextRequest) {  try {
           take: 1,
         },
       },
-    });
-
-    // Calculate total inventory value
-    const totalInventoryValue = inventoryItems.reduce((sum: number, item: Record<string, any>) => {
-      const cost = item.averageCost || item.product.costPrice || 0;
-      return sum + (item.quantity * Number(cost));
+    });    // Calculate total inventory value
+    const totalInventoryValue = inventoryItems.reduce((sum: number, item) => {
+      const cost = Number(item.averageCost || item.product.costPrice || 0);
+      return sum + (item.quantity * cost);
     }, 0);
 
     // Get sales and COGS data from order items
@@ -89,7 +87,8 @@ export async function GET(request: NextRequest) {  try {
       },
     });    // Calculate COGS and revenue by month
     const monthlyData: { [key: string]: { revenue: number; cogs: number; } } = {};
-      orderItems.forEach((item: Record<string, any>) => {
+    
+    orderItems.forEach((item) => {
       if (item.order) {
         const month = new Date(item.order.createdAt).toISOString().slice(0, 7); // YYYY-MM
         if (!monthlyData[month]) {
@@ -104,7 +103,8 @@ export async function GET(request: NextRequest) {  try {
       }
     });    // Get profit margin by category
     const categoryData: { [key: string]: { revenue: number; cogs: number; } } = {};
-      orderItems.forEach((item: Record<string, any>) => {
+    
+    orderItems.forEach((item) => {
       if (item.order && item.product.category) {
         const categoryName = item.product.category.name;
         if (!categoryData[categoryName]) {
@@ -135,9 +135,10 @@ export async function GET(request: NextRequest) {  try {
         },
       },
     });    const purchasesByMonth: { [key: string]: number } = {};
-      purchaseOrders.forEach((po: Record<string, any>) => {
+    
+    purchaseOrders.forEach((po) => {
       const month = new Date(po.createdAt).toISOString().slice(0, 7);
-      const totalPurchase = po.items.reduce((sum: number, item: Record<string, any>) => {
+      const totalPurchase = po.items.reduce((sum: number, item) => {
         return sum + (Number(item.unitCost) * item.orderedQty);
       }, 0);
       

@@ -38,10 +38,8 @@ export async function POST(
         status: 'IN_PROGRESS',
         startedDate: new Date()
       }
-    })
-
-    // Generate audit items based on warehouse and/or product selection
-    let inventoryItems: Array<Record<string, any>> = []
+    })    // Generate audit items based on warehouse and/or product selection
+    let inventoryItems: Record<string, unknown>[] = []
 
     if (audit.productId) {
       // Product-specific audit
@@ -78,19 +76,16 @@ export async function POST(
           product: true,
           variant: true,
           warehouse: true
-        },
-        take: 50 // Very limited for cycle counts
+        },        take: 50 // Very limited for cycle counts
       })
-    }
-
-    // Create audit items
+    }    // Create audit items
     const auditItemsData = inventoryItems.map(item => ({
       auditId: id,
-      productId: item.productId,
-      variantId: item.variantId,
-      warehouseId: item.warehouseId,
-      systemQty: item.quantity,
-      location: item.locationCode || `${item.zone || ''}-${item.aisle || ''}-${item.shelf || ''}`.replace(/^-+|-+$/g, '') || null,
+      productId: item.productId as string,
+      variantId: item.variantId as string | null,
+      warehouseId: item.warehouseId as string,
+      systemQty: item.quantity as number,
+      location: (item.locationCode as string | null) || `${(item.zone as string) || ''}-${(item.aisle as string) || ''}-${(item.shelf as string) || ''}`.replace(/^-+|-+$/g, '') || null,
       status: 'PENDING' as const
     }))
 
@@ -98,7 +93,9 @@ export async function POST(
       await neonClient.inventoryAuditItem.createMany({
         data: auditItemsData
       })
-    }    // Update audit with totals
+    }
+
+    // Update audit with totals
     await neonClient.inventoryAudit.update({
       where: { id },
       data: {

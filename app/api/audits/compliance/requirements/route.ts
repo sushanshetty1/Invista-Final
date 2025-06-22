@@ -133,11 +133,18 @@ export async function GET(request: NextRequest) {
       if ((severityLevels[req.severity] || 0) > (severityLevels[acc[req.category].highestSeverity] || 0)) {
         acc[req.category].highestSeverity = req.severity
       }
-      
-      return acc    }, {} as Record<string, any>)
+        return acc
+    }, {} as Record<string, {
+      category: string;
+      total: number;
+      compliant: number;
+      highestSeverity: string;
+      averageRate?: number;
+      complianceRate?: number;
+    }>)
 
     // Calculate average rates for categories
-    Object.values(categoryBreakdown).forEach((cat: Record<string, any>) => {
+    Object.values(categoryBreakdown).forEach((cat) => {
       const categoryReqs = filteredRequirements.filter(r => r.category === cat.category)
       cat.averageRate = Math.round(
         categoryReqs.reduce((sum, req) => sum + req.complianceRate, 0) / categoryReqs.length

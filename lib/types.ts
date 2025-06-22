@@ -203,3 +203,110 @@ export interface CategoryQueryParams extends BaseQueryParams {
   level?: number
   isActive?: boolean
 }
+
+// Analytics types for financial reports
+export interface FinancialMetrics {
+  totalRevenue: number
+  totalCost: number
+  grossProfit: number
+  grossProfitMargin: number
+  netProfit: number
+  netProfitMargin: number
+  period: string
+}
+
+export interface RevenueData {
+  date: string
+  revenue: number
+  cost: number
+  profit: number
+}
+
+export interface InventoryMetrics {
+  totalValue: number
+  totalQuantity: number
+  lowStockCount: number
+  outOfStockCount: number
+  avgTurnover: number
+}
+
+export interface InventoryTrendData {
+  date: string
+  value: number
+  quantity: number
+  turnover: number
+}
+
+// Audit types
+export interface AuditTrailEntry {
+  id: string
+  entityType: string
+  entityId: string
+  action: string
+  changes: Record<string, unknown>
+  userId: string
+  timestamp: string
+  ip?: string
+  userAgent?: string
+}
+
+export interface ComplianceMetric {
+  id: string
+  name: string
+  value: number
+  target: number
+  status: 'COMPLIANT' | 'NON_COMPLIANT' | 'WARNING'
+  lastChecked: string
+}
+
+export interface DiscrepancyStats {
+  totalDiscrepancies: number
+  resolvedDiscrepancies: number
+  pendingDiscrepancies: number
+  avgResolutionTime: number
+  period: string
+}
+
+// Common API response wrapper
+export interface ApiResult<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+// Chart data types
+export interface ChartDataPoint {
+  label: string
+  value: number
+  date?: string
+  category?: string
+}
+
+export interface TimeSeriesData {
+  timestamp: string
+  value: number
+  label?: string
+}
+
+// Root cause analysis
+export interface RootCause {
+  id: string
+  name: string
+  description?: string
+  category: string
+  frequency: number
+  impact: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+}
+
+// Alert types
+export interface StockAlert {
+  id: string
+  productId: string
+  productName: string
+  currentStock: number
+  minStockLevel: number
+  severity: 'LOW' | 'CRITICAL'
+  warehouseId: string
+  warehouseName: string
+}

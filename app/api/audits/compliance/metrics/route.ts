@@ -123,12 +123,20 @@ export async function GET(request: NextRequest) {
         acc[type].overdue += 1
       } else if (audit.status === 'CANCELLED') {
         acc[type].cancelled += 1
-      }
-        return acc
-    }, {} as Record<string, any>)
+      }      return acc
+    }, {} as Record<string, {
+      type: string;
+      total: number;
+      completed: number;
+      onTime: number;
+      overdue: number;
+      cancelled: number;
+      completionRate?: number;
+      onTimeRate?: number;
+    }>)
 
     // Add completion rates to type compliance
-    Object.values(typeCompliance).forEach((tc: Record<string, any>) => {
+    Object.values(typeCompliance).forEach((tc) => {
       tc.completionRate = tc.total > 0 ? Math.round((tc.completed / tc.total) * 100) : 0
       tc.onTimeRate = tc.completed > 0 ? Math.round((tc.onTime / tc.completed) * 100) : 0
     })
@@ -183,7 +191,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function generateRecommendations(metrics: Record<string, any>) {
+function generateRecommendations(metrics: {
+  completionRate: number;
+  onTimeRate: number;
+  discrepancyRate: number;
+  overdueAudits: number;
+  cycleCountsThisMonth: number;
+  fullCountsThisQuarter: number;
+}) {
   const recommendations = []
 
   if (metrics.completionRate < 80) {

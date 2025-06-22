@@ -69,27 +69,33 @@ export async function GET(request: NextRequest) {
 
       if (item.warehouse?.name) {
         acc[reason].affectedWarehouses.add(item.warehouse.name)
-      }
-
-      const auditType = item.audit?.type || 'UNKNOWN'
+      }      const auditType = item.audit?.type || 'UNKNOWN'
       acc[reason].auditTypes[auditType] = (acc[reason].auditTypes[auditType] || 0) + 1
 
-      return acc    }, {} as Record<string, any>)
-
-    // Calculate averages and determine severity
-    const rootCauses = Object.values(rootCauseStats).map((cause: Record<string, any>) => {
+      return acc
+    }, {} as Record<string, {
+      reason: string;
+      count: number;
+      totalAdjustment: number;
+      averageAdjustment?: number;
+      affectedProducts: Set<string>;
+      affectedWarehouses: Set<string>;
+      affectedProductsCount?: number;
+      affectedWarehousesCount?: number;
+      auditTypes: Record<string, number>;
+      severity?: string;
+      investigationsRequired: number;
+      investigationRate?: number;
+    }>)    // Calculate averages and determine severity
+    const rootCauses = Object.values(rootCauseStats).map((cause) => {
       cause.averageAdjustment = Math.round((cause.totalAdjustment / cause.count) * 100) / 100
       cause.affectedProductsCount = cause.affectedProducts.size
       cause.affectedWarehousesCount = cause.affectedWarehouses.size
-      
-      // Remove Sets (not JSON serializable)
-      delete cause.affectedProducts
-      delete cause.affectedWarehouses
 
       // Determine severity based on frequency and impact
-      if (cause.count >= 20 || cause.averageAdjustment >= 50) {
+      if (cause.count >= 20 || (cause.averageAdjustment && cause.averageAdjustment >= 50)) {
         cause.severity = 'HIGH'
-      } else if (cause.count >= 10 || cause.averageAdjustment >= 20) {
+      } else if (cause.count >= 10 || (cause.averageAdjustment && cause.averageAdjustment >= 20)) {
         cause.severity = 'MEDIUM'
       } else {
         cause.severity = 'LOW'
@@ -98,9 +104,14 @@ export async function GET(request: NextRequest) {
       // Calculate investigation rate
       cause.investigationRate = cause.count > 0 
         ? Math.round((cause.investigationsRequired / cause.count) * 100)
-        : 0
-
-      return cause
+        : 0      // Remove Sets (not JSON serializable) and return clean object
+      const { affectedProducts: _affectedProducts, affectedWarehouses: _affectedWarehouses, ...cleanCause } = cause
+      
+      return {
+        ...cleanCause,
+        affectedProductsCount: cause.affectedProductsCount,
+        affectedWarehousesCount: cause.affectedWarehousesCount
+      }
     }).sort((a, b) => b.count - a.count).slice(0, limit)
 
     // Common predefined reasons for reference
@@ -165,9 +176,8 @@ export async function GET(request: NextRequest) {
       commonReasons,
       summary: {
         mostCommonCause: rootCauses[0]?.reason || 'No data',
-        highSeverityCauses: rootCauses.filter(c => c.severity === 'HIGH').length,
-        averageInvestigationRate: rootCauses.length > 0 
-          ? Math.round(rootCauses.reduce((sum, c) => sum + c.investigationRate, 0) / rootCauses.length)
+        highSeverityCauses: rootCauses.filter(c => c.severity === 'HIGH').length,        averageInvestigationRate: rootCauses.length > 0 
+          ? Math.round(rootCauses.reduce((sum, c) => sum + (c.investigationRate || 0), 0) / rootCauses.length)
           : 0
       }
     })

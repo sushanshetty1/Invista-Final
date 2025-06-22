@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardGuard from "@/components/DashboardGuard";
@@ -16,10 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Building2, 
   Users, 
-  Mail, 
-  Plus, 
   Trash2, 
-  Edit, 
   Send,
   Clock,
   CheckCircle,
@@ -75,30 +73,29 @@ export default function CompanyProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);  const [inviteForm, setInviteForm] = useState<InviteForm>({ emails: '', role: 'VIEWER' });
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [inviteForm, setInviteForm] = useState<InviteForm>({ emails: '', role: 'VIEWER' });
   const [isInviting, setIsInviting] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-
-  useEffect(() => {
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);  useEffect(() => {
     if (user) {
       fetchCompanyProfile();
       fetchTeamMembers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
   const fetchCompanyProfile = async () => {
-    try {
-      // First try to find company where user is owner
-      let { data, error } = await supabase
+    try {      // First try to find company where user is owner
+      let { data, error: initialError } = await supabase
         .from('companies')
         .select('*')
         .eq('createdBy', user?.id)
         .single();
 
       // If no company found as owner, check if user is a member
-      if (error && error.code === 'PGRST116') {
+      if (initialError && initialError.code === 'PGRST116') {
         const { data: companyUserData, error: companyUserError } = await supabase
           .from('company_users')
           .select(`
@@ -112,11 +109,9 @@ export default function CompanyProfilePage() {
           console.error('Error fetching company profile:', companyUserError);
           setLoading(false);
           return;
-        }
-
-        data = companyUserData?.company;
-      } else if (error) {
-        throw error;
+        }        data = companyUserData?.company;
+      } else if (initialError) {
+        throw initialError;
       }
 
       setCompanyProfile(data);
@@ -162,20 +157,29 @@ export default function CompanyProfilePage() {
       if (usersError) throw usersError;
 
       // Combine invites and users into team members list
-      const teamMembersList: TeamMember[] = [
-        // Active users
-        ...(users || []).map((companyUser: any) => ({
+      const teamMembersList: TeamMember[] = [        // Active users
+        ...(users || []).map((companyUser: {
+          id: string;
+          role: string;
+          joinedAt: string;
+          user: { email: string; firstName?: string; lastName?: string; lastLoginAt?: string; }[];
+        }) => ({
           id: companyUser.id,
-          email: companyUser.user.email,
-          firstName: companyUser.user.firstName,
-          lastName: companyUser.user.lastName,
+          email: companyUser.user[0]?.email || '',
+          firstName: companyUser.user[0]?.firstName,
+          lastName: companyUser.user[0]?.lastName,
           role: companyUser.role,
           status: 'ACTIVE' as const,
           joinedAt: companyUser.joinedAt,
-          lastActive: companyUser.user.lastLoginAt
+          lastActive: companyUser.user[0]?.lastLoginAt
         })),
         // Pending invites
-        ...(invites || []).map((invite: any) => ({
+        ...(invites || []).map((invite: {
+          id: string;
+          email: string;
+          role: string;
+          status: string;
+        }) => ({
           id: invite.id,
           email: invite.email,
           firstName: undefined,
@@ -290,7 +294,7 @@ export default function CompanyProfilePage() {
   const removeTeamMember = async (memberId: string) => {
     try {
       // First try to remove from company_invites (for pending invites)
-      const { data: invite, error: inviteError } = await supabase
+      const { data: invite, error: _inviteError } = await supabase
         .from('company_invites')
         .select('id')
         .eq('id', memberId)
@@ -402,7 +406,13 @@ export default function CompanyProfilePage() {
                 <div className="flex flex-col items-center space-y-4">
                   <div className="w-32 h-32 bg-gradient-to-br from-muted to-muted/50 rounded-xl flex items-center justify-center border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors duration-300">
                     {companyProfile?.logo ? (
-                      <img src={companyProfile.logo} alt="Company Logo" className="w-full h-full object-cover rounded-xl" />
+                      <Image 
+                        src={companyProfile.logo} 
+                        alt="Company Logo" 
+                        width={128}
+                        height={128}
+                        className="w-full h-full object-cover rounded-xl" 
+                      />
                     ) : (
                       <Building2 className="h-12 w-12 text-muted-foreground" />
                     )}

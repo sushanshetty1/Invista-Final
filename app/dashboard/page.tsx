@@ -2,8 +2,7 @@
 
 import DashboardGuard from "@/components/DashboardGuard";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { 
   Package, 
   BarChart3, 
@@ -101,7 +100,7 @@ const suppliers = [
 ];
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [timeRange, setTimeRange] = useState("7d");
   const [selectedTab, setSelectedTab] = useState("overview");
   const getStatusBadge = (status: string) => {

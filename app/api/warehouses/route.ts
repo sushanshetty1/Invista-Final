@@ -64,13 +64,21 @@ export async function POST(request: NextRequest) {
       type = 'STANDARD',
       managerName,
       managerEmail,
-      managerPhone
+      managerPhone,
+      companyId
     } = body
 
     // Validate required fields
     if (!name || !code) {
       return NextResponse.json(
         { error: 'Name and code are required' },
+        { status: 400 }
+      )
+    }
+
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'Company ID is required' },
         { status: 400 }
       )
     }
@@ -98,6 +106,7 @@ export async function POST(request: NextRequest) {
         managerName,
         managerEmail,
         managerPhone,
+        companyId,
         isActive: true
       },
       select: {

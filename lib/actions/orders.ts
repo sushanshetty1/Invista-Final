@@ -2,6 +2,8 @@
 
 import { neonClient } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { supabase } from '@/lib/supabaseClient';
+import { actionError, actionSuccess } from '@/lib/api-utils';
 
 export interface CreateOrderData {
   customerId: string;
@@ -68,6 +70,25 @@ async function generateOrderNumber(): Promise<string> {
 // Create a new order
 export async function createOrder(data: CreateOrderData) {
   try {
+    // Authenticate user
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      return actionError('Authentication required');
+    }
+
+    // Get user's company from Supabase
+    const { data: companyUser, error: companyError } = await supabase
+      .from('company_users')
+      .select('companyId')
+      .eq('userId', session.user.id)
+      .eq('isActive', true)
+      .single();
+
+    if (companyError || !companyUser) {
+      return actionError('User not associated with any company');
+    }
+
     // Generate order number
     const orderNumber = await generateOrderNumber();
 
@@ -83,6 +104,7 @@ export async function createOrder(data: CreateOrderData) {
         orderNumber,
         customerId: data.customerId,
         warehouseId: data.warehouseId,
+        companyId: companyUser.companyId,
         type: data.type || 'SALES',
         channel: data.channel || 'DIRECT',
         priority: data.priority || 'NORMAL',
@@ -92,7 +114,7 @@ export async function createOrder(data: CreateOrderData) {
         shippingMethod: data.shippingMethod,
         shippingAddress: data.shippingAddress,
         notes: data.notes,
-        createdBy: 'system',
+        createdBy: session.user.id,
       }
     });
 
@@ -122,10 +144,9 @@ export async function createOrder(data: CreateOrderData) {
     }
 
     revalidatePath('/orders');
-    return { success: true, data: order };
+    return actionSuccess(order);
   } catch (error) {
-    // Error handled silently in production
-    return { success: false, error: 'Failed to create order' };
+    return actionError('Failed to create order');
   }
 }
 

@@ -36,6 +36,23 @@ import {
   ComposedChart
 } from "recharts";
 
+// Type definitions for financial data
+interface FinancialMetric {
+  value: number;
+  trend?: 'up' | 'down';
+  change?: number;
+}
+
+interface FinancialData {
+  data?: {
+    metrics?: {
+      cogs?: FinancialMetric;
+      grossMargin?: FinancialMetric;
+      roi?: FinancialMetric;
+    };
+  };
+}
+
 // Mock data for financial analytics
 const inventoryValuationData = [
   { month: 'Jan', fifo: 1250000, lifo: 1230000, weighted: 1240000 },
@@ -175,10 +192,10 @@ export default function FinancialReportsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
+            <Package className="h-4 w-4 text-muted-foreground" />          </CardHeader>
           <CardContent>            <div className="text-2xl font-bold">
-              ${((financialData as Record<string, any>)?.data?.metrics?.cogs?.value * 2.2 || 1450000).toLocaleString()}
+              ${((financialData as { data?: { metrics?: { cogs?: { value?: number } } } })?.data?.metrics?.cogs?.value ? 
+                ((financialData as FinancialData).data!.metrics!.cogs!.value! * 2.2) : 1450000).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600 flex items-center">
@@ -197,18 +214,17 @@ export default function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(financialData as Record<string, any>)?.data?.metrics?.grossMargin?.value || 38.1}%
+              {(financialData as FinancialData)?.data?.metrics?.grossMargin?.value || 38.1}%
             </div>
-            <p className="text-xs text-muted-foreground">
-              <span className={`flex items-center ${
-                ((financialData as Record<string, any>)?.data?.metrics?.grossMargin?.trend || 'up') === 'up' ? 'text-green-600' : 'text-red-600'
+            <p className="text-xs text-muted-foreground">              <span className={`flex items-center ${
+                ((financialData as FinancialData)?.data?.metrics?.grossMargin?.trend || 'up') === 'up' ? 'text-green-600' : 'text-red-600'
               }`}>
-                {((financialData as Record<string, any>)?.data?.metrics?.grossMargin?.trend || 'up') === 'up' ? (
+                {((financialData as FinancialData)?.data?.metrics?.grossMargin?.trend || 'up') === 'up' ? (
                   <TrendingUp className="w-3 h-3 mr-1" />
                 ) : (
                   <TrendingDown className="w-3 h-3 mr-1" />
                 )}
-                +{(financialData as Record<string, any>)?.data?.metrics?.grossMargin?.change || 1.2}%
+                +{(financialData as FinancialData)?.data?.metrics?.grossMargin?.change || 1.2}%
               </span>
               improvement
             </p>
@@ -220,14 +236,14 @@ export default function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(financialData as Record<string, any>)?.data?.metrics?.cogs?.value?.toLocaleString() || '650,000'}
+              ${(financialData as FinancialData)?.data?.metrics?.cogs?.value?.toLocaleString() || '650,000'}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className={`flex items-center ${
-                ((financialData as Record<string, any>)?.data?.metrics?.cogs?.trend || 'up') === 'up' ? 'text-red-600' : 'text-green-600'
+                ((financialData as FinancialData)?.data?.metrics?.cogs?.trend || 'up') === 'up' ? 'text-red-600' : 'text-green-600'
               }`}>
                 <TrendingUp className="w-3 h-3 mr-1" />
-                +{(financialData as Record<string, any>)?.data?.metrics?.cogs?.change || 12.1}%
+                +{(financialData as FinancialData)?.data?.metrics?.cogs?.change || 12.1}%
               </span>
               from last month
             </p>
@@ -241,12 +257,12 @@ export default function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(financialData as Record<string, any>)?.data?.metrics?.roi?.value || 24.7}%
+              {(financialData as FinancialData)?.data?.metrics?.roi?.value || 24.7}%
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600 flex items-center">
                 <TrendingUp className="w-3 h-3 mr-1" />
-                +{(financialData as Record<string, any>)?.data?.metrics?.roi?.change || 2.3}%
+                +{(financialData as FinancialData)?.data?.metrics?.roi?.change || 2.3}%
               </span>
               annual improvement
             </p>

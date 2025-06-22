@@ -10,8 +10,10 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type')
     const status = searchParams.get('status')
     const warehouseId = searchParams.get('warehouseId')
-    const dateRange = searchParams.get('dateRange')    // Build where clause
-    const where: Record<string, any> = {}
+    const dateRange = searchParams.get('dateRange')
+
+    // Build where clause
+    const where: Record<string, unknown> = {}
     if (type) where.type = type
     if (status) where.status = status
     if (warehouseId) where.warehouseId = warehouseId
@@ -58,19 +60,16 @@ export async function GET(request: NextRequest) {
         take: limit
       }),
       neonClient.inventoryAudit.count({ where })
-    ])
-
-    // Transform the data to match our interface
-    const transformedAudits = audits.map((audit: Record<string, any>) => ({
+    ])    // Transform the data to match our interface
+    const transformedAudits = audits.map((audit: Record<string, unknown>) => ({
       id: audit.id,
       auditNumber: audit.auditNumber,
       type: audit.type,
       method: audit.method,
-      status: audit.status,
-      warehouseId: audit.warehouseId,
-      warehouseName: audit.warehouse?.name,
+      status: audit.status,      warehouseId: audit.warehouseId,
+      warehouseName: (audit.warehouse as { name: string } | null)?.name,
       productId: audit.productId,
-      productName: audit.product?.name,
+      productName: (audit.product as { name: string; sku: string } | null)?.name,
       plannedDate: audit.plannedDate,
       startedDate: audit.startedDate,
       completedDate: audit.completedDate,
@@ -177,7 +176,7 @@ export async function POST(request: NextRequest) {
 // Helper function to generate audit items
 async function generateAuditItems(auditId: string, type: string, warehouseId?: string, productId?: string) {
   try {
-    const where: Record<string, any> = {}
+    const where: Record<string, unknown> = {}
     if (warehouseId) where.warehouseId = warehouseId
     if (productId) where.productId = productId
 
@@ -192,12 +191,12 @@ async function generateAuditItems(auditId: string, type: string, warehouseId?: s
     })
 
     // Create audit items
-    const auditItems = inventoryItems.map((item: Record<string, any>) => ({
+    const auditItems = inventoryItems.map(item => ({
       auditId,
       productId: item.productId,
       warehouseId: item.warehouseId,
       systemQty: item.quantity,
-      location: item.location,
+      location: item.locationCode,
       status: 'PENDING' as const
     }))
 

@@ -13,8 +13,10 @@ export async function GET(request: NextRequest) {
 
     const periodDays = parseInt(period)
     const dateFrom = new Date()
-    dateFrom.setDate(dateFrom.getDate() - periodDays)    // Build where clause
-    const where: Record<string, any> = {
+    dateFrom.setDate(dateFrom.getDate() - periodDays)
+
+    // Build where clause
+    const where: Record<string, unknown> = {
       audit: {
         completedDate: { gte: dateFrom },
         status: 'COMPLETED'

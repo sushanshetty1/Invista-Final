@@ -10,8 +10,10 @@ export async function GET(request: NextRequest) {
 
     const periodDays = parseInt(period)
     const dateFrom = new Date()
-    dateFrom.setDate(dateFrom.getDate() - periodDays)    // Build where clause for filtering
-    const where: Record<string, any> = {
+    dateFrom.setDate(dateFrom.getDate() - periodDays)
+
+    // Build where clause for filtering
+    const where: Record<string, unknown> = {
       completedDate: {
         gte: dateFrom
       },
@@ -82,7 +84,12 @@ export async function GET(request: NextRequest) {
       acc[warehouseName].discrepancies += audit.discrepancies || 0
       acc[warehouseName].valueImpact += Number(audit.adjustmentValue || 0)
       return acc
-    }, {} as any)
+    }, {} as Record<string, {
+      name: string;
+      audits: number;
+      discrepancies: number;
+      valueImpact: number;
+    }>)
 
     // Group by product category (simplified)
     const productStats = auditsWithDiscrepancies.reduce((acc, audit) => {
@@ -99,10 +106,14 @@ export async function GET(request: NextRequest) {
         if (item.adjustmentQty !== 0) {
           acc[productName].discrepancies += 1
           acc[productName].totalAdjustment += item.adjustmentQty || 0
-        }
-      })
+        }      })
       return acc
-    }, {} as any)
+    }, {} as Record<string, {
+      name: string;
+      sku?: string;
+      discrepancies: number;
+      totalAdjustment: number;
+    }>)
 
     // Time series data (daily aggregation)
     const timeSeriesData = auditsWithDiscrepancies.reduce((acc, audit) => {
@@ -118,10 +129,14 @@ export async function GET(request: NextRequest) {
         }
         acc[date].audits += 1
         acc[date].discrepancies += audit.discrepancies || 0
-        acc[date].valueImpact += Number(audit.adjustmentValue || 0)
-      }
+        acc[date].valueImpact += Number(audit.adjustmentValue || 0)      }
       return acc
-    }, {} as any)
+    }, {} as Record<string, {
+      date: string;
+      audits: number;
+      discrepancies: number;
+      valueImpact: number;
+    }>)
 
     return NextResponse.json({
       summary: {
@@ -130,10 +145,9 @@ export async function GET(request: NextRequest) {
         totalValueImpact,
         averageDiscrepanciesPerAudit: Math.round(averageDiscrepanciesPerAudit * 100) / 100,
         period: periodDays
-      },
-      warehouseBreakdown: Object.values(warehouseStats),
+      },      warehouseBreakdown: Object.values(warehouseStats),
       productBreakdown: Object.values(productStats).slice(0, 20), // Top 20
-      timeSeriesData: Object.values(timeSeriesData).sort((a: any, b: any) => 
+      timeSeriesData: Object.values(timeSeriesData).sort((a: { date: string }, b: { date: string }) => 
         new Date(a.date).getTime() - new Date(b.date).getTime()
       ),
       recentDiscrepancies: auditsWithDiscrepancies.slice(0, 10).map(audit => ({

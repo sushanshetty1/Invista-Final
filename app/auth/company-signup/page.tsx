@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabaseClient'
 import { 
     Package, Eye, EyeOff, User, Building, MapPin,
     Users, ArrowRight, ChevronLeft, CheckCircle, 
@@ -272,10 +271,9 @@ export default function CompanySignUpPage() {
             // Additional delay to ensure access check completes
             setTimeout(() => {
                 router.push('/dashboard')
-            }, 1500)
-
-        } catch (err: any) {
-            setError('An unexpected error occurred: ' + (err?.message || 'Unknown error'))
+            }, 1500)        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+            setError('An unexpected error occurred: ' + errorMessage)
         } finally {
             setLoading(false)
         }

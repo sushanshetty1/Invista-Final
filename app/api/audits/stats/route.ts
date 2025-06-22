@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { neonClient } from '@/lib/db'
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const now = new Date()
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -43,13 +43,12 @@ export async function GET(_request: NextRequest) {
         product: {
           select: { costPrice: true }
         }
-      }
-    })
+      }    })
 
     const discrepanciesFound = discrepancyItems.length
-    const discrepancyValue = discrepancyItems.reduce((sum: number, item: Record<string, any>) => {
-      const costPrice = item.product?.costPrice || 0
-      const adjustmentValue = (item.adjustmentQty || 0) * Number(costPrice)
+    const discrepancyValue = discrepancyItems.reduce((sum: number, item) => {
+      const costPrice = item.product?.costPrice ? Number(item.product.costPrice) : 0
+      const adjustmentValue = (item.adjustmentQty || 0) * costPrice
       return sum + Math.abs(adjustmentValue)
     }, 0)
 
@@ -102,13 +101,13 @@ async function getOnTimeAuditsCount(): Promise<number> {
         status: 'COMPLETED',
         completedDate: { not: null }
       },
-      select: {
-        plannedDate: true,
+      select: {        plannedDate: true,
         completedDate: true
       }
     })
 
-    const onTimeAudits = audits.filter((audit: Record<string, any>) => {
+    const onTimeAudits = audits.filter(audit => {
+      if (!audit.plannedDate || !audit.completedDate) return false
       const plannedDate = new Date(audit.plannedDate)
       const completedDate = new Date(audit.completedDate)
       // Consider on-time if completed within 1 day of planned date

@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
             acc[warehouseName].discrepancies += audit.discrepancies || 0
             acc[warehouseName].valueImpact += Number(audit.adjustmentValue || 0)
             return acc
-          }, {} as Record<string, any>)
+          }, {} as Record<string, { discrepancies: number; valueImpact: number }>)
         }
       },
       {
