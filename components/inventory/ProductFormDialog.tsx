@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, X, Plus } from 'lucide-react'
+import { Upload, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface ProductFormData {
   name: string
@@ -121,20 +121,29 @@ export function ProductFormDialog({
   onSave,
   categories,
   brands
-}: ProductFormDialogProps) {
-  // Ensure props are always arrays
+}: ProductFormDialogProps) {  // Ensure props are always arrays
   const safeCategories = Array.isArray(categories) ? categories : []
-  const safeBrands = Array.isArray(brands) ? brands : []
 
   const [loading, setLoading] = useState(false)
   const [selectedImages, setSelectedImages] = useState<string[]>([])
   const [currentTags, setCurrentTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState('')
+  const [currentTab, setCurrentTab] = useState('basic')
+  const [formErrors, setFormErrors] = useState<string[]>([])
+
+  // Generate random SKU
+  const generateSKU = () => {
+    const prefix = 'SKU'
+    const timestamp = Date.now().toString().slice(-6)
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
+    return `${prefix}-${timestamp}-${random}`
+  }
+
   const form = useForm<ProductFormData>({
     defaultValues: {
       name: '',
       description: '',
-      sku: '',
+      sku: generateSKU(),
       barcode: '',
       categoryId: undefined,
       brandId: undefined,
@@ -151,7 +160,7 @@ export function ProductFormDialog({
       costPrice: 0,
       sellingPrice: 0,
       wholesalePrice: 0,
-      minStockLevel: 0,
+      minStockLevel: 1,
       maxStockLevel: 0,
       reorderPoint: 0,
       reorderQuantity: 0,
@@ -174,7 +183,8 @@ export function ProductFormDialog({
         name: product.name,
         description: product.description || '',
         sku: product.sku,
-        barcode: product.barcode || '', categoryId: product.categoryId || undefined,
+        barcode: product.barcode || '',
+        categoryId: product.categoryId || undefined,
         brandId: product.brandId || undefined,
         weight: product.weight || 0,
         dimensions: product.dimensions || { length: 0, width: 0, height: 0, unit: 'cm' },
@@ -229,8 +239,6 @@ export function ProductFormDialog({
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files) {
-      // In a real app, you'd upload these to a file storage service
-      // For now, we'll just create object URLs for preview
       const newImages = Array.from(files).map(file => URL.createObjectURL(file))
       setSelectedImages(prev => [...prev, ...newImages])
     }
@@ -251,6 +259,74 @@ export function ProductFormDialog({
     setCurrentTags(prev => prev.filter(t => t !== tag))
   }
 
+  // Validation functions
+  const validatePricing = () => {
+    const errors: string[] = []
+    const values = form.getValues()
+
+    if (values.costPrice !== undefined && values.costPrice <= 0) {
+      errors.push('Cost Price must be greater than 0')
+    }
+    if (values.sellingPrice !== undefined && values.sellingPrice <= 0) {
+      errors.push('Selling Price must be greater than 0')
+    }
+    if (values.wholesalePrice !== undefined && values.wholesalePrice <= 0) {
+      errors.push('Wholesale Price must be greater than 0')
+    }
+
+    return errors
+  }
+
+  const validateInventory = () => {
+    const errors: string[] = []
+    const values = form.getValues()
+
+    if (values.minStockLevel <= 0) {
+      errors.push('Minimum Stock Level must be greater than 0')
+    }
+    if (values.maxStockLevel !== undefined && values.maxStockLevel <= 0) {
+      errors.push('Maximum Stock Level must be greater than 0')
+    }
+    if (values.reorderPoint !== undefined && values.reorderPoint <= 0) {
+      errors.push('Reorder Point must be greater than 0')
+    }
+    if (values.leadTimeSupply !== undefined && values.leadTimeSupply <= 0) {
+      errors.push('Lead Time must be greater than 0')
+    }
+
+    return errors
+  }
+
+  const validateAllTabs = () => {
+    const pricingErrors = validatePricing()
+    const inventoryErrors = validateInventory()
+    const allErrors = [...pricingErrors, ...inventoryErrors]
+    setFormErrors(allErrors)
+    return allErrors.length === 0
+  }
+
+  // Tab navigation
+  const tabs = ['basic', 'pricing', 'inventory', 'media']
+
+  const goToNextTab = () => {
+    const currentIndex = tabs.indexOf(currentTab)
+    if (currentIndex < tabs.length - 1) {
+      setCurrentTab(tabs[currentIndex + 1])
+    }
+  }
+
+  const goToPreviousTab = () => {
+    const currentIndex = tabs.indexOf(currentTab)
+    if (currentIndex > 0) {
+      setCurrentTab(tabs[currentIndex - 1])
+    }
+  }
+
+  const canCreateProduct = () => {
+    const values = form.getValues()
+    return values.name.trim() !== '' && validateAllTabs()
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -265,13 +341,25 @@ export function ProductFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs defaultValue="basic" className="w-full">
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="pricing">Pricing</TabsTrigger>
                 <TabsTrigger value="inventory">Inventory</TabsTrigger>
                 <TabsTrigger value="media">Media & SEO</TabsTrigger>
               </TabsList>
+
+              {/* Display form errors */}
+              {formErrors.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <h4 className="text-red-800 font-medium">Please fix the following errors:</h4>
+                  <ul className="mt-1 text-red-700 text-sm list-disc list-inside">
+                    {formErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <TabsContent value="basic" className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -296,7 +384,17 @@ export function ProductFormDialog({
                       <FormItem>
                         <FormLabel>SKU *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter SKU" {...field} />
+                          <div className="flex gap-2">
+                            <Input placeholder="Auto-generated SKU" {...field} readOnly />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => field.onChange(generateSKU())}
+                              className="whitespace-nowrap"
+                            >
+                              Generate New
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -311,11 +409,7 @@ export function ProductFormDialog({
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder="Enter product description"
-                          className="min-h-[100px]"
-                          {...field}
-                        />
+                        <Textarea placeholder="Enter product description" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -329,19 +423,18 @@ export function ProductFormDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select category" />
                             </SelectTrigger>
-                          </FormControl>                          <SelectContent>
-                            {safeCategories
-                              .filter(category => category.id && category.id.trim() !== '')
-                              .map(category => (
-                                <SelectItem key={category.id} value={category.id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
+                          </FormControl>
+                          <SelectContent>
+                            {safeCategories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -355,21 +448,9 @@ export function ProductFormDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Brand</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select brand" />
-                            </SelectTrigger>
-                          </FormControl>                          <SelectContent>
-                            {safeBrands
-                              .filter(brand => brand.id && brand.id.trim() !== '')
-                              .map(brand => (
-                                <SelectItem key={brand.id} value={brand.id}>
-                                  {brand.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input placeholder="Enter brand name" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -381,7 +462,7 @@ export function ProductFormDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select status" />
@@ -421,9 +502,21 @@ export function ProductFormDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Size</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., S, M, L, XL" {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="S">S</SelectItem>
+                            <SelectItem value="M">M</SelectItem>
+                            <SelectItem value="L">L</SelectItem>
+                            <SelectItem value="XL">XL</SelectItem>
+                            <SelectItem value="XXL">XXL</SelectItem>
+                            <SelectItem value="XXXL">XXXL</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -457,9 +550,15 @@ export function ProductFormDialog({
                           <Input
                             type="number"
                             step="0.01"
+                            min="0.01"
                             placeholder="0.00"
                             {...field}
-                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            onChange={e => {
+                              const value = parseFloat(e.target.value) || 0
+                              field.onChange(value)
+                              validatePricing()
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -477,9 +576,15 @@ export function ProductFormDialog({
                           <Input
                             type="number"
                             step="0.01"
+                            min="0.01"
                             placeholder="0.00"
                             {...field}
-                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            onChange={e => {
+                              const value = parseFloat(e.target.value) || 0
+                              field.onChange(value)
+                              validatePricing()
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -497,9 +602,15 @@ export function ProductFormDialog({
                           <Input
                             type="number"
                             step="0.01"
+                            min="0.01"
                             placeholder="0.00"
                             {...field}
-                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            onChange={e => {
+                              const value = parseFloat(e.target.value) || 0
+                              field.onChange(value)
+                              validatePricing()
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -510,12 +621,12 @@ export function ProductFormDialog({
               </TabsContent>
 
               <TabsContent value="inventory" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-sm">Stock Levels</CardTitle>
+                      <CardTitle>Stock Levels</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-4">
                       <FormField
                         control={form.control}
                         name="minStockLevel"
@@ -525,9 +636,15 @@ export function ProductFormDialog({
                             <FormControl>
                               <Input
                                 type="number"
-                                placeholder="0"
+                                min="1"
+                                placeholder="1"
                                 {...field}
-                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                onChange={e => {
+                                  const value = parseInt(e.target.value) || 1
+                                  field.onChange(value)
+                                  validateInventory()
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -544,9 +661,15 @@ export function ProductFormDialog({
                             <FormControl>
                               <Input
                                 type="number"
+                                min="1"
                                 placeholder="0"
                                 {...field}
-                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                onChange={e => {
+                                  const value = parseInt(e.target.value) || 0
+                                  field.onChange(value)
+                                  validateInventory()
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -563,9 +686,15 @@ export function ProductFormDialog({
                             <FormControl>
                               <Input
                                 type="number"
+                                min="1"
                                 placeholder="0"
                                 {...field}
-                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                onChange={e => {
+                                  const value = parseInt(e.target.value) || 0
+                                  field.onChange(value)
+                                  validateInventory()
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -577,19 +706,44 @@ export function ProductFormDialog({
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-sm">Tracking Settings</CardTitle>
+                      <CardTitle>Tracking Settings</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <FormField
                         control={form.control}
+                        name="leadTimeSupply"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Lead Time (Days)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="1"
+                                placeholder="0"
+                                {...field}
+                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                onChange={e => {
+                                  const value = parseInt(e.target.value) || 0
+                                  field.onChange(value)
+                                  validateInventory()
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
                         name="isTrackable"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                             <div className="space-y-0.5">
                               <FormLabel>Track Inventory</FormLabel>
-                              <p className="text-sm text-muted-foreground">
+                              <div className="text-sm text-muted-foreground">
                                 Track stock levels for this product
-                              </p>
+                              </div>
                             </div>
                             <FormControl>
                               <Switch
@@ -605,12 +759,12 @@ export function ProductFormDialog({
                         control={form.control}
                         name="isSerialized"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                             <div className="space-y-0.5">
                               <FormLabel>Serial Numbers</FormLabel>
-                              <p className="text-sm text-muted-foreground">
+                              <div className="text-sm text-muted-foreground">
                                 Track individual serial numbers
-                              </p>
+                              </div>
                             </div>
                             <FormControl>
                               <Switch
@@ -621,43 +775,27 @@ export function ProductFormDialog({
                           </FormItem>
                         )}
                       />
-
-                      <FormField
-                        control={form.control}
-                        name="leadTimeSupply"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lead Time (Days)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                {...field}
-                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </CardContent>
                   </Card>
                 </div>
               </TabsContent>
 
               <TabsContent value="media" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Product Images</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        <Button type="button" variant="outline" size="sm" asChild>
-                          <label className="cursor-pointer">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Upload Images
+                <div className="grid grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Product Images</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <div className="mt-4">
+                          <label htmlFor="image-upload" className="cursor-pointer">
+                            <span className="mt-2 block text-sm font-medium text-gray-900">
+                              Upload product images
+                            </span>
                             <input
+                              id="image-upload"
                               type="file"
                               multiple
                               accept="image/*"
@@ -665,24 +803,25 @@ export function ProductFormDialog({
                               onChange={handleImageUpload}
                             />
                           </label>
-                        </Button>
+                        </div>
                       </div>
 
                       {selectedImages.length > 0 && (
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="grid grid-cols-3 gap-2">
                           {selectedImages.map((image, index) => (
-                            <div key={index} className="relative">                              <Image
-                              src={image}
-                              alt={`Product image ${index + 1}`}
-                              width={96}
-                              height={96}
-                              className="w-full h-24 object-cover rounded-lg border"
-                            />
+                            <div key={index} className="relative">
+                              <Image
+                                src={image}
+                                alt={`Product ${index + 1}`}
+                                width={100}
+                                height={100}
+                                className="rounded-lg object-cover"
+                              />
                               <Button
                                 type="button"
                                 variant="destructive"
                                 size="sm"
-                                className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                                className="absolute top-1 right-1 h-6 w-6 p-0"
                                 onClick={() => removeImage(index)}
                               >
                                 <X className="h-3 w-3" />
@@ -691,87 +830,109 @@ export function ProductFormDialog({
                           ))}
                         </div>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Tags</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Add a tag"
-                          value={newTag}
-                          onChange={(e) => setNewTag(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                        />
-                        <Button type="button" variant="outline" onClick={addTag}>
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>SEO & Tags</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="metaTitle"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Meta Title</FormLabel>
+                            <FormControl>
+                              <Input placeholder="SEO title" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                      {currentTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {currentTags.map((tag) => (
-                            <Badge key={tag} variant="secondary" className="cursor-pointer">
+                      <FormField
+                        control={form.control}
+                        name="metaDescription"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Meta Description</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="SEO description" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div>
+                        <FormLabel>Tags</FormLabel>
+                        <div className="flex gap-2 mt-2">
+                          <Input
+                            value={newTag}
+                            onChange={(e) => setNewTag(e.target.value)}
+                            placeholder="Add tag"
+                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                          />
+                          <Button type="button" onClick={addTag} variant="outline">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>                        <div className="flex flex-wrap gap-2 mt-2">
+                          {currentTags.map((tag, index) => (
+                            <Badge key={index} variant="secondary" className="gap-1">
                               {tag}
-                              <X
-                                className="h-3 w-3 ml-1"
-                                onClick={() => removeTag(tag)}
-                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 hover:bg-transparent"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  removeTag(tag)
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
                             </Badge>
                           ))}
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="grid grid-cols-1 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="metaTitle"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Meta Title (SEO)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="SEO title for search engines" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="metaDescription"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Meta Description (SEO)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="SEO description for search engines"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
             </Tabs>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : (product ? 'Update Product' : 'Create Product')}
-              </Button>
+
+              {currentTab !== 'basic' && (
+                <Button type="button" variant="outline" onClick={goToPreviousTab}>
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+              )}
+
+              {currentTab !== 'media' && (
+                <Button type="button" onClick={goToNextTab}>
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              )}
+
+              {currentTab === 'media' && (
+                <Button
+                  type="submit"
+                  disabled={loading || !canCreateProduct()}
+                  className="min-w-[120px]"
+                >
+                  {loading ? 'Creating...' : 'Create Product'}
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </Form>
