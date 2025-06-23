@@ -14,7 +14,7 @@ type AuthContextType = {
     logout: () => Promise<void>
     resetPassword: (email: string) => Promise<any>
     deleteAccount: () => Promise<any>
-    checkUserAccess: (retryCount?: number) => Promise<void>
+    checkUserAccess: () => Promise<void>
     refreshAccess: () => Promise<void>
 }
 
@@ -27,14 +27,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [hasCompanyAccess, setHasCompanyAccess] = useState(false)
     const router = useRouter()
     
-    const checkUserAccess = async (retryCount = 0) => {
+    const checkUserAccess = async () => {
         if (!user?.email || !user?.id) {
             setUserType(null);
             setHasCompanyAccess(false);
             return;
         }
         
-        console.log(`AuthContext - Checking user access (attempt ${retryCount + 1})`);
+        console.log('AuthContext - Checking user access');
         
         // First check if user previously had access (permanent flag)
         if (typeof window !== 'undefined') {
@@ -48,173 +48,113 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         try {
-            // Check if user is a company user/owner via company_users table using Supabase Auth user ID
-            const { data: companyUserData, error: companyUserError } = await supabase
-                .from('company_users')
-                .select('id, role, isOwner, isActive, companyId, userId')
-                .eq('userId', user.id)
-                .eq('isActive', true);
+            // Simplified access check - use Promise.all to reduce database calls
+            const [companyUserResult, userRecordsResult, companyResult, inviteResult] = await Promise.all([
+                // Check company_users with Auth user ID
+                supabase
+                    .from('company_users')
+                    .select('id, role, isOwner, isActive, companyId, userId')
+                    .eq('userId', user.id)
+                    .eq('isActive', true),
+                    
+                // Get user records by email
+                supabase
+                    .from('users')
+                    .select('id, email')
+                    .eq('email', user.email),
+                    
+                // Check companies created by user
+                supabase
+                    .from('companies')
+                    .select('id, name, createdBy')
+                    .eq('createdBy', user.id)
+                    .eq('isActive', true),
+                    
+                // Check user invitations
+                supabase
+                    .from('user_invitations')
+                    .select('id, status, email')
+                    .eq('email', user.email)
+                    .eq('status', 'ACCEPTED')
+            ]);
 
-            if (companyUserData && companyUserData.length > 0) {
+            // Check company user access (Auth ID)
+            if (companyUserResult.data && companyUserResult.data.length > 0) {
                 setUserType('company');
                 setHasCompanyAccess(true);
-                
-                // Set permanent access flag in localStorage
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem(`invista_has_access_${user.id}`, 'true');
-                }
-                
-                return;
-            }
-
-            // Find user records in users table by email to get internal user IDs
-            const { data: userRecords, error: userError } = await supabase
-                .from('users')
-                .select('id, email')
-                .eq('email', user.email);
-
-            // Check company_users table with internal user IDs
-            if (userRecords && userRecords.length > 0) {
-                for (const userRecord of userRecords) {
-                    const { data: companyUserByInternalId, error: companyUserByInternalIdError } = await supabase
-                        .from('company_users')
-                        .select('id, role, isOwner, isActive, companyId, userId')
-                        .eq('userId', userRecord.id)
-                        .eq('isActive', true);                    if (companyUserByInternalId && companyUserByInternalId.length > 0) {
-                        setUserType('company');
-                        setHasCompanyAccess(true);
-                        
-                        // Set permanent access flag in localStorage
-                        if (typeof window !== 'undefined') {
-                            localStorage.setItem(`invista_has_access_${user.id}`, 'true');
-                        }
-                        
-                        return;
-                    }
-                }
-            }
-
-            // Check if user created a company directly (using Auth user ID)
-            const { data: companyData, error: companyError } = await supabase
-                .from('companies')
-                .select('id, name, createdBy')
-                .eq('createdBy', user.id)
-                .eq('isActive', true);            if (companyData && companyData.length > 0) {
-                setUserType('company');
-                setHasCompanyAccess(true);
-                
-                // Set permanent access flag in localStorage
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem(`invista_has_access_${user.id}`, 'true');
-                }
-                
-                return;
-            }
-
-            // Check company ownership with internal user IDs
-            if (userRecords && userRecords.length > 0) {
-                for (const userRecord of userRecords) {
-                    const { data: companyByInternalId, error: companyByInternalIdError } = await supabase
-                        .from('companies')
-                        .select('id, name, createdBy')
-                        .eq('createdBy', userRecord.id)
-                        .eq('isActive', true);                    if (companyByInternalId && companyByInternalId.length > 0) {
-                        setUserType('company');
-                        setHasCompanyAccess(true);
-                        
-                        // Set permanent access flag in localStorage
-                        if (typeof window !== 'undefined') {
-                            localStorage.setItem(`invista_has_access_${user.id}`, 'true');
-                        }
-                        
-                        return;
-                    }
-                }
-            }
-
-            // Check recent company creation (within last 5 minutes)
-            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-            
-            // Check with Auth user ID
-            const { data: recentCompanyByAuth, error: recentCompanyByAuthError } = await supabase
-                .from('companies')
-                .select('id, name, createdAt, createdBy')
-                .eq('createdBy', user.id)
-                .eq('isActive', true)
-                .gte('createdAt', fiveMinutesAgo);            if (recentCompanyByAuth && recentCompanyByAuth.length > 0) {
-                setUserType('company');
-                setHasCompanyAccess(true);
-                
-                // Set permanent access flag in localStorage
                 if (typeof window !== 'undefined') {
                     localStorage.setItem(`invista_has_access_${user.id}`, 'true');
                 }
                 return;
             }
 
-            // Check with internal user IDs
-            if (userRecords && userRecords.length > 0) {
-                for (const userRecord of userRecords) {
-                    const { data: recentCompanyByInternal, error: recentCompanyByInternalError } = await supabase
-                        .from('companies')
-                        .select('id, name, createdAt, createdBy')
-                        .eq('createdBy', userRecord.id)
-                        .eq('isActive', true)
-                        .gte('createdAt', fiveMinutesAgo);                    if (recentCompanyByInternal && recentCompanyByInternal.length > 0) {
-                        setUserType('company');
-                        setHasCompanyAccess(true);
-                        
-                        // Set permanent access flag in localStorage
-                        if (typeof window !== 'undefined') {
-                            localStorage.setItem(`invista_has_access_${user.id}`, 'true');
-                        }
-                        
-                        return;
-                    }
+            // Check company ownership
+            if (companyResult.data && companyResult.data.length > 0) {
+                setUserType('company');
+                setHasCompanyAccess(true);
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem(`invista_has_access_${user.id}`, 'true');
                 }
+                return;
             }
 
-            // Check if user has accepted company invitations
-            const { data: inviteData, error: inviteError } = await supabase
-                .from('user_invitations')
-                .select('id, status, email')
-                .eq('email', user.email)
-                .eq('status', 'ACCEPTED');            if (inviteData && inviteData.length > 0) {
+            // Check invitations
+            if (inviteResult.data && inviteResult.data.length > 0) {
                 setUserType('individual');
                 setHasCompanyAccess(true);
-                
-                // Set permanent access flag in localStorage
                 if (typeof window !== 'undefined') {
                     localStorage.setItem(`invista_has_access_${user.id}`, 'true');
                 }
-                
                 return;
-            }            // If we reach here, no company access was found
+            }
+
+            // Check with internal user IDs if no direct match found
+            if (userRecordsResult.data && userRecordsResult.data.length > 0) {
+                const internalUserIds = userRecordsResult.data.map(u => u.id);
+                
+                const [companyUserByInternal, companyByInternal] = await Promise.all([
+                    supabase
+                        .from('company_users')
+                        .select('id, role, isOwner, isActive, companyId, userId')
+                        .in('userId', internalUserIds)
+                        .eq('isActive', true),
+                        
+                    supabase
+                        .from('companies')
+                        .select('id, name, createdBy')
+                        .in('createdBy', internalUserIds)
+                        .eq('isActive', true)
+                ]);
+
+                if (companyUserByInternal.data && companyUserByInternal.data.length > 0) {
+                    setUserType('company');
+                    setHasCompanyAccess(true);
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem(`invista_has_access_${user.id}`, 'true');
+                    }
+                    return;
+                }
+
+                if (companyByInternal.data && companyByInternal.data.length > 0) {
+                    setUserType('company');
+                    setHasCompanyAccess(true);
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem(`invista_has_access_${user.id}`, 'true');
+                    }
+                    return;
+                }
+            }
+
+            // If we reach here, no company access was found
             setUserType('individual');
             setHasCompanyAccess(false);
             
-            console.log(`AuthContext - No access found for user ${user.email} (attempt ${retryCount + 1})`);
+            console.log(`AuthContext - No access found for user ${user.email}`);
             
-            // Retry logic for newly created companies (max 2 retries with increasing delays)
-            if (retryCount < 2) {
-                const delay = (retryCount + 1) * 2000; // 2s, 4s delays
-                console.log(`AuthContext - Retrying in ${delay}ms`);
-                setTimeout(() => {
-                    checkUserAccess(retryCount + 1);
-                }, delay);
-            }        } catch (error) {
+        } catch (error) {
             console.error('AuthContext - Error checking user access:', error);
-            setUserType('individual')
-            setHasCompanyAccess(false)
-            
-            // Retry on error (max 2 retries)
-            if (retryCount < 2) {
-                const delay = (retryCount + 1) * 2000;
-                console.log(`AuthContext - Retrying after error in ${delay}ms`);
-                setTimeout(() => {
-                    checkUserAccess(retryCount + 1);
-                }, delay);
-            }
+            setUserType('individual');
+            setHasCompanyAccess(false);
         }
     }
     
@@ -226,6 +166,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             try {
                 console.log('AuthContext - Initializing auth state');
                 
+                // Set a timeout to prevent infinite loading
+                const timeoutId = setTimeout(() => {
+                    if (isMounted) {
+                        console.log('AuthContext - Auth initialization timeout, setting loading to false');
+                        setLoading(false);
+                    }
+                }, 10000); // 10 seconds timeout
+                
                 // First, get the current session
                 const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
                 const currentSession = sessionData?.session;
@@ -235,11 +183,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 }
                 
                 if (isMounted) {
+                    clearTimeout(timeoutId);
+                    
                     if (currentSession?.user) {
                         console.log('AuthContext - Session found:', currentSession.user.email);
                         setUser(currentSession.user);
                         
-                        // Wait for user access check to complete
+                        // Check user access
                         try {
                             await checkUserAccess();
                         } catch (accessError) {
@@ -254,11 +204,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     }
                     
                     // Only set loading to false after we've fully initialized
-                    if (isMounted) {
-                        setLoading(false);
-                    }
+                    setLoading(false);
                 }
-                  // Set up the auth state change listener
+                
+                // Set up the auth state change listener
                 const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
                     if (!isMounted) return;
                     
@@ -298,7 +247,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                                         isVerified: true,
                                         emailVerified: session.user.email_confirmed_at ? true : false,
                                         twoFactorEnabled: false,
-                                        failedLoginCount: 0,                                        createdAt: new Date().toISOString(),
+                                        failedLoginCount: 0,
+                                        createdAt: new Date().toISOString(),
                                         updatedAt: new Date().toISOString()
                                     });
                             }
@@ -307,12 +257,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             if (event === 'SIGNED_IN' && isMounted) {
                                 // Small delay to allow user creation to complete
                                 setTimeout(() => {
-                                    checkUserAccess(0);
+                                    checkUserAccess();
                                 }, 500);
                             }
                         }
                     } else if (event === 'SIGNED_OUT') {
-                        console.log('AuthContext - User signed out or deleted');
+                        console.log('AuthContext - User signed out');
                         if (isMounted) {
                             setUser(null);
                             setUserType(null);
@@ -338,7 +288,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 subscription.unsubscribe();
             }
         };
-    }, []) // Remove user.id dependency to prevent infinite loops
+    }, [])
 
     const signUp = async (email: string, password: string) => {
         return await supabase.auth.signUp({ email, password })
@@ -410,11 +360,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         return { error: { message: 'No user found' } }
-    }    
+    }
+
     const refreshAccess = async () => {
         console.log('AuthContext - Manual refresh access requested');
-        await checkUserAccess(0);
-    };
+        await checkUserAccess();
+    }
 
     return (
         <AuthContext.Provider value={{ 

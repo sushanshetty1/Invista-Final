@@ -81,15 +81,25 @@ export default function CompanyProfilePage() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);  useEffect(() => {
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  console.log('CompanyProfile component mounted, user:', user?.id, 'company:', companyProfile?.id);useEffect(() => {
     if (user) {
       fetchCompanyProfile();
-      fetchTeamMembers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
-  const fetchCompanyProfile = async () => {
-    try {      // First try to find company where user is owner
+
+  useEffect(() => {
+    if (companyProfile?.id) {
+      fetchTeamMembers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyProfile?.id]);  const fetchCompanyProfile = async () => {
+    try {
+      console.log('Fetching company profile for user:', user?.id);
+      
+      // First try to find company where user is owner
       const { data: initialData, error: initialError } = await supabase
         .from('companies')
         .select('*')
@@ -100,6 +110,8 @@ export default function CompanyProfilePage() {
 
       // If no company found as owner, check if user is a member
       if (initialError && initialError.code === 'PGRST116') {
+        console.log('User is not company owner, checking if they are a member...');
+        
         const { data: companyUserData, error: companyUserError } = await supabase
           .from('company_users')
           .select(`
@@ -110,24 +122,32 @@ export default function CompanyProfilePage() {
           .single();
 
         if (companyUserError) {
-          console.error('Error fetching company profile:', companyUserError);
+          console.error('Error fetching company profile via company_users:', companyUserError);
           setLoading(false);
           return;
-        }        data = companyUserData?.company;
+        }
+
+        data = companyUserData?.company;
       } else if (initialError) {
+        console.error('Error fetching company profile directly:', initialError);
         throw initialError;
       }
 
+      console.log('Company profile data:', data);
       setCompanyProfile(data);
     } catch (error) {
       console.error('Error fetching company profile:', error);
     } finally {
       setLoading(false);
     }
-  };
-  const fetchTeamMembers = async () => {
+  };  const fetchTeamMembers = async () => {
     try {
-      if (!companyProfile?.id) return;
+      if (!companyProfile?.id) {
+        console.log('No company profile ID available for fetching team members');
+        return;
+      }
+
+      console.log('Fetching team members for company:', companyProfile.id);
 
       // Fetch company invites (pending invitations)
       const { data: invites, error: invitesError } = await supabase
@@ -136,7 +156,12 @@ export default function CompanyProfilePage() {
         .eq('companyId', companyProfile.id)
         .order('createdAt', { ascending: false });
 
-      if (invitesError) throw invitesError;
+      if (invitesError) {
+        console.error('Error fetching invites:', invitesError);
+        throw invitesError;
+      }
+
+      console.log('Fetched invites:', invites);
 
       // Fetch active company users
       const { data: users, error: usersError } = await supabase
@@ -158,10 +183,16 @@ export default function CompanyProfilePage() {
         .eq('isActive', true)
         .order('joinedAt', { ascending: false });
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error('Error fetching company users:', usersError);
+        throw usersError;
+      }
+
+      console.log('Fetched company users:', users);
 
       // Combine invites and users into team members list
-      const teamMembersList: TeamMember[] = [        // Active users
+      const teamMembersList: TeamMember[] = [
+        // Active users
         ...(users || []).map((companyUser: {
           id: string;
           role: string;
@@ -195,14 +226,16 @@ export default function CompanyProfilePage() {
         }))
       ];
 
+      console.log('Combined team members list:', teamMembersList);
       setTeamMembers(teamMembersList);
     } catch (error) {
       console.error('Error fetching team members:', error);
     }
-  };  const handleInviteUsers = async () => {
+  };const handleInviteUsers = async () => {
     if (!inviteForm.emails.trim() || !inviteForm.role) return;
 
     setIsInviting(true);
+    setMessage(null); // Clear any previous messages
     
     try {
       if (!companyProfile?.id) throw new Error('Company not found');
@@ -216,11 +249,19 @@ export default function CompanyProfilePage() {
 
       const invitedByName = userData?.displayName || 
         (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : null) ||
-        userData?.email || user?.email || 'Someone';      // Parse emails (comma or newline separated)
+        userData?.email || user?.email || 'Someone';
+
+      // Parse emails (comma or newline separated)
       const emails = inviteForm.emails
         .split(/[,\n]/)
         .map(email => email.trim())
         .filter(email => email && email.includes('@'));
+
+      if (emails.length === 0) {
+        throw new Error('Please enter at least one valid email address');
+      }
+
+      console.log('Sending invites to:', emails);
 
       const response = await fetch('/api/company-invites', {
         method: 'POST',
@@ -239,6 +280,7 @@ export default function CompanyProfilePage() {
       });
 
       const result = await response.json();
+      console.log('Invite response:', result);
 
       if (!response.ok) {
         console.error('Invite failed:', result);
@@ -249,12 +291,19 @@ export default function CompanyProfilePage() {
 
       // Show success message
       const successMessage = result.message || `Successfully sent ${emails.length} invitation(s)`;
-      setMessage({ type: 'success', text: successMessage });      // Reset form and close dialog
+      setMessage({ type: 'success', text: successMessage });
+
+      // Reset form and close dialog
       setInviteForm({ emails: '', role: 'VIEWER' });
       setShowInviteDialog(false);
-      setMessage(null);
-        // Refresh team members
-      fetchTeamMembers();
+      
+      // Refresh team members
+      await fetchTeamMembers();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setMessage(null);
+      }, 3000);
     } catch (error) {
       console.error('Error inviting users:', error);
       
