@@ -60,13 +60,18 @@ model Company {
 }
 
 model CompanyUser {
-  id               String           @id @default(uuid())
-  companyId        String
-  userId           String
-  role             CompanyRole      @default(EMPLOYEE)
-  title            String?
-  departmentId     String?
-  employeeId       String?
+  id           String      @id @default(uuid())
+  companyId    String
+  userId       String
+  role         CompanyRole @default(EMPLOYEE)
+  title        String?
+  departmentId String?
+  employeeId   String?
+
+  // Location Assignment - Users first belong to company, then assigned to locations
+  primaryLocationId  String? // Primary work location
+  allowedLocationIds Json? // Array of location IDs user can access
+
   startDate        DateTime         @default(now())
   endDate          DateTime?
   permissions      Json?
@@ -81,11 +86,15 @@ model CompanyUser {
   invitedAt        DateTime?
   joinedAt         DateTime         @default(now())
   lastActiveAt     DateTime?
-  company          Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  department       Department?      @relation(fields: [departmentId], references: [id])
-  manager          CompanyUser?     @relation("CompanyHierarchy", fields: [managerId], references: [id])
-  reports          CompanyUser[]    @relation("CompanyHierarchy")
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations
+  company         Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  department      Department?          @relation(fields: [departmentId], references: [id])
+  primaryLocation CompanyLocation?     @relation("PrimaryLocation", fields: [primaryLocationId], references: [id])
+  manager         CompanyUser?         @relation("CompanyHierarchy", fields: [managerId], references: [id])
+  reports         CompanyUser[]        @relation("CompanyHierarchy")
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locationAccess  UserLocationAccess[]
 
   @@unique([companyId, userId])
   @@map("company_users")
@@ -138,23 +147,53 @@ model CompanyInvite {
 }
 
 model CompanyLocation {
-  id            String       @id @default(uuid())
-  companyId     String
-  name          String
-  type          LocationType @default(OFFICE)
-  address       Json
-  coordinates   Json?
-  timezone      String       @default("UTC")
+  id          String       @id @default(uuid())
+  companyId   String
+  name        String
+  description String?
+  code        String? // Unique identifier for the location
+  type        LocationType @default(OFFICE)
+
+  // Physical Address
+  address     Json // {street, city, state, country, zip, etc.}
+  coordinates Json? // {lat, lng}
+  timezone    String @default("UTC")
+
+  // Contact Information
   phone         String?
   email         String?
   managerName   String?
-  businessHours Json?
-  isPrimary     Boolean      @default(false)
-  isActive      Boolean      @default(true)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  managerUserId String? // Reference to CompanyUser who manages this location
 
+  // Business Configuration
+  businessHours Json? // Operating hours configuration
+  isPrimary     Boolean @default(false)
+  isActive      Boolean @default(true)
+
+  // Warehouse/Store Specific Configuration
+  capacity Json? // {volume, weight, pallets, floor_space, etc.}
+  features Json? // {rfid, barcode, temperature_control, security_level, etc.}
+
+  // Retail Store Specific
+  storeFormat   String? // "flagship", "outlet", "pop-up", etc.
+  salesChannels Json? // ["walk-in", "online", "phone", etc.]
+
+  // Operational Settings
+  allowsInventory Boolean @default(true) // Can store inventory
+  allowsOrders    Boolean @default(true) // Can process orders
+  allowsReturns   Boolean @default(true) // Can handle returns
+  allowsTransfers Boolean @default(true) // Can participate in transfers
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  company      Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  primaryUsers CompanyUser[]        @relation("PrimaryLocation")
+  userAccess   UserLocationAccess[]
+
+  @@unique([companyId, code])
   @@map("company_locations")
 }
 
@@ -205,22 +244,22 @@ model CompanyAuditLog {
 }
 
 model BillingHistory {
-  id            String        @id @default(uuid())
+  id            String               @id @default(uuid())
   companyId     String
   periodStart   DateTime
   periodEnd     DateTime
   amount        Decimal
-  tax           Decimal       @default(0)
+  tax           Decimal              @default(0)
   total         Decimal
-  currency      String        @default("USD")
+  currency      String               @default("USD")
   description   String?
-  invoiceNumber String?       @unique
-  paymentStatus PaymentStatus @default(PENDING)
+  invoiceNumber String?              @unique
+  paymentStatus BillingPaymentStatus @default(PENDING)
   paymentMethod String?
   paidAt        DateTime?
   metadata      Json?
-  createdAt     DateTime      @default(now())
-  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt     DateTime             @default(now())
+  company       Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@map("billing_history")
 }
@@ -524,13 +563,23 @@ enum EmploymentStatus {
 }
 
 enum LocationType {
-  HEADQUARTERS
-  OFFICE
-  WAREHOUSE
-  STORE
-  FACTORY
-  REMOTE
-  OTHER
+  HEADQUARTERS // Main company office
+  OFFICE // Branch office
+  WAREHOUSE // Storage facility
+  DISTRIBUTION_CENTER // Distribution hub
+  RETAIL_STORE // Physical retail location
+  FLAGSHIP_STORE // Main retail showcase
+  OUTLET_STORE // Discount retail location
+  POP_UP_STORE // Temporary retail location
+  KIOSK // Small retail point
+  SHOWROOM // Display and demo center
+  FACTORY // Manufacturing facility
+  FULFILLMENT_CENTER // E-commerce fulfillment
+  CROSS_DOCK // Transfer facility
+  COLD_STORAGE // Temperature-controlled storage
+  REMOTE // Remote work location
+  VENDOR_LOCATION // External vendor facility
+  OTHER // Other type of location
 }
 
 enum IntegrationType {
@@ -552,7 +601,7 @@ enum IntegrationStatus {
   PAUSED
 }
 
-enum PaymentStatus {
+enum BillingPaymentStatus {
   PENDING
   PAID
   FAILED
@@ -590,4 +639,36 @@ enum AuditSeverity {
   WARNING
   ERROR
   CRITICAL
+}
+
+// ===================================================================
+// USER LOCATION ACCESS MANAGEMENT
+// ===================================================================
+
+model UserLocationAccess {
+  id          String              @id @default(uuid())
+  userId      String
+  companyId   String
+  locationId  String
+  accessLevel LocationAccessLevel @default(READ_ONLY)
+  canManage   Boolean             @default(false)
+  startDate   DateTime            @default(now())
+  endDate     DateTime?
+  isActive    Boolean             @default(true)
+  grantedBy   String? // User ID who granted access
+  grantedAt   DateTime            @default(now())
+  // Relations
+  companyUser CompanyUser         @relation(fields: [userId], references: [id])
+  location    CompanyLocation     @relation(fields: [locationId], references: [id])
+
+  @@unique([userId, locationId])
+  @@map("user_location_access")
+}
+
+enum LocationAccessLevel {
+  READ_ONLY // Can view location data
+  STANDARD // Can perform standard operations
+  SUPERVISOR // Can supervise operations
+  MANAGER // Can manage location settings
+  ADMIN // Full administrative access
 }

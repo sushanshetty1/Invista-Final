@@ -1,20 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import Barcode from 'react-barcode'
-import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Upload, X, Plus } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { supabase } from '@/lib/supabaseClient'
+
+// Constants outside component to prevent recreation
+const TABS = ['basic', 'pricing', 'inventory', 'media'] as const
+
+const generateSKU = () => {
+  const prefix = 'SKU'
+  const timestamp = Date.now().toString().slice(-6)
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
+  return `${prefix}-${timestamp}-${random}`
+}
+
+const generateBarcode = () => {
+  return Math.floor(100000000000 + Math.random() * 900000000000).toString()
+}
 
 interface ProductFormData {
   name: string
@@ -37,7 +51,45 @@ interface ProductFormData {
   costPrice?: number
   sellingPrice?: number
   wholesalePrice?: number
-  minStockLevel: number
+  minStockLevel?: number
+  maxStockLevel?: number
+  reorderPoint?: number
+  reorderQuantity?: number
+  status?: 'ACTIVE' | 'INACTIVE' | 'DISCONTINUED' | 'DRAFT'
+  isTrackable?: boolean
+  isSerialized?: boolean
+  primaryImage?: string
+  images?: string[]
+  metaTitle?: string
+  metaDescription?: string
+  tags?: string[]
+  leadTimeSupply?: number
+  shelfLife?: number
+}
+
+interface Product {
+  id: string
+  name: string
+  description?: string
+  sku: string
+  slug?: string
+  barcode?: string
+  categoryId?: string
+  brandId?: string
+  weight?: number
+  dimensions?: {
+    length?: number
+    width?: number
+    height?: number
+    unit?: string
+  }
+  color?: string
+  size?: string
+  material?: string
+  costPrice?: number
+  sellingPrice?: number
+  wholesalePrice?: number
+  minStockLevel?: number
   maxStockLevel?: number
   reorderPoint?: number
   reorderQuantity?: number
@@ -53,51 +105,6 @@ interface ProductFormData {
   shelfLife?: number
 }
 
-interface Product {
-  id: string
-  name: string
-  sku: string
-  slug?: string
-  barcode?: string
-  description?: string
-  categoryId?: string
-  brandId?: string
-  costPrice?: number
-  sellingPrice?: number
-  wholesalePrice?: number
-  minStockLevel: number
-  maxStockLevel?: number
-  reorderPoint?: number
-  status: 'ACTIVE' | 'INACTIVE' | 'DISCONTINUED' | 'DRAFT'
-  primaryImage?: string
-  isTrackable: boolean
-  isSerialized: boolean
-  weight?: number
-  dimensions?: {
-    length?: number
-    width?: number
-    height?: number
-    unit?: string
-  }
-  color?: string
-  size?: string
-  material?: string
-  images?: string[]
-  metaTitle?: string
-  metaDescription?: string
-  tags?: string[]
-  leadTimeSupply?: number
-  shelfLife?: number
-  category?: {
-    id: string
-    name: string
-  }
-  brand?: {
-    id: string
-    name: string
-  }
-}
-
 interface Category {
   id: string
   name: string
@@ -111,253 +118,436 @@ interface Brand {
 interface ProductFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  product?: Product
-  onSave: (data: ProductFormData) => Promise<void>
+  product?: Product | null
   categories: Category[]
   brands: Brand[]
+  onSave: () => Promise<void>
 }
 
-export function ProductFormDialog({
+// Main component with React.memo for optimization
+const ProductFormDialog = React.memo(function ProductFormDialog({
   open,
   onOpenChange,
-  product,
-  onSave,
-  categories,
-  brands
-}: ProductFormDialogProps) {  // Ensure props are always arrays
-  const safeCategories = Array.isArray(categories) ? categories : []
-
+  product = null,
+  categories = [],
+  brands = [],
+  onSave
+}: ProductFormDialogProps) {
+  // Ensure arrays are always stable arrays
+  const safeCategories = useMemo(() => Array.isArray(categories) ? categories : [], [categories])
+  const safeBrands = useMemo(() => Array.isArray(brands) ? brands : [], [brands])
+  // State
   const [loading, setLoading] = useState(false)
-  const [selectedImages, setSelectedImages] = useState<string[]>([])
-  const [currentTags, setCurrentTags] = useState<string[]>([])
-  const [newTag, setNewTag] = useState('')
   const [currentTab, setCurrentTab] = useState('basic')
-  const [formErrors, setFormErrors] = useState<string[]>([])
-  // Generate random SKU
-  const generateSKU = () => {
-    const prefix = 'SKU'
-    const timestamp = Date.now().toString().slice(-6)
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-    return `${prefix}-${timestamp}-${random}`
-  }
+  const [imageUploading, setImageUploading] = useState(false)
+  const [tagInput, setTagInput] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Generate barcode (12-digit number)
-  const generateBarcode = () => {
-    return Math.floor(100000000000 + Math.random() * 900000000000).toString()
-  }
-
-  // Generate slug from product name
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-  }
+  // Stable default values - never changes
+  const defaultValues = useMemo(() => ({
+    name: '',
+    description: '',
+    sku: generateSKU(),
+    slug: '',
+    barcode: generateBarcode(),
+    categoryId: '',
+    brandId: '',
+    weight: 0,
+    dimensions: {
+      length: 0,
+      width: 0,
+      height: 0,
+      unit: 'cm'
+    },
+    color: '',
+    size: '',
+    material: '',
+    costPrice: 0,
+    sellingPrice: 0,
+    wholesalePrice: 0,
+    minStockLevel: 1,
+    maxStockLevel: 0,
+    reorderPoint: 0,
+    reorderQuantity: 0,
+    status: 'ACTIVE' as const,
+    isTrackable: true,
+    isSerialized: false,
+    primaryImage: '',
+    images: [] as string[],
+    metaTitle: '',
+    metaDescription: '',
+    tags: [] as string[],
+    leadTimeSupply: 0,
+    shelfLife: 0
+  }), [])
   const form = useForm<ProductFormData>({
-    defaultValues: {
-      name: '',
-      description: '',
-      sku: generateSKU(),
-      slug: '',
-      barcode: generateBarcode(),
-      categoryId: undefined,
-      brandId: undefined,
-      weight: 0,
-      dimensions: {
-        length: 0,
-        width: 0,
-        height: 0,
-        unit: 'cm'
-      },
-      color: '',
-      size: '',
-      material: '',
-      costPrice: 0,
-      sellingPrice: 0,
-      wholesalePrice: 0,
-      minStockLevel: 1,
-      maxStockLevel: 0,
-      reorderPoint: 0,
-      reorderQuantity: 0,
-      status: 'ACTIVE',
-      isTrackable: true,
-      isSerialized: false,
-      primaryImage: '',
-      images: [],
-      metaTitle: '',
-      metaDescription: '',
-      tags: [],
-      leadTimeSupply: 0,
-      shelfLife: 0
-    }
+    defaultValues
   })
 
-  useEffect(() => {
-    if (product) {
-      form.reset({
-        name: product.name,
-        description: product.description || '',
-        sku: product.sku,
-        slug: product.slug || generateSlug(product.name),
-        barcode: product.barcode || generateBarcode(),
-        categoryId: product.categoryId || undefined,
-        brandId: product.brandId || undefined,
-        weight: product.weight || 0,
-        dimensions: product.dimensions || { length: 0, width: 0, height: 0, unit: 'cm' },
-        color: product.color || '',
-        size: product.size || '',
-        material: product.material || '',
-        costPrice: product.costPrice || 0,
-        sellingPrice: product.sellingPrice || 0,
-        wholesalePrice: product.wholesalePrice || 0,
-        minStockLevel: product.minStockLevel,
-        maxStockLevel: product.maxStockLevel || 0,
-        reorderPoint: product.reorderPoint || 0,
-        status: product.status,
-        isTrackable: product.isTrackable,
-        isSerialized: product.isSerialized,
-        primaryImage: product.primaryImage || '',
-        images: product.images || [],
-        metaTitle: product.metaTitle || '',
-        metaDescription: product.metaDescription || '',
-        tags: product.tags || [],
-        leadTimeSupply: product.leadTimeSupply || 0,
-        shelfLife: product.shelfLife || 0
-      })
-      setSelectedImages(product.images || [])
-      setCurrentTags(product.tags || [])
-    } else {
-      form.reset()
-      setSelectedImages([])
-      setCurrentTags([])
-    }
-  }, [product, form])
+  // Image upload to Supabase
+  const uploadImage = useCallback(async (file: File): Promise<string | null> => {
+    let timeoutId: NodeJS.Timeout | null = null
 
-  const onSubmit = async (data: ProductFormData) => {
-    setLoading(true)
     try {
-      await onSave({
-        ...data,
-        images: selectedImages,
-        tags: currentTags
-      })
-      onOpenChange(false)
-      form.reset()
-      setSelectedImages([])
-      setCurrentTags([])
+      setImageUploading(true)
+      console.log('Starting image upload:', file.name, file.size)
+
+      // Safety timeout to reset loading state after 30 seconds
+      timeoutId = setTimeout(() => {
+        console.error('Image upload timeout')
+        setImageUploading(false)
+        setError('Image upload timed out. Please try again.')
+      }, 30000)
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      const filePath = `products/${fileName}`
+
+      console.log('Uploading to path:', filePath)
+      console.log('Using bucket: prodctimg')
+
+      const { data, error } = await supabase.storage
+        .from('prodctimg').upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (error) {
+        console.error('Upload error details:', {
+          message: error.message,
+          error: error
+        })
+        setError(`Failed to upload image: ${error.message}`)
+        return null
+      }
+
+      console.log('Upload successful:', data)
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('prodctimg')
+        .getPublicUrl(filePath)
+
+      console.log('Public URL:', publicUrl)
+      return publicUrl
     } catch (error) {
-      console.error('Error saving product:', error)
+      console.error('Error uploading image:', error)
+      setError('Network error during image upload. Please try again.')
+      return null
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId)
+      setImageUploading(false)
+    }
+  }, [])
+  // Handle image upload
+  const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      setError('File too large. Please choose a file smaller than 10MB.')
+      return
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid file type. Please choose a JPG, PNG, or GIF image.')
+      return
+    }
+
+    console.log('Starting image upload for file:', file.name)
+    const url = await uploadImage(file)
+
+    if (url) {
+      console.log('Image uploaded successfully, adding to form')
+      const currentImages = form.getValues('images') || []
+      const newImages = [...currentImages, url]
+
+      form.setValue('images', newImages)
+
+      // Set as primary image if none exists
+      if (!form.getValues('primaryImage')) {
+        form.setValue('primaryImage', url)
+      }
+
+      // Clear any previous errors
+      setError(null)
+    } else {
+      console.error('Image upload failed')
+    }
+
+    // Reset the file input
+    event.target.value = ''
+  }, [form, uploadImage])
+
+  // Remove image
+  const removeImage = useCallback((index: number) => {
+    const currentImages = form.getValues('images') || []
+    const imageToRemove = currentImages[index]
+    const newImages = currentImages.filter((_, i) => i !== index)
+
+    form.setValue('images', newImages)
+
+    // Update primary image if it was removed
+    if (form.getValues('primaryImage') === imageToRemove) {
+      form.setValue('primaryImage', newImages[0] || '')
+    }
+  }, [form])
+
+  // Set primary image
+  const setPrimaryImage = useCallback((url: string) => {
+    form.setValue('primaryImage', url)
+  }, [form])
+
+  // Tag management
+  const addTag = useCallback(() => {
+    if (!tagInput.trim()) return
+
+    const currentTags = form.getValues('tags') || []
+    if (!currentTags.includes(tagInput.trim())) {
+      form.setValue('tags', [...currentTags, tagInput.trim()])
+    }
+    setTagInput('')
+  }, [tagInput, form])
+
+  const removeTag = useCallback((tagToRemove: string) => {
+    const currentTags = form.getValues('tags') || []
+    form.setValue('tags', currentTags.filter(tag => tag !== tagToRemove))
+  }, [form])
+
+  const handleTagInputKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      addTag()
+    }
+  }, [addTag])
+  // Reset form when product changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      if (product) {
+        // Editing existing product
+        form.reset({
+          name: product.name || '',
+          description: product.description || '',
+          sku: product.sku || '',
+          slug: product.slug || '',
+          barcode: product.barcode || '',
+          categoryId: product.categoryId || '',
+          brandId: product.brandId || '',
+          weight: product.weight || 0,
+          dimensions: product.dimensions || { length: 0, width: 0, height: 0, unit: 'cm' },
+          color: product.color || '',
+          size: product.size || '',
+          material: product.material || '',
+          costPrice: product.costPrice || 0,
+          sellingPrice: product.sellingPrice || 0,
+          wholesalePrice: product.wholesalePrice || 0,
+          minStockLevel: product.minStockLevel || 1,
+          maxStockLevel: product.maxStockLevel || 0,
+          reorderPoint: product.reorderPoint || 0,
+          reorderQuantity: product.reorderQuantity || 0,
+          status: product.status || 'ACTIVE',
+          isTrackable: product.isTrackable ?? true,
+          isSerialized: product.isSerialized ?? false,
+          primaryImage: product.primaryImage || '',
+          images: product.images || [],
+          metaTitle: product.metaTitle || '',
+          metaDescription: product.metaDescription || '',
+          tags: product.tags || [],
+          leadTimeSupply: product.leadTimeSupply || 0,
+          shelfLife: product.shelfLife || 0
+        })
+      } else {
+        // Creating new product
+        form.reset(defaultValues)
+      }
+      setCurrentTab('basic')
+    }
+  }, [product, open, form, defaultValues])
+  // Stable submit handler
+  const handleSubmit = useCallback(async (data: ProductFormData) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const url = product ? `/api/inventory/products/${product.id}` : '/api/inventory/products'
+      const method = product ? 'PUT' : 'POST'      // Clean up the data before sending - remove fields that are empty/invalid
+      const cleanedData: any = {
+        name: data.name,
+        sku: data.sku,
+        status: data.status || 'ACTIVE',
+        isTrackable: data.isTrackable,
+        isSerialized: data.isSerialized,
+        minStockLevel: data.minStockLevel || 0,
+      }
+
+      // Only include optional fields if they have valid values
+      if (data.description && data.description.trim() !== '') {
+        cleanedData.description = data.description.trim()
+      }
+      if (data.barcode && data.barcode.trim() !== '') {
+        cleanedData.barcode = data.barcode.trim()
+      }
+      if (data.slug && data.slug.trim() !== '') {
+        cleanedData.slug = data.slug.trim()
+      }      // Only include categoryId if it's a non-empty string
+      if (data.categoryId && data.categoryId.trim() !== '') {
+        cleanedData.categoryId = data.categoryId.trim()
+      }
+      // Only include brandId if it's a non-empty string
+      if (data.brandId && data.brandId.trim() !== '') {
+        cleanedData.brandId = data.brandId.trim()
+      }
+      if (data.weight && data.weight > 0) {
+        cleanedData.weight = data.weight
+      } if (data.dimensions && ((data.dimensions.length || 0) > 0 || (data.dimensions.width || 0) > 0 || (data.dimensions.height || 0) > 0)) {
+        cleanedData.dimensions = data.dimensions
+      }
+      if (data.color && data.color.trim() !== '') {
+        cleanedData.color = data.color.trim()
+      }
+      if (data.size && data.size.trim() !== '') {
+        cleanedData.size = data.size.trim()
+      }
+      if (data.material && data.material.trim() !== '') {
+        cleanedData.material = data.material.trim()
+      }
+      if (data.costPrice && data.costPrice > 0) {
+        cleanedData.costPrice = data.costPrice
+      }
+      if (data.sellingPrice && data.sellingPrice > 0) {
+        cleanedData.sellingPrice = data.sellingPrice
+      }
+      if (data.wholesalePrice && data.wholesalePrice > 0) {
+        cleanedData.wholesalePrice = data.wholesalePrice
+      }
+      if (data.maxStockLevel && data.maxStockLevel > 0) {
+        cleanedData.maxStockLevel = data.maxStockLevel
+      }
+      if (data.reorderPoint && data.reorderPoint > 0) {
+        cleanedData.reorderPoint = data.reorderPoint
+      }
+      if (data.reorderQuantity && data.reorderQuantity > 0) {
+        cleanedData.reorderQuantity = data.reorderQuantity
+      }
+      if (data.leadTimeSupply && data.leadTimeSupply > 0) {
+        cleanedData.leadTimeSupply = data.leadTimeSupply
+      }
+      if (data.shelfLife && data.shelfLife > 0) {
+        cleanedData.shelfLife = data.shelfLife
+      }
+      if (data.primaryImage && data.primaryImage.trim() !== '') {
+        cleanedData.primaryImage = data.primaryImage.trim()
+      }
+      if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+        cleanedData.images = data.images
+      }
+      if (data.metaTitle && data.metaTitle.trim() !== '') {
+        cleanedData.metaTitle = data.metaTitle.trim()
+      }
+      if (data.metaDescription && data.metaDescription.trim() !== '') {
+        cleanedData.metaDescription = data.metaDescription.trim()
+      }
+      if (data.tags && Array.isArray(data.tags) && data.tags.length > 0) {
+        cleanedData.tags = data.tags
+      }
+
+      console.log('Saving product with cleaned data:', cleanedData)
+
+      // Get authentication token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        setError('Authentication error. Please try logging in again.')
+        return
+      }
+
+      const token = session?.access_token
+
+      if (!token) {
+        console.error('No authentication token available')
+        setError('Not authenticated. Please log in and try again.')
+        return
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }, body: JSON.stringify(cleanedData)
+      })
+
+      if (response.ok) {
+        console.log('Product saved successfully')
+        await onSave()
+        onOpenChange(false)
+      } else {
+        const errorText = await response.text()
+        console.error('Failed to save product. Status:', response.status)
+        console.error('Error response:', errorText)
+
+        let errorMessage = 'Failed to save product'
+        try {
+          const errorJson = JSON.parse(errorText)
+          console.error('Error details:', errorJson)
+          errorMessage = errorJson.error || errorMessage
+        } catch {
+          console.error('Raw error text:', errorText)
+        }
+
+        setError(errorMessage)
+      }
+    } catch (error) {
+      console.error('Network or other error saving product:', error)
+      setError('Network error. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [product, onSave, onOpenChange])
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files) {
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file))
-      setSelectedImages(prev => [...prev, ...newImages])
+  // Stable tab navigation
+  const handleTabChange = useCallback((value: string) => {
+    setCurrentTab(value)
+  }, [])
+
+  const goToNextTab = useCallback(() => {
+    const currentIndex = TABS.indexOf(currentTab as any)
+    if (currentIndex < TABS.length - 1) {
+      setCurrentTab(TABS[currentIndex + 1])
     }
-  }
+  }, [currentTab])
 
-  const removeImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index))
-  }
-
-  const addTag = () => {
-    if (newTag.trim() && !currentTags.includes(newTag.trim())) {
-      setCurrentTags(prev => [...prev, newTag.trim()])
-      setNewTag('')
-    }
-  }
-
-  const removeTag = (tag: string) => {
-    setCurrentTags(prev => prev.filter(t => t !== tag))
-  }
-
-  // Validation functions
-  const validatePricing = () => {
-    const errors: string[] = []
-    const values = form.getValues()
-
-    if (values.costPrice !== undefined && values.costPrice <= 0) {
-      errors.push('Cost Price must be greater than 0')
-    }
-    if (values.sellingPrice !== undefined && values.sellingPrice <= 0) {
-      errors.push('Selling Price must be greater than 0')
-    }
-    if (values.wholesalePrice !== undefined && values.wholesalePrice <= 0) {
-      errors.push('Wholesale Price must be greater than 0')
-    }
-
-    return errors
-  }
-
-  const validateInventory = () => {
-    const errors: string[] = []
-    const values = form.getValues()
-
-    if (values.minStockLevel <= 0) {
-      errors.push('Minimum Stock Level must be greater than 0')
-    }
-    if (values.maxStockLevel !== undefined && values.maxStockLevel <= 0) {
-      errors.push('Maximum Stock Level must be greater than 0')
-    }
-    if (values.reorderPoint !== undefined && values.reorderPoint <= 0) {
-      errors.push('Reorder Point must be greater than 0')
-    }
-    if (values.leadTimeSupply !== undefined && values.leadTimeSupply <= 0) {
-      errors.push('Lead Time must be greater than 0')
-    }
-
-    return errors
-  }
-
-  const validateAllTabs = () => {
-    const pricingErrors = validatePricing()
-    const inventoryErrors = validateInventory()
-    const allErrors = [...pricingErrors, ...inventoryErrors]
-    setFormErrors(allErrors)
-    return allErrors.length === 0
-  }
-
-  // Tab navigation
-  const tabs = ['basic', 'pricing', 'inventory', 'media']
-
-  const goToNextTab = () => {
-    const currentIndex = tabs.indexOf(currentTab)
-    if (currentIndex < tabs.length - 1) {
-      setCurrentTab(tabs[currentIndex + 1])
-    }
-  }
-
-  const goToPreviousTab = () => {
-    const currentIndex = tabs.indexOf(currentTab)
+  const goToPreviousTab = useCallback(() => {
+    const currentIndex = TABS.indexOf(currentTab as any)
     if (currentIndex > 0) {
-      setCurrentTab(tabs[currentIndex - 1])
+      setCurrentTab(TABS[currentIndex - 1])
     }
-  }
-
-  const canCreateProduct = () => {
-    const values = form.getValues()
-    return values.name.trim() !== '' && validateAllTabs()
-  }
-
+  }, [currentTab])
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {product ? 'Edit Product' : 'Add New Product'}
-          </DialogTitle>
-          <DialogDescription>
-            {product ? 'Update product information' : 'Add a new product to your inventory'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">        <DialogHeader>
+        <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+        <DialogDescription>
+          {product ? 'Update the product information' : 'Add a new product to your inventory'}
+        </DialogDescription>
+      </DialogHeader>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="pricing">Pricing</TabsTrigger>
@@ -365,100 +555,29 @@ export function ProductFormDialog({
                 <TabsTrigger value="media">Media & SEO</TabsTrigger>
               </TabsList>
 
-              {/* Display form errors */}
-              {formErrors.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                  <h4 className="text-red-800 font-medium">Please fix the following errors:</h4>
-                  <ul className="mt-1 text-red-700 text-sm list-disc list-inside">
-                    {formErrors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <TabsContent value="basic" className="space-y-4">                <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Product Name *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter product name"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e)
-                            // Auto-generate slug when name changes
-                            const slugValue = generateSlug(e.target.value)
-                            form.setValue('slug', slugValue)
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sku"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SKU *</FormLabel>
-                      <FormControl>
-                        <div className="flex gap-2">
-                          <Input placeholder="Auto-generated SKU" {...field} readOnly />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => field.onChange(generateSKU())}
-                            className="whitespace-nowrap"
-                          >
-                            Generate New
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+              <TabsContent value="basic" className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="slug"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Slug</FormLabel>
+                        <FormLabel>Product Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Auto-generated from product name" {...field} />
+                          <Input placeholder="Enter product name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
-                  />                  <FormField
+                  />
+                  <FormField
                     control={form.control}
-                    name="barcode"
+                    name="sku"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Barcode</FormLabel>
+                        <FormLabel>SKU *</FormLabel>
                         <FormControl>
-                          <div className="space-y-2">
-                            <Input placeholder="Auto-generated barcode" {...field} />
-                            {field.value && (
-                              <div className="p-2 bg-white rounded border flex justify-center">
-                                <Barcode
-                                  value={field.value}
-                                  width={1}
-                                  height={30}
-                                  fontSize={12}
-                                />
-                              </div>
-                            )}
-                          </div>
+                          <Input placeholder="Product SKU" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -473,14 +592,14 @@ export function ProductFormDialog({
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Enter product description" {...field} />
+                        <Textarea placeholder="Product description" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="categoryId"
@@ -504,9 +623,7 @@ export function ProductFormDialog({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
-
-                  <FormField
+                  />                  <FormField
                     control={form.control}
                     name="brandId"
                     render={({ field }) => (
@@ -519,13 +636,60 @@ export function ProductFormDialog({
                       </FormItem>
                     )}
                   />
-
+                </div>                <div className="grid grid-cols-3 gap-4">                  <FormField
+                  control={form.control}
+                  name="barcode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Barcode</FormLabel>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input placeholder="Product barcode" {...field} />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => field.onChange(generateBarcode())}
+                        >
+                          Generate
+                        </Button>
+                      </div>
+                      {field.value && field.value.trim() !== '' && (
+                        <div className="mt-2 p-2 bg-white border rounded">
+                          <Barcode
+                            value={field.value}
+                            format="CODE128"
+                            width={1}
+                            height={50}
+                            displayValue={true}
+                            fontSize={12}
+                          />
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                  <FormField
+                    control={form.control}
+                    name="slug"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Slug</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Product URL slug" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <FormLabel>Product Status</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -535,15 +699,17 @@ export function ProductFormDialog({
                           <SelectContent>
                             <SelectItem value="ACTIVE">Active</SelectItem>
                             <SelectItem value="INACTIVE">Inactive</SelectItem>
-                            <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
                             <SelectItem value="DRAFT">Draft</SelectItem>
+                            <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>                <div className="grid grid-cols-3 gap-4">
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="color"
@@ -551,39 +717,25 @@ export function ProductFormDialog({
                       <FormItem>
                         <FormLabel>Color</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Red, Blue" {...field} />
+                          <Input placeholder="Product color" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="size"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Size</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select size" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="S">S</SelectItem>
-                            <SelectItem value="M">M</SelectItem>
-                            <SelectItem value="L">L</SelectItem>
-                            <SelectItem value="XL">XL</SelectItem>
-                            <SelectItem value="XXL">XXL</SelectItem>
-                            <SelectItem value="XXXL">XXXL</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input placeholder="Product size" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="material"
@@ -591,7 +743,7 @@ export function ProductFormDialog({
                       <FormItem>
                         <FormLabel>Material</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Cotton, Plastic" {...field} />
+                          <Input placeholder="Product material" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -610,23 +762,17 @@ export function ProductFormDialog({
                           <Input
                             type="number"
                             step="0.01"
-                            min="0"
-                            placeholder="0.00"
+                            placeholder="Product weight"
                             {...field}
-                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            onChange={e => {
-                              const value = parseFloat(e.target.value) || 0
-                              field.onChange(value)
-                            }}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <div className="space-y-2">
-                    <FormLabel>Dimensions</FormLabel>
+                    <label className="text-sm font-medium">Dimensions</label>
                     <div className="grid grid-cols-4 gap-2">
                       <FormField
                         control={form.control}
@@ -637,14 +783,9 @@ export function ProductFormDialog({
                               <Input
                                 type="number"
                                 step="0.01"
-                                min="0"
                                 placeholder="Length"
                                 {...field}
-                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                onChange={e => {
-                                  const value = parseFloat(e.target.value) || 0
-                                  field.onChange(value)
-                                }}
+                                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                               />
                             </FormControl>
                           </FormItem>
@@ -659,14 +800,9 @@ export function ProductFormDialog({
                               <Input
                                 type="number"
                                 step="0.01"
-                                min="0"
                                 placeholder="Width"
                                 {...field}
-                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                onChange={e => {
-                                  const value = parseFloat(e.target.value) || 0
-                                  field.onChange(value)
-                                }}
+                                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                               />
                             </FormControl>
                           </FormItem>
@@ -681,14 +817,9 @@ export function ProductFormDialog({
                               <Input
                                 type="number"
                                 step="0.01"
-                                min="0"
                                 placeholder="Height"
                                 {...field}
-                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                onChange={e => {
-                                  const value = parseFloat(e.target.value) || 0
-                                  field.onChange(value)
-                                }}
+                                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                               />
                             </FormControl>
                           </FormItem>
@@ -702,14 +833,13 @@ export function ProductFormDialog({
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Unit" />
+                                  <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="cm">cm</SelectItem>
-                                <SelectItem value="m">m</SelectItem>
                                 <SelectItem value="in">in</SelectItem>
-                                <SelectItem value="ft">ft</SelectItem>
+                                <SelectItem value="m">m</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormItem>
@@ -732,22 +862,15 @@ export function ProductFormDialog({
                           <Input
                             type="number"
                             step="0.01"
-                            min="0.01"
                             placeholder="0.00"
                             {...field}
-                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            onChange={e => {
-                              const value = parseFloat(e.target.value) || 0
-                              field.onChange(value)
-                              validatePricing()
-                            }}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="sellingPrice"
@@ -758,22 +881,15 @@ export function ProductFormDialog({
                           <Input
                             type="number"
                             step="0.01"
-                            min="0.01"
                             placeholder="0.00"
                             {...field}
-                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            onChange={e => {
-                              const value = parseFloat(e.target.value) || 0
-                              field.onChange(value)
-                              validatePricing()
-                            }}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="wholesalePrice"
@@ -784,15 +900,9 @@ export function ProductFormDialog({
                           <Input
                             type="number"
                             step="0.01"
-                            min="0.01"
                             placeholder="0.00"
                             {...field}
-                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            onChange={e => {
-                              const value = parseFloat(e.target.value) || 0
-                              field.onChange(value)
-                              validatePricing()
-                            }}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -800,9 +910,7 @@ export function ProductFormDialog({
                     )}
                   />
                 </div>
-              </TabsContent>
-
-              <TabsContent value="inventory" className="space-y-4">
+              </TabsContent>              <TabsContent value="inventory" className="space-y-4">
                 <div className="grid grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
@@ -818,22 +926,14 @@ export function ProductFormDialog({
                             <FormControl>
                               <Input
                                 type="number"
-                                min="1"
-                                placeholder="1"
                                 {...field}
-                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                onChange={e => {
-                                  const value = parseInt(e.target.value) || 1
-                                  field.onChange(value)
-                                  validateInventory()
-                                }}
+                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={form.control}
                         name="maxStockLevel"
@@ -843,22 +943,14 @@ export function ProductFormDialog({
                             <FormControl>
                               <Input
                                 type="number"
-                                min="1"
-                                placeholder="0"
                                 {...field}
-                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                onChange={e => {
-                                  const value = parseInt(e.target.value) || 0
-                                  field.onChange(value)
-                                  validateInventory()
-                                }}
+                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={form.control}
                         name="reorderPoint"
@@ -868,15 +960,25 @@ export function ProductFormDialog({
                             <FormControl>
                               <Input
                                 type="number"
-                                min="1"
-                                placeholder="0"
                                 {...field}
-                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                onChange={e => {
-                                  const value = parseInt(e.target.value) || 0
-                                  field.onChange(value)
-                                  validateInventory()
-                                }}
+                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="reorderQuantity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Reorder Quantity</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -888,7 +990,7 @@ export function ProductFormDialog({
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Tracking Settings</CardTitle>
+                      <CardTitle>Supply Chain & Tracking</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <FormField
@@ -900,29 +1002,39 @@ export function ProductFormDialog({
                             <FormControl>
                               <Input
                                 type="number"
-                                min="1"
-                                placeholder="0"
+                                placeholder="Days to restock"
                                 {...field}
-                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                onChange={e => {
-                                  const value = parseInt(e.target.value) || 0
-                                  field.onChange(value)
-                                  validateInventory()
-                                }}
+                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
                       <FormField
+                        control={form.control}
+                        name="shelfLife"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Shelf Life (Days)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="Days before expiry"
+                                {...field}
+                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />                      <FormField
                         control={form.control}
                         name="isTrackable"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
-                              <FormLabel>Track Inventory</FormLabel>
+                              <FormLabel className="text-base">Track Inventory</FormLabel>
                               <div className="text-sm text-muted-foreground">
                                 Track stock levels for this product
                               </div>
@@ -936,14 +1048,13 @@ export function ProductFormDialog({
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={form.control}
                         name="isSerialized"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
-                              <FormLabel>Serial Numbers</FormLabel>
+                              <FormLabel className="text-base">Serial Numbers</FormLabel>
                               <div className="text-sm text-muted-foreground">
                                 Track individual serial numbers
                               </div>
@@ -963,213 +1074,186 @@ export function ProductFormDialog({
               </TabsContent>
 
               <TabsContent value="media" className="space-y-4">
-                <div className="grid grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Product Images</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <div className="mt-4">
-                          <label htmlFor="image-upload" className="cursor-pointer">
-                            <span className="mt-2 block text-sm font-medium text-gray-900">
-                              Upload product images
-                            </span>
-                            <input
-                              id="image-upload"
-                              type="file"
-                              multiple
-                              accept="image/*"
-                              className="hidden"
-                              onChange={handleImageUpload}
-                            />
-                          </label>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Product Images</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          console.log('Upload button clicked')
+                          console.log('Current imageUploading state:', imageUploading)
+                          fileInputRef.current?.click()
+                        }}
+                        disabled={imageUploading}
+                      >
+                        {imageUploading ? 'Uploading...' : 'Upload Images'}
+                      </Button>
+                      {imageUploading && (
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '50%' }}></div>
+                          </div>
                         </div>
-                      </div>
-
-                      {selectedImages.length > 0 && (
-                        <div className="grid grid-cols-3 gap-2">
-                          {selectedImages.map((image, index) => (
-                            <div key={index} className="relative">
-                              <Image
-                                src={image}
-                                alt={`Product ${index + 1}`}
-                                width={100}
-                                height={100}
-                                className="rounded-lg object-cover"
-                              />
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      JPG, PNG, GIF up to 10MB
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>{/* Display uploaded images */}
+                    {form.watch('images') && (form.watch('images') || []).length > 0 && (
+                      <div className="grid grid-cols-4 gap-4">
+                        {(form.watch('images') || []).map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={url}
+                              alt={`Product image ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg border"
+                            />
+                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Button
                                 type="button"
                                 variant="destructive"
                                 size="sm"
-                                className="absolute top-1 right-1 h-6 w-6 p-0"
                                 onClick={() => removeImage(index)}
                               >
                                 <X className="h-3 w-3" />
                               </Button>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>SEO & Tags</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="metaTitle"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Meta Title</FormLabel>
-                            <FormControl>
-                              <Input placeholder="SEO title" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="metaDescription"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Meta Description</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="SEO description" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div>
-                        <FormLabel>Tags</FormLabel>
-                        <div className="flex gap-2 mt-2">
-                          <Input
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            placeholder="Add tag"
-                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                          />
-                          <Button type="button" onClick={addTag} variant="outline">
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>                        <div className="flex flex-wrap gap-2 mt-2">
-                          {currentTags.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="gap-1">
-                              {tag}
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-4 w-4 p-0 hover:bg-transparent"
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  removeTag(tag)
-                                }}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </Badge>
-                          ))}                        </div>
+                            {form.watch('primaryImage') !== url && (
+                              <div className="absolute bottom-1 left-1">
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => setPrimaryImage(url)}
+                                >
+                                  Set Primary
+                                </Button>
+                              </div>
+                            )}
+                            {form.watch('primaryImage') === url && (
+                              <div className="absolute bottom-1 left-1">
+                                <Badge variant="default">Primary</Badge>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="leadTimeSupply"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Lead Time Supply (Days)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Days to restock"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                            min="0"
-                            style={{
-                              MozAppearance: 'textfield',
-                              WebkitAppearance: 'none'
-                            }}
-                            className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
                     )}
-                  />
+                  </CardContent>
+                </Card>
 
-                  <FormField
-                    control={form.control}
-                    name="shelfLife"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Shelf Life (Days)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Days before expiry"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                            min="0"
-                            style={{
-                              MozAppearance: 'textfield',
-                              WebkitAppearance: 'none'
-                            }}
-                            className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Product Tags</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Add a tag"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyPress={handleTagInputKeyPress}
+                      />
+                      <Button type="button" onClick={addTag}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {form.watch('tags') && (form.watch('tags') || []).length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {(form.watch('tags') || []).map((tag, index) => (
+                          <Badge key={index} variant="secondary" className="cursor-pointer">
+                            {tag}
+                            <X
+                              className="h-3 w-3 ml-1"
+                              onClick={() => removeTag(tag)}
+                            />
+                          </Badge>
+                        ))}
+                      </div>
                     )}
-                  />
-                </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>SEO & Meta</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="metaTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Meta Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="SEO title" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="metaDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Meta Description</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="SEO description" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="flex justify-between">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-
-              {currentTab !== 'basic' && (
-                <Button type="button" variant="outline" onClick={goToPreviousTab}>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-              )}
-
-              {currentTab !== 'media' && (
-                <Button type="button" onClick={goToNextTab}>
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              )}
-
-              {currentTab === 'media' && (
-                <Button
-                  type="submit"
-                  disabled={loading || !canCreateProduct()}
-                  className="min-w-[120px]"
-                >
-                  {loading ? 'Creating...' : 'Create Product'}
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {currentTab !== 'basic' && (
+                  <Button type="button" variant="outline" onClick={goToPreviousTab}>
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    Previous
+                  </Button>
+                )}
+                {currentTab !== 'media' ? (
+                  <Button type="button" onClick={goToNextTab}>
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Saving...' : product ? 'Update Product' : 'Create Product'}
+                  </Button>
+                )}
+              </div>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
   )
-}
+})
+
+// Set display name for React DevTools
+ProductFormDialog.displayName = 'ProductFormDialog'
+
+export default ProductFormDialog

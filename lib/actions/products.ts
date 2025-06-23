@@ -24,25 +24,10 @@ import { revalidatePath } from 'next/cache'
 // Create a new product
 export async function createProduct(input: CreateProductInput): Promise<ActionResponse> {
   try {
-    // Get current user session from Supabase
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !session?.user?.id) {
-      return actionError('Authentication required')
-    }
-
-    // Get user's company from Supabase
-    const { data: companyUser, error: companyError } = await supabase
-      .from('company_users')
-      .select('companyId')
-      .eq('userId', session.user.id)
-      .eq('isActive', true)
-      .single()
-
-    if (companyError || !companyUser) {
-      return actionError('User not associated with any company')
-    }
+    console.log('createProduct: received input:', JSON.stringify(input, null, 2))
 
     const validatedData = createProductSchema.parse(input)
+    console.log('createProduct: validation passed, validated data:', JSON.stringify(validatedData, null, 2))
 
     // Generate slug if not provided
     if (!validatedData.slug) {
@@ -50,13 +35,11 @@ export async function createProduct(input: CreateProductInput): Promise<ActionRe
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
-    }
-
-    // Prepare the data for Prisma creation
+    }    // Prepare the data for Prisma creation
     const { categoryId, brandId, ...productData } = validatedData
-    
-    // Create the base data object without category and brand
-    const createData = {
+
+    // Create the base data object
+    const createData: any = {
       name: productData.name,
       description: productData.description,
       sku: productData.sku,
@@ -85,9 +68,34 @@ export async function createProduct(input: CreateProductInput): Promise<ActionRe
       leadTimeSupply: productData.leadTimeSupply,
       shelfLife: productData.shelfLife,
       createdBy: productData.createdBy,
-      companyId: companyUser.companyId, // Use the user's company ID
-      ...(categoryId && { categoryId }),
-      ...(brandId && { brandId })
+      companyId: productData.companyId, // Now passed from API route
+    }
+
+    console.log('createProduct: prepared data for Prisma:', JSON.stringify(createData, null, 2))
+
+    // Validate foreign keys if they are provided
+    if (categoryId) {
+      const categoryExists = await neonClient.category.findUnique({
+        where: { id: categoryId }
+      })
+      if (!categoryExists) {
+        console.log('Category not found, ignoring categoryId:', categoryId)
+        // Don't include categoryId if it doesn't exist
+      } else {
+        createData.categoryId = categoryId
+      }
+    }
+
+    if (brandId) {
+      const brandExists = await neonClient.brand.findUnique({
+        where: { id: brandId }
+      })
+      if (!brandExists) {
+        console.log('Brand not found, ignoring brandId:', brandId)
+        // Don't include brandId if it doesn't exist
+      } else {
+        createData.brandId = brandId
+      }
     }
 
     const product = await neonClient.product.create({
@@ -104,11 +112,16 @@ export async function createProduct(input: CreateProductInput): Promise<ActionRe
       },
     })
 
+    console.log('createProduct: product created successfully:', product.id)
     revalidatePath('/inventory/products')
     return actionSuccess(product, 'Product created successfully')
   } catch (error) {
-    console.error('Error creating product:', error)
-    return actionError('Failed to create product')
+    console.error('Error creating product - Full error details:', error)
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    return actionError(`Failed to create product: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -133,7 +146,9 @@ export async function updateProduct(input: UpdateProductInput): Promise<ActionRe
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
-    }    const product = await neonClient.product.update({
+    }
+
+    const product = await neonClient.product.update({
       where: { id },
       data: {
         ...updateData,
@@ -340,7 +355,7 @@ export async function createProductVariant(input: CreateProductVariantInput): Pr
 
     if (!parentProduct) {
       return actionError('Parent product not found')
-    }    const variant = await neonClient.productVariant.create({
+    } const variant = await neonClient.productVariant.create({
       data: {
         ...validatedData,
         attributes: validatedData.attributes,
@@ -378,7 +393,7 @@ export async function updateProductVariant(input: UpdateProductVariantInput): Pr
 
     if (!existingVariant) {
       return actionError('Product variant not found')
-    }    const variant = await neonClient.productVariant.update({
+    } const variant = await neonClient.productVariant.update({
       where: { id },
       data: {
         ...updateData,
@@ -458,7 +473,7 @@ export async function bulkUpdateProducts(input: BulkProductUpdateInput): Promise
 
     if (existingProducts.length !== productIds.length) {
       return actionError('One or more products not found')
-    }    const updatedProducts = await neonClient.product.updateMany({
+    } const updatedProducts = await neonClient.product.updateMany({
       where: { id: { in: productIds } },
       data: {
         ...updates,

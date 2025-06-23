@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { ProductFormDialog } from '@/components/inventory/ProductFormDialog'
+import ProductFormDialog from '@/components/inventory/ProductFormDialog'
 import { ProductVariantsManager } from '@/components/inventory/ProductVariantsManager'
 import { CategoryManager } from '@/components/inventory/CategoryManager'
 import { BulkActionsDialog } from '@/components/inventory/BulkActionsDialog'
