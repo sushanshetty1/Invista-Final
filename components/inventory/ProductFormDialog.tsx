@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useForm } from 'react-hook-form'
+import Barcode from 'react-barcode'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -19,6 +20,7 @@ interface ProductFormData {
   name: string
   description?: string
   sku: string
+  slug?: string
   barcode?: string
   categoryId?: string
   brandId?: string
@@ -55,6 +57,7 @@ interface Product {
   id: string
   name: string
   sku: string
+  slug?: string
   barcode?: string
   description?: string
   categoryId?: string
@@ -130,7 +133,6 @@ export function ProductFormDialog({
   const [newTag, setNewTag] = useState('')
   const [currentTab, setCurrentTab] = useState('basic')
   const [formErrors, setFormErrors] = useState<string[]>([])
-
   // Generate random SKU
   const generateSKU = () => {
     const prefix = 'SKU'
@@ -139,12 +141,25 @@ export function ProductFormDialog({
     return `${prefix}-${timestamp}-${random}`
   }
 
+  // Generate barcode (12-digit number)
+  const generateBarcode = () => {
+    return Math.floor(100000000000 + Math.random() * 900000000000).toString()
+  }
+
+  // Generate slug from product name
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  }
   const form = useForm<ProductFormData>({
     defaultValues: {
       name: '',
       description: '',
       sku: generateSKU(),
-      barcode: '',
+      slug: '',
+      barcode: generateBarcode(),
       categoryId: undefined,
       brandId: undefined,
       weight: 0,
@@ -183,7 +198,8 @@ export function ProductFormDialog({
         name: product.name,
         description: product.description || '',
         sku: product.sku,
-        barcode: product.barcode || '',
+        slug: product.slug || generateSlug(product.name),
+        barcode: product.barcode || generateBarcode(),
         categoryId: product.categoryId || undefined,
         brandId: product.brandId || undefined,
         weight: product.weight || 0,
@@ -361,39 +377,87 @@ export function ProductFormDialog({
                 </div>
               )}
 
-              <TabsContent value="basic" className="space-y-4">
+              <TabsContent value="basic" className="space-y-4">                <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product Name *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter product name"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e)
+                            // Auto-generate slug when name changes
+                            const slugValue = generateSlug(e.target.value)
+                            form.setValue('slug', slugValue)
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sku"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SKU *</FormLabel>
+                      <FormControl>
+                        <div className="flex gap-2">
+                          <Input placeholder="Auto-generated SKU" {...field} readOnly />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => field.onChange(generateSKU())}
+                            className="whitespace-nowrap"
+                          >
+                            Generate New
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="name"
+                    name="slug"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Product Name *</FormLabel>
+                        <FormLabel>Slug</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter product name" {...field} />
+                          <Input placeholder="Auto-generated from product name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
-
-                  <FormField
+                  />                  <FormField
                     control={form.control}
-                    name="sku"
+                    name="barcode"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>SKU *</FormLabel>
+                        <FormLabel>Barcode</FormLabel>
                         <FormControl>
-                          <div className="flex gap-2">
-                            <Input placeholder="Auto-generated SKU" {...field} readOnly />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => field.onChange(generateSKU())}
-                              className="whitespace-nowrap"
-                            >
-                              Generate New
-                            </Button>
+                          <div className="space-y-2">
+                            <Input placeholder="Auto-generated barcode" {...field} />
+                            {field.value && (
+                              <div className="p-2 bg-white rounded border flex justify-center">
+                                <Barcode
+                                  value={field.value}
+                                  width={1}
+                                  height={30}
+                                  fontSize={12}
+                                />
+                              </div>
+                            )}
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -479,9 +543,7 @@ export function ProductFormDialog({
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
+                </div>                <div className="grid grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="color"
@@ -535,6 +597,126 @@ export function ProductFormDialog({
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="weight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Weight (kg)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            {...field}
+                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            onChange={e => {
+                              const value = parseFloat(e.target.value) || 0
+                              field.onChange(value)
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-2">
+                    <FormLabel>Dimensions</FormLabel>
+                    <div className="grid grid-cols-4 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="dimensions.length"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="Length"
+                                {...field}
+                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                onChange={e => {
+                                  const value = parseFloat(e.target.value) || 0
+                                  field.onChange(value)
+                                }}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="dimensions.width"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="Width"
+                                {...field}
+                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                onChange={e => {
+                                  const value = parseFloat(e.target.value) || 0
+                                  field.onChange(value)
+                                }}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="dimensions.height"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="Height"
+                                {...field}
+                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                onChange={e => {
+                                  const value = parseFloat(e.target.value) || 0
+                                  field.onChange(value)
+                                }}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="dimensions.unit"
+                        render={({ field }) => (
+                          <FormItem>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Unit" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="cm">cm</SelectItem>
+                                <SelectItem value="m">m</SelectItem>
+                                <SelectItem value="in">in</SelectItem>
+                                <SelectItem value="ft">ft</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
 
@@ -896,11 +1078,62 @@ export function ProductFormDialog({
                                 <X className="h-3 w-3" />
                               </Button>
                             </Badge>
-                          ))}
-                        </div>
+                          ))}                        </div>
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="leadTimeSupply"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lead Time Supply (Days)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Days to restock"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            min="0"
+                            style={{
+                              MozAppearance: 'textfield',
+                              WebkitAppearance: 'none'
+                            }}
+                            className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="shelfLife"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Shelf Life (Days)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Days before expiry"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            min="0"
+                            style={{
+                              MozAppearance: 'textfield',
+                              WebkitAppearance: 'none'
+                            }}
+                            className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </TabsContent>
             </Tabs>
