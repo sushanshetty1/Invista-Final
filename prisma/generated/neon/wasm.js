@@ -782,6 +782,16 @@ exports.Prisma.SystemConfigurationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.BundleItemsScalarFieldEnum = {
+  A: 'A',
+  B: 'B'
+};
+
+exports.Prisma.BundleProductsScalarFieldEnum = {
+  A: 'A',
+  B: 'B'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1111,7 +1121,9 @@ exports.Prisma.ModelName = {
   InventoryAudit: 'InventoryAudit',
   InventoryAuditItem: 'InventoryAuditItem',
   ProductReview: 'ProductReview',
-  SystemConfiguration: 'SystemConfiguration'
+  SystemConfiguration: 'SystemConfiguration',
+  BundleItems: 'BundleItems',
+  BundleProducts: 'BundleProducts'
 };
 
 /**

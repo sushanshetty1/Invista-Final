@@ -16,6 +16,7 @@ import {
   getProducts,
   createProduct
 } from '@/lib/actions/products'
+import { supabaseClient } from '@/lib/db'
 
 // Rate limiting: 100 requests per minute per IP
 const RATE_LIMIT = 100
@@ -44,9 +45,9 @@ export async function GET(request: NextRequest) {
 
     const queryInput: ProductQueryInput = {
       page: parseInt(searchParams.get('page') || '1'),
-      limit: Math.min(parseInt(searchParams.get('limit') || '20'), 100), // Max 100 items
-      search: searchParams.get('search') || undefined,
-      categoryId: searchParams.get('categoryId') || undefined, brandId: searchParams.get('brandId') || undefined,
+      limit: Math.min(parseInt(searchParams.get('limit') || '20'), 100), // Max 100 items      search: searchParams.get('search') || undefined,
+      categoryId: searchParams.get('categoryId') || undefined,
+      brandId: searchParams.get('brandId') || undefined,
       status: (searchParams.get('status') as 'ACTIVE' | 'INACTIVE' | 'DISCONTINUED' | 'DRAFT') || undefined,
       sortBy: (searchParams.get('sortBy') as 'name' | 'sku' | 'createdAt' | 'updatedAt') || 'createdAt',
       sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
@@ -79,39 +80,68 @@ export async function POST(request: NextRequest) {
     const clientId = getClientIdentifier(request)
     if (!checkRateLimit(`${clientId}:write`, 20, RATE_WINDOW)) {
       return errorResponse('Rate limit exceeded for write operations', 429)
-    }
-
-    // Parse request body
+    }    // Parse request body
     const body = await request.json()
 
     // Authentication check
     const authResult = await authenticate(request)
     if (!authResult.success) {
-      return errorResponse('Unauthorized', 401)
+      return errorResponse('Authentication required', 401)
     }
 
-    // Use authenticated user ID
-    const userId = authResult.user?.id || 'system'
-    const createInput: CreateProductInput = {
-      ...body,
-      createdBy: body.createdBy || userId
+    const userId = authResult.user?.id
+    if (!userId) {
+      return errorResponse('User ID not found', 401)
     }
 
-    // Validate input
-    const validatedInput = createProductSchema.parse(createInput)
+    // Get user's company from Supabase using Prisma client
+    console.log('Looking up company for userId:', userId)
 
-    // Create product using server action
-    const result = await createProduct(validatedInput)
+    try {
+      const companyUser = await supabaseClient.companyUser.findFirst({
+        where: {
+          userId: userId,
+          isActive: true
+        },
+        select: {
+          companyId: true,
+          role: true
+        }
+      })
 
-    if (!result.success) {
-      return errorResponse(result.error!, 400)
+      console.log('Company lookup result:', companyUser)
+
+      if (!companyUser) {
+        return errorResponse('User not associated with any company', 403)
+      }
+
+      // Prepare the input with all required fields
+      const createInput: CreateProductInput = {
+        ...body,
+        createdBy: userId,
+        companyId: companyUser.companyId // Add the companyId from lookup
+      }      // Validate input
+      const validatedInput = createProductSchema.parse(createInput)
+
+      // Create product using server action
+      const result = await createProduct(validatedInput)
+
+      console.log('API route: createProduct result:', result)
+
+      if (!result.success) {
+        console.log('API route: Product creation failed with error:', result.error)
+        return errorResponse(result.error!, 400)
+      }
+
+      return successResponse(
+        result.data,
+        result.message,
+        undefined
+      )
+    } catch (companyLookupError) {
+      console.error('Company lookup error:', companyLookupError)
+      return errorResponse('Failed to lookup user company', 500)
     }
-
-    return successResponse(
-      result.data,
-      result.message,
-      undefined
-    )
 
   } catch (error) {
     return handleError(error)

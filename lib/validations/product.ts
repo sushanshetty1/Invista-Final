@@ -3,12 +3,11 @@ import { z } from 'zod'
 // Base product schema for shared validation
 export const baseProductSchema = z.object({
   name: z.string().min(1, 'Product name is required').max(255),
-  description: z.string().optional(),
-  sku: z.string().min(1, 'SKU is required').max(100),
+  description: z.string().optional(), sku: z.string().min(1, 'SKU is required').max(100),
   barcode: z.string().optional(),
   slug: z.string().optional(),
-  categoryId: z.string().uuid().optional(),
-  brandId: z.string().uuid().optional(),
+  categoryId: z.string().optional(),
+  brandId: z.string().optional(),
   weight: z.number().positive().optional(),
   dimensions: z.object({
     length: z.number().positive(),
@@ -41,6 +40,7 @@ export const baseProductSchema = z.object({
 // Create product schema
 export const createProductSchema = baseProductSchema.extend({
   createdBy: z.string().uuid('Invalid user ID'),
+  companyId: z.string().min(1, 'Company ID is required'),
 })
 
 // Update product schema - all fields optional except ID
@@ -51,10 +51,9 @@ export const updateProductSchema = baseProductSchema.partial().extend({
 // Product query schema for filters
 export const productQuerySchema = z.object({
   page: z.number().int().positive().default(1),
-  limit: z.number().int().min(1).max(100).default(20),
-  search: z.string().optional(),
-  categoryId: z.string().uuid().optional(),
-  brandId: z.string().uuid().optional(),
+  limit: z.number().int().min(1).max(100).default(20), search: z.string().optional(),
+  categoryId: z.string().optional(),
+  brandId: z.string().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'DISCONTINUED', 'DRAFT']).optional(),
   sortBy: z.enum(['name', 'sku', 'createdAt', 'updatedAt']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),

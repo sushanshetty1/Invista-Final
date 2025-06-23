@@ -124,6 +124,7 @@ export interface Product {
   minStockLevel?: number
   reorderPoint?: number
   maxStockLevel?: number
+  reorderQuantity?: number
   trackInventory: boolean
   sellWithoutStock: boolean
   taxable: boolean
