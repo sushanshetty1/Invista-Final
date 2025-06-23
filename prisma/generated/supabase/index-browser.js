@@ -169,6 +169,8 @@ exports.Prisma.CompanyUserScalarFieldEnum = {
   title: 'title',
   departmentId: 'departmentId',
   employeeId: 'employeeId',
+  primaryLocationId: 'primaryLocationId',
+  allowedLocationIds: 'allowedLocationIds',
   startDate: 'startDate',
   endDate: 'endDate',
   permissions: 'permissions',
@@ -223,6 +225,8 @@ exports.Prisma.CompanyLocationScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
   name: 'name',
+  description: 'description',
+  code: 'code',
   type: 'type',
   address: 'address',
   coordinates: 'coordinates',
@@ -230,9 +234,18 @@ exports.Prisma.CompanyLocationScalarFieldEnum = {
   phone: 'phone',
   email: 'email',
   managerName: 'managerName',
+  managerUserId: 'managerUserId',
   businessHours: 'businessHours',
   isPrimary: 'isPrimary',
   isActive: 'isActive',
+  capacity: 'capacity',
+  features: 'features',
+  storeFormat: 'storeFormat',
+  salesChannels: 'salesChannels',
+  allowsInventory: 'allowsInventory',
+  allowsOrders: 'allowsOrders',
+  allowsReturns: 'allowsReturns',
+  allowsTransfers: 'allowsTransfers',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -489,6 +502,20 @@ exports.Prisma.ApiKeyScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.UserLocationAccessScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  companyId: 'companyId',
+  locationId: 'locationId',
+  accessLevel: 'accessLevel',
+  canManage: 'canManage',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  isActive: 'isActive',
+  grantedBy: 'grantedBy',
+  grantedAt: 'grantedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -583,9 +610,19 @@ exports.LocationType = exports.$Enums.LocationType = {
   HEADQUARTERS: 'HEADQUARTERS',
   OFFICE: 'OFFICE',
   WAREHOUSE: 'WAREHOUSE',
-  STORE: 'STORE',
+  DISTRIBUTION_CENTER: 'DISTRIBUTION_CENTER',
+  RETAIL_STORE: 'RETAIL_STORE',
+  FLAGSHIP_STORE: 'FLAGSHIP_STORE',
+  OUTLET_STORE: 'OUTLET_STORE',
+  POP_UP_STORE: 'POP_UP_STORE',
+  KIOSK: 'KIOSK',
+  SHOWROOM: 'SHOWROOM',
   FACTORY: 'FACTORY',
+  FULFILLMENT_CENTER: 'FULFILLMENT_CENTER',
+  CROSS_DOCK: 'CROSS_DOCK',
+  COLD_STORAGE: 'COLD_STORAGE',
   REMOTE: 'REMOTE',
+  VENDOR_LOCATION: 'VENDOR_LOCATION',
   OTHER: 'OTHER'
 };
 
@@ -615,7 +652,7 @@ exports.AuditSeverity = exports.$Enums.AuditSeverity = {
   CRITICAL: 'CRITICAL'
 };
 
-exports.PaymentStatus = exports.$Enums.PaymentStatus = {
+exports.BillingPaymentStatus = exports.$Enums.BillingPaymentStatus = {
   PENDING: 'PENDING',
   PAID: 'PAID',
   FAILED: 'FAILED',
@@ -639,6 +676,14 @@ exports.NotificationPriority = exports.$Enums.NotificationPriority = {
   URGENT: 'URGENT'
 };
 
+exports.LocationAccessLevel = exports.$Enums.LocationAccessLevel = {
+  READ_ONLY: 'READ_ONLY',
+  STANDARD: 'STANDARD',
+  SUPERVISOR: 'SUPERVISOR',
+  MANAGER: 'MANAGER',
+  ADMIN: 'ADMIN'
+};
+
 exports.Prisma.ModelName = {
   Company: 'Company',
   CompanyUser: 'CompanyUser',
@@ -659,7 +704,8 @@ exports.Prisma.ModelName = {
   UserNotification: 'UserNotification',
   AuditLog: 'AuditLog',
   SystemSetting: 'SystemSetting',
-  ApiKey: 'ApiKey'
+  ApiKey: 'ApiKey',
+  UserLocationAccess: 'UserLocationAccess'
 };
 
 /**

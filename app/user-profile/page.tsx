@@ -18,7 +18,10 @@ import {
   Settings,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  MapPin,
+  Clock,
+  Users
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
@@ -280,10 +283,10 @@ export default function UserProfilePage() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">        <TabsList>
           <TabsTrigger value="profile">Personal Information</TabsTrigger>
           <TabsTrigger value="companies">Company Memberships</TabsTrigger>
+          <TabsTrigger value="locations">My Locations</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
@@ -436,8 +439,11 @@ export default function UserProfilePage() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </CardContent>          </Card>
+        </TabsContent>
+
+        <TabsContent value="locations" className="space-y-6">
+          <UserLocationInfo userProfile={userProfile} />
         </TabsContent>
 
         <TabsContent value="preferences" className="space-y-6">
@@ -583,5 +589,257 @@ export default function UserProfilePage() {
         </TabsContent>      </Tabs>
     </div>
     </DashboardGuard>
+  );
+}
+
+// UserLocationInfo Component
+function UserLocationInfo({ userProfile }: { userProfile: UserProfile | null }) {
+  const [companyMemberships, setCompanyMemberships] = useState<CompanyMembership[]>([]);
+  const [locationData, setLocationData] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (userProfile?.id) {
+      fetchUserLocationData();
+    }
+  }, [userProfile?.id]);
+
+  const fetchUserLocationData = async () => {
+    try {
+      // Get user's company memberships first
+      const { data: memberships, error: membershipError } = await supabase
+        .from('company_users')
+        .select(`
+          id,
+          companyId,
+          role,
+          primaryLocationId,
+          company:companies!inner(
+            id,
+            name
+          )
+        `)
+        .eq('userId', userProfile?.id);
+
+      if (membershipError) throw membershipError;
+
+      // For each company, get location data
+      const locationPromises = memberships?.map(async (membership) => {
+        try {
+          // Get primary location info
+          let primaryLocation = null;
+          if (membership.primaryLocationId) {
+            const response = await fetch(`/api/companies/${membership.companyId}/locations/${membership.primaryLocationId}`);
+            if (response.ok) {
+              const result = await response.json();
+              primaryLocation = result.data;
+            }
+          }
+
+          // Get user's location access
+          const accessResponse = await fetch(`/api/companies/${membership.companyId}/users/${userProfile?.id}/location-access`);
+          let locationAccess = [];
+          if (accessResponse.ok) {
+            const accessResult = await accessResponse.json();
+            locationAccess = accessResult.data?.locationAccess || [];
+          }          return {
+            companyId: membership.companyId,
+            companyName: (membership as any).company?.name || 'Unknown Company',
+            primaryLocation,
+            locationAccess,
+            role: membership.role
+          };
+        } catch (error) {
+          console.error('Error fetching location data for company:', membership.companyId, error);
+          return {
+            companyId: membership.companyId,
+            companyName: (membership as any).company?.name || 'Unknown Company',
+            primaryLocation: null,
+            locationAccess: [],
+            role: membership.role
+          };
+        }
+      }) || [];
+
+      const locationResults = await Promise.all(locationPromises);
+      
+      // Convert to object with companyId as key
+      const locationDataObj = locationResults.reduce((acc, result) => {
+        acc[result.companyId] = result;
+        return acc;
+      }, {} as any);
+
+      setLocationData(locationDataObj);      setCompanyMemberships(memberships?.map(m => ({
+        id: m.id,
+        companyName: (m as any).company?.name || 'Unknown Company',
+        role: m.role,
+        status: 'ACTIVE' as const,
+        joinedAt: new Date().toISOString() // This should come from the actual data
+      })) || []);
+
+    } catch (error) {
+      console.error('Error fetching user location data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (companyMemberships.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            My Locations
+          </CardTitle>
+          <CardDescription>
+            Your assigned work locations and access permissions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">
+            <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No location assignments found</p>
+            <p className="text-sm">You need to be a member of a company to have location assignments</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {companyMemberships.map((membership) => {
+        const companyLocationData = locationData[membership.id] || {};
+        
+        return (
+          <Card key={membership.id}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                {membership.companyName}
+              </CardTitle>
+              <CardDescription>
+                Your location assignments and access permissions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Primary Location */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Primary Work Location
+                </h4>
+                {companyLocationData.primaryLocation ? (
+                  <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h5 className="font-medium">{companyLocationData.primaryLocation.name}</h5>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {companyLocationData.primaryLocation.type?.replace('_', ' ')}
+                        </p>
+                        {companyLocationData.primaryLocation.address && (
+                          <div className="text-sm text-muted-foreground">
+                            {typeof companyLocationData.primaryLocation.address === 'object' ? (
+                              <div>
+                                {companyLocationData.primaryLocation.address.street && (
+                                  <div>{companyLocationData.primaryLocation.address.street}</div>
+                                )}
+                                {(companyLocationData.primaryLocation.address.city || companyLocationData.primaryLocation.address.state) && (
+                                  <div>
+                                    {companyLocationData.primaryLocation.address.city}
+                                    {companyLocationData.primaryLocation.address.city && companyLocationData.primaryLocation.address.state && ', '}
+                                    {companyLocationData.primaryLocation.address.state} {companyLocationData.primaryLocation.address.zip}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span>{companyLocationData.primaryLocation.address}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <Badge variant="default">Primary</Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900/20">
+                    <p className="text-muted-foreground">No primary location assigned</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Contact your company admin to assign a primary work location
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Location Access */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Additional Location Access
+                </h4>
+                {companyLocationData.locationAccess && companyLocationData.locationAccess.length > 0 ? (
+                  <div className="space-y-3">
+                    {companyLocationData.locationAccess.map((access: any) => (
+                      <div key={access.id} className="p-4 border rounded-lg">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h5 className="font-medium">{access.location.name}</h5>
+                            <p className="text-sm text-muted-foreground">
+                              {access.location.type?.replace('_', ' ')}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge variant="outline">
+                              {access.accessLevel?.replace('_', ' ')}
+                            </Badge>
+                            {access.canManage && (
+                              <Badge variant="secondary" className="text-xs">
+                                Can Manage
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {access.endDate && (
+                          <div className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            Access expires: {new Date(access.endDate).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900/20">
+                    <p className="text-muted-foreground">No additional location access</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      You only have access to your primary location
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Role Information */}
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Your role in this company:</span>
+                  <Badge variant="outline">{companyLocationData.role?.replace('_', ' ')}</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
   );
 }

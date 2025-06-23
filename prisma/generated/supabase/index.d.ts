@@ -113,6 +113,11 @@ export type SystemSetting = $Result.DefaultSelection<Prisma.$SystemSettingPayloa
  * 
  */
 export type ApiKey = $Result.DefaultSelection<Prisma.$ApiKeyPayload>
+/**
+ * Model UserLocationAccess
+ * 
+ */
+export type UserLocationAccess = $Result.DefaultSelection<Prisma.$UserLocationAccessPayload>
 
 /**
  * Enums
@@ -192,9 +197,19 @@ export const LocationType: {
   HEADQUARTERS: 'HEADQUARTERS',
   OFFICE: 'OFFICE',
   WAREHOUSE: 'WAREHOUSE',
-  STORE: 'STORE',
+  DISTRIBUTION_CENTER: 'DISTRIBUTION_CENTER',
+  RETAIL_STORE: 'RETAIL_STORE',
+  FLAGSHIP_STORE: 'FLAGSHIP_STORE',
+  OUTLET_STORE: 'OUTLET_STORE',
+  POP_UP_STORE: 'POP_UP_STORE',
+  KIOSK: 'KIOSK',
+  SHOWROOM: 'SHOWROOM',
   FACTORY: 'FACTORY',
+  FULFILLMENT_CENTER: 'FULFILLMENT_CENTER',
+  CROSS_DOCK: 'CROSS_DOCK',
+  COLD_STORAGE: 'COLD_STORAGE',
   REMOTE: 'REMOTE',
+  VENDOR_LOCATION: 'VENDOR_LOCATION',
   OTHER: 'OTHER'
 };
 
@@ -226,7 +241,7 @@ export const IntegrationStatus: {
 export type IntegrationStatus = (typeof IntegrationStatus)[keyof typeof IntegrationStatus]
 
 
-export const PaymentStatus: {
+export const BillingPaymentStatus: {
   PENDING: 'PENDING',
   PAID: 'PAID',
   FAILED: 'FAILED',
@@ -234,7 +249,7 @@ export const PaymentStatus: {
   CANCELLED: 'CANCELLED'
 };
 
-export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
+export type BillingPaymentStatus = (typeof BillingPaymentStatus)[keyof typeof BillingPaymentStatus]
 
 
 export const InvitationStatus: {
@@ -280,6 +295,17 @@ export const AuditSeverity: {
 
 export type AuditSeverity = (typeof AuditSeverity)[keyof typeof AuditSeverity]
 
+
+export const LocationAccessLevel: {
+  READ_ONLY: 'READ_ONLY',
+  STANDARD: 'STANDARD',
+  SUPERVISOR: 'SUPERVISOR',
+  MANAGER: 'MANAGER',
+  ADMIN: 'ADMIN'
+};
+
+export type LocationAccessLevel = (typeof LocationAccessLevel)[keyof typeof LocationAccessLevel]
+
 }
 
 export type CompanySize = $Enums.CompanySize
@@ -318,9 +344,9 @@ export type IntegrationStatus = $Enums.IntegrationStatus
 
 export const IntegrationStatus: typeof $Enums.IntegrationStatus
 
-export type PaymentStatus = $Enums.PaymentStatus
+export type BillingPaymentStatus = $Enums.BillingPaymentStatus
 
-export const PaymentStatus: typeof $Enums.PaymentStatus
+export const BillingPaymentStatus: typeof $Enums.BillingPaymentStatus
 
 export type InvitationStatus = $Enums.InvitationStatus
 
@@ -337,6 +363,10 @@ export const NotificationPriority: typeof $Enums.NotificationPriority
 export type AuditSeverity = $Enums.AuditSeverity
 
 export const AuditSeverity: typeof $Enums.AuditSeverity
+
+export type LocationAccessLevel = $Enums.LocationAccessLevel
+
+export const LocationAccessLevel: typeof $Enums.LocationAccessLevel
 
 /**
  * ##  Prisma Client ʲˢ
@@ -662,6 +692,16 @@ export class PrismaClient<
     * ```
     */
   get apiKey(): Prisma.ApiKeyDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.userLocationAccess`: Exposes CRUD operations for the **UserLocationAccess** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserLocationAccesses
+    * const userLocationAccesses = await prisma.userLocationAccess.findMany()
+    * ```
+    */
+  get userLocationAccess(): Prisma.UserLocationAccessDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1121,7 +1161,8 @@ export namespace Prisma {
     UserNotification: 'UserNotification',
     AuditLog: 'AuditLog',
     SystemSetting: 'SystemSetting',
-    ApiKey: 'ApiKey'
+    ApiKey: 'ApiKey',
+    UserLocationAccess: 'UserLocationAccess'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1140,7 +1181,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "company" | "companyUser" | "department" | "companyInvite" | "companyLocation" | "companyIntegration" | "companyAuditLog" | "billingHistory" | "user" | "role" | "userRole" | "userSession" | "loginHistory" | "passwordReset" | "userInvitation" | "userPreference" | "userNotification" | "auditLog" | "systemSetting" | "apiKey"
+      modelProps: "company" | "companyUser" | "department" | "companyInvite" | "companyLocation" | "companyIntegration" | "companyAuditLog" | "billingHistory" | "user" | "role" | "userRole" | "userSession" | "loginHistory" | "passwordReset" | "userInvitation" | "userPreference" | "userNotification" | "auditLog" | "systemSetting" | "apiKey" | "userLocationAccess"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2624,6 +2665,80 @@ export namespace Prisma {
           }
         }
       }
+      UserLocationAccess: {
+        payload: Prisma.$UserLocationAccessPayload<ExtArgs>
+        fields: Prisma.UserLocationAccessFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UserLocationAccessFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UserLocationAccessFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>
+          }
+          findFirst: {
+            args: Prisma.UserLocationAccessFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UserLocationAccessFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>
+          }
+          findMany: {
+            args: Prisma.UserLocationAccessFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>[]
+          }
+          create: {
+            args: Prisma.UserLocationAccessCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>
+          }
+          createMany: {
+            args: Prisma.UserLocationAccessCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UserLocationAccessCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>[]
+          }
+          delete: {
+            args: Prisma.UserLocationAccessDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>
+          }
+          update: {
+            args: Prisma.UserLocationAccessUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>
+          }
+          deleteMany: {
+            args: Prisma.UserLocationAccessDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UserLocationAccessUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UserLocationAccessUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>[]
+          }
+          upsert: {
+            args: Prisma.UserLocationAccessUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserLocationAccessPayload>
+          }
+          aggregate: {
+            args: Prisma.UserLocationAccessAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUserLocationAccess>
+          }
+          groupBy: {
+            args: Prisma.UserLocationAccessGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserLocationAccessGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UserLocationAccessCountArgs<ExtArgs>
+            result: $Utils.Optional<UserLocationAccessCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2728,6 +2843,7 @@ export namespace Prisma {
     auditLog?: AuditLogOmit
     systemSetting?: SystemSettingOmit
     apiKey?: ApiKeyOmit
+    userLocationAccess?: UserLocationAccessOmit
   }
 
   /* Types for Logging */
@@ -2908,10 +3024,12 @@ export namespace Prisma {
 
   export type CompanyUserCountOutputType = {
     reports: number
+    locationAccess: number
   }
 
   export type CompanyUserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     reports?: boolean | CompanyUserCountOutputTypeCountReportsArgs
+    locationAccess?: boolean | CompanyUserCountOutputTypeCountLocationAccessArgs
   }
 
   // Custom InputTypes
@@ -2930,6 +3048,13 @@ export namespace Prisma {
    */
   export type CompanyUserCountOutputTypeCountReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CompanyUserWhereInput
+  }
+
+  /**
+   * CompanyUserCountOutputType without action
+   */
+  export type CompanyUserCountOutputTypeCountLocationAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserLocationAccessWhereInput
   }
 
 
@@ -2970,6 +3095,46 @@ export namespace Prisma {
    */
   export type DepartmentCountOutputTypeCountChildrenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DepartmentWhereInput
+  }
+
+
+  /**
+   * Count Type CompanyLocationCountOutputType
+   */
+
+  export type CompanyLocationCountOutputType = {
+    primaryUsers: number
+    userAccess: number
+  }
+
+  export type CompanyLocationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    primaryUsers?: boolean | CompanyLocationCountOutputTypeCountPrimaryUsersArgs
+    userAccess?: boolean | CompanyLocationCountOutputTypeCountUserAccessArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CompanyLocationCountOutputType without action
+   */
+  export type CompanyLocationCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompanyLocationCountOutputType
+     */
+    select?: CompanyLocationCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CompanyLocationCountOutputType without action
+   */
+  export type CompanyLocationCountOutputTypeCountPrimaryUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompanyUserWhereInput
+  }
+
+  /**
+   * CompanyLocationCountOutputType without action
+   */
+  export type CompanyLocationCountOutputTypeCountUserAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserLocationAccessWhereInput
   }
 
 
@@ -4853,6 +5018,7 @@ export namespace Prisma {
     title: string | null
     departmentId: string | null
     employeeId: string | null
+    primaryLocationId: string | null
     startDate: Date | null
     endDate: Date | null
     isActive: boolean | null
@@ -4875,6 +5041,7 @@ export namespace Prisma {
     title: string | null
     departmentId: string | null
     employeeId: string | null
+    primaryLocationId: string | null
     startDate: Date | null
     endDate: Date | null
     isActive: boolean | null
@@ -4897,6 +5064,8 @@ export namespace Prisma {
     title: number
     departmentId: number
     employeeId: number
+    primaryLocationId: number
+    allowedLocationIds: number
     startDate: number
     endDate: number
     permissions: number
@@ -4923,6 +5092,7 @@ export namespace Prisma {
     title?: true
     departmentId?: true
     employeeId?: true
+    primaryLocationId?: true
     startDate?: true
     endDate?: true
     isActive?: true
@@ -4945,6 +5115,7 @@ export namespace Prisma {
     title?: true
     departmentId?: true
     employeeId?: true
+    primaryLocationId?: true
     startDate?: true
     endDate?: true
     isActive?: true
@@ -4967,6 +5138,8 @@ export namespace Prisma {
     title?: true
     departmentId?: true
     employeeId?: true
+    primaryLocationId?: true
+    allowedLocationIds?: true
     startDate?: true
     endDate?: true
     permissions?: true
@@ -5064,6 +5237,8 @@ export namespace Prisma {
     title: string | null
     departmentId: string | null
     employeeId: string | null
+    primaryLocationId: string | null
+    allowedLocationIds: JsonValue | null
     startDate: Date
     endDate: Date | null
     permissions: JsonValue | null
@@ -5105,6 +5280,8 @@ export namespace Prisma {
     title?: boolean
     departmentId?: boolean
     employeeId?: boolean
+    primaryLocationId?: boolean
+    allowedLocationIds?: boolean
     startDate?: boolean
     endDate?: boolean
     permissions?: boolean
@@ -5121,9 +5298,11 @@ export namespace Prisma {
     lastActiveAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     department?: boolean | CompanyUser$departmentArgs<ExtArgs>
+    primaryLocation?: boolean | CompanyUser$primaryLocationArgs<ExtArgs>
     manager?: boolean | CompanyUser$managerArgs<ExtArgs>
     reports?: boolean | CompanyUser$reportsArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    locationAccess?: boolean | CompanyUser$locationAccessArgs<ExtArgs>
     _count?: boolean | CompanyUserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["companyUser"]>
 
@@ -5135,6 +5314,8 @@ export namespace Prisma {
     title?: boolean
     departmentId?: boolean
     employeeId?: boolean
+    primaryLocationId?: boolean
+    allowedLocationIds?: boolean
     startDate?: boolean
     endDate?: boolean
     permissions?: boolean
@@ -5151,6 +5332,7 @@ export namespace Prisma {
     lastActiveAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     department?: boolean | CompanyUser$departmentArgs<ExtArgs>
+    primaryLocation?: boolean | CompanyUser$primaryLocationArgs<ExtArgs>
     manager?: boolean | CompanyUser$managerArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["companyUser"]>
@@ -5163,6 +5345,8 @@ export namespace Prisma {
     title?: boolean
     departmentId?: boolean
     employeeId?: boolean
+    primaryLocationId?: boolean
+    allowedLocationIds?: boolean
     startDate?: boolean
     endDate?: boolean
     permissions?: boolean
@@ -5179,6 +5363,7 @@ export namespace Prisma {
     lastActiveAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     department?: boolean | CompanyUser$departmentArgs<ExtArgs>
+    primaryLocation?: boolean | CompanyUser$primaryLocationArgs<ExtArgs>
     manager?: boolean | CompanyUser$managerArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["companyUser"]>
@@ -5191,6 +5376,8 @@ export namespace Prisma {
     title?: boolean
     departmentId?: boolean
     employeeId?: boolean
+    primaryLocationId?: boolean
+    allowedLocationIds?: boolean
     startDate?: boolean
     endDate?: boolean
     permissions?: boolean
@@ -5207,24 +5394,28 @@ export namespace Prisma {
     lastActiveAt?: boolean
   }
 
-  export type CompanyUserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "companyId" | "userId" | "role" | "title" | "departmentId" | "employeeId" | "startDate" | "endDate" | "permissions" | "isActive" | "isOwner" | "canInvite" | "canManageBilling" | "managerId" | "directReports" | "status" | "invitedBy" | "invitedAt" | "joinedAt" | "lastActiveAt", ExtArgs["result"]["companyUser"]>
+  export type CompanyUserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "companyId" | "userId" | "role" | "title" | "departmentId" | "employeeId" | "primaryLocationId" | "allowedLocationIds" | "startDate" | "endDate" | "permissions" | "isActive" | "isOwner" | "canInvite" | "canManageBilling" | "managerId" | "directReports" | "status" | "invitedBy" | "invitedAt" | "joinedAt" | "lastActiveAt", ExtArgs["result"]["companyUser"]>
   export type CompanyUserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     department?: boolean | CompanyUser$departmentArgs<ExtArgs>
+    primaryLocation?: boolean | CompanyUser$primaryLocationArgs<ExtArgs>
     manager?: boolean | CompanyUser$managerArgs<ExtArgs>
     reports?: boolean | CompanyUser$reportsArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    locationAccess?: boolean | CompanyUser$locationAccessArgs<ExtArgs>
     _count?: boolean | CompanyUserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CompanyUserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     department?: boolean | CompanyUser$departmentArgs<ExtArgs>
+    primaryLocation?: boolean | CompanyUser$primaryLocationArgs<ExtArgs>
     manager?: boolean | CompanyUser$managerArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type CompanyUserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     department?: boolean | CompanyUser$departmentArgs<ExtArgs>
+    primaryLocation?: boolean | CompanyUser$primaryLocationArgs<ExtArgs>
     manager?: boolean | CompanyUser$managerArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -5234,9 +5425,11 @@ export namespace Prisma {
     objects: {
       company: Prisma.$CompanyPayload<ExtArgs>
       department: Prisma.$DepartmentPayload<ExtArgs> | null
+      primaryLocation: Prisma.$CompanyLocationPayload<ExtArgs> | null
       manager: Prisma.$CompanyUserPayload<ExtArgs> | null
       reports: Prisma.$CompanyUserPayload<ExtArgs>[]
       user: Prisma.$UserPayload<ExtArgs>
+      locationAccess: Prisma.$UserLocationAccessPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5246,6 +5439,8 @@ export namespace Prisma {
       title: string | null
       departmentId: string | null
       employeeId: string | null
+      primaryLocationId: string | null
+      allowedLocationIds: Prisma.JsonValue | null
       startDate: Date
       endDate: Date | null
       permissions: Prisma.JsonValue | null
@@ -5656,9 +5851,11 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     company<T extends CompanyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CompanyDefaultArgs<ExtArgs>>): Prisma__CompanyClient<$Result.GetResult<Prisma.$CompanyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     department<T extends CompanyUser$departmentArgs<ExtArgs> = {}>(args?: Subset<T, CompanyUser$departmentArgs<ExtArgs>>): Prisma__DepartmentClient<$Result.GetResult<Prisma.$DepartmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    primaryLocation<T extends CompanyUser$primaryLocationArgs<ExtArgs> = {}>(args?: Subset<T, CompanyUser$primaryLocationArgs<ExtArgs>>): Prisma__CompanyLocationClient<$Result.GetResult<Prisma.$CompanyLocationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     manager<T extends CompanyUser$managerArgs<ExtArgs> = {}>(args?: Subset<T, CompanyUser$managerArgs<ExtArgs>>): Prisma__CompanyUserClient<$Result.GetResult<Prisma.$CompanyUserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     reports<T extends CompanyUser$reportsArgs<ExtArgs> = {}>(args?: Subset<T, CompanyUser$reportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompanyUserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    locationAccess<T extends CompanyUser$locationAccessArgs<ExtArgs> = {}>(args?: Subset<T, CompanyUser$locationAccessArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5695,6 +5892,8 @@ export namespace Prisma {
     readonly title: FieldRef<"CompanyUser", 'String'>
     readonly departmentId: FieldRef<"CompanyUser", 'String'>
     readonly employeeId: FieldRef<"CompanyUser", 'String'>
+    readonly primaryLocationId: FieldRef<"CompanyUser", 'String'>
+    readonly allowedLocationIds: FieldRef<"CompanyUser", 'Json'>
     readonly startDate: FieldRef<"CompanyUser", 'DateTime'>
     readonly endDate: FieldRef<"CompanyUser", 'DateTime'>
     readonly permissions: FieldRef<"CompanyUser", 'Json'>
@@ -6124,6 +6323,25 @@ export namespace Prisma {
   }
 
   /**
+   * CompanyUser.primaryLocation
+   */
+  export type CompanyUser$primaryLocationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompanyLocation
+     */
+    select?: CompanyLocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompanyLocation
+     */
+    omit?: CompanyLocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompanyLocationInclude<ExtArgs> | null
+    where?: CompanyLocationWhereInput
+  }
+
+  /**
    * CompanyUser.manager
    */
   export type CompanyUser$managerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6164,6 +6382,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CompanyUserScalarFieldEnum | CompanyUserScalarFieldEnum[]
+  }
+
+  /**
+   * CompanyUser.locationAccess
+   */
+  export type CompanyUser$locationAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    where?: UserLocationAccessWhereInput
+    orderBy?: UserLocationAccessOrderByWithRelationInput | UserLocationAccessOrderByWithRelationInput[]
+    cursor?: UserLocationAccessWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserLocationAccessScalarFieldEnum | UserLocationAccessScalarFieldEnum[]
   }
 
   /**
@@ -8680,13 +8922,21 @@ export namespace Prisma {
     id: string | null
     companyId: string | null
     name: string | null
+    description: string | null
+    code: string | null
     type: $Enums.LocationType | null
     timezone: string | null
     phone: string | null
     email: string | null
     managerName: string | null
+    managerUserId: string | null
     isPrimary: boolean | null
     isActive: boolean | null
+    storeFormat: string | null
+    allowsInventory: boolean | null
+    allowsOrders: boolean | null
+    allowsReturns: boolean | null
+    allowsTransfers: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -8695,13 +8945,21 @@ export namespace Prisma {
     id: string | null
     companyId: string | null
     name: string | null
+    description: string | null
+    code: string | null
     type: $Enums.LocationType | null
     timezone: string | null
     phone: string | null
     email: string | null
     managerName: string | null
+    managerUserId: string | null
     isPrimary: boolean | null
     isActive: boolean | null
+    storeFormat: string | null
+    allowsInventory: boolean | null
+    allowsOrders: boolean | null
+    allowsReturns: boolean | null
+    allowsTransfers: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -8710,6 +8968,8 @@ export namespace Prisma {
     id: number
     companyId: number
     name: number
+    description: number
+    code: number
     type: number
     address: number
     coordinates: number
@@ -8717,9 +8977,18 @@ export namespace Prisma {
     phone: number
     email: number
     managerName: number
+    managerUserId: number
     businessHours: number
     isPrimary: number
     isActive: number
+    capacity: number
+    features: number
+    storeFormat: number
+    salesChannels: number
+    allowsInventory: number
+    allowsOrders: number
+    allowsReturns: number
+    allowsTransfers: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -8730,13 +8999,21 @@ export namespace Prisma {
     id?: true
     companyId?: true
     name?: true
+    description?: true
+    code?: true
     type?: true
     timezone?: true
     phone?: true
     email?: true
     managerName?: true
+    managerUserId?: true
     isPrimary?: true
     isActive?: true
+    storeFormat?: true
+    allowsInventory?: true
+    allowsOrders?: true
+    allowsReturns?: true
+    allowsTransfers?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -8745,13 +9022,21 @@ export namespace Prisma {
     id?: true
     companyId?: true
     name?: true
+    description?: true
+    code?: true
     type?: true
     timezone?: true
     phone?: true
     email?: true
     managerName?: true
+    managerUserId?: true
     isPrimary?: true
     isActive?: true
+    storeFormat?: true
+    allowsInventory?: true
+    allowsOrders?: true
+    allowsReturns?: true
+    allowsTransfers?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -8760,6 +9045,8 @@ export namespace Prisma {
     id?: true
     companyId?: true
     name?: true
+    description?: true
+    code?: true
     type?: true
     address?: true
     coordinates?: true
@@ -8767,9 +9054,18 @@ export namespace Prisma {
     phone?: true
     email?: true
     managerName?: true
+    managerUserId?: true
     businessHours?: true
     isPrimary?: true
     isActive?: true
+    capacity?: true
+    features?: true
+    storeFormat?: true
+    salesChannels?: true
+    allowsInventory?: true
+    allowsOrders?: true
+    allowsReturns?: true
+    allowsTransfers?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -8851,6 +9147,8 @@ export namespace Prisma {
     id: string
     companyId: string
     name: string
+    description: string | null
+    code: string | null
     type: $Enums.LocationType
     address: JsonValue
     coordinates: JsonValue | null
@@ -8858,9 +9156,18 @@ export namespace Prisma {
     phone: string | null
     email: string | null
     managerName: string | null
+    managerUserId: string | null
     businessHours: JsonValue | null
     isPrimary: boolean
     isActive: boolean
+    capacity: JsonValue | null
+    features: JsonValue | null
+    storeFormat: string | null
+    salesChannels: JsonValue | null
+    allowsInventory: boolean
+    allowsOrders: boolean
+    allowsReturns: boolean
+    allowsTransfers: boolean
     createdAt: Date
     updatedAt: Date
     _count: CompanyLocationCountAggregateOutputType | null
@@ -8886,6 +9193,8 @@ export namespace Prisma {
     id?: boolean
     companyId?: boolean
     name?: boolean
+    description?: boolean
+    code?: boolean
     type?: boolean
     address?: boolean
     coordinates?: boolean
@@ -8893,18 +9202,32 @@ export namespace Prisma {
     phone?: boolean
     email?: boolean
     managerName?: boolean
+    managerUserId?: boolean
     businessHours?: boolean
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: boolean
+    features?: boolean
+    storeFormat?: boolean
+    salesChannels?: boolean
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
+    primaryUsers?: boolean | CompanyLocation$primaryUsersArgs<ExtArgs>
+    userAccess?: boolean | CompanyLocation$userAccessArgs<ExtArgs>
+    _count?: boolean | CompanyLocationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["companyLocation"]>
 
   export type CompanyLocationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     companyId?: boolean
     name?: boolean
+    description?: boolean
+    code?: boolean
     type?: boolean
     address?: boolean
     coordinates?: boolean
@@ -8912,9 +9235,18 @@ export namespace Prisma {
     phone?: boolean
     email?: boolean
     managerName?: boolean
+    managerUserId?: boolean
     businessHours?: boolean
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: boolean
+    features?: boolean
+    storeFormat?: boolean
+    salesChannels?: boolean
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -8924,6 +9256,8 @@ export namespace Prisma {
     id?: boolean
     companyId?: boolean
     name?: boolean
+    description?: boolean
+    code?: boolean
     type?: boolean
     address?: boolean
     coordinates?: boolean
@@ -8931,9 +9265,18 @@ export namespace Prisma {
     phone?: boolean
     email?: boolean
     managerName?: boolean
+    managerUserId?: boolean
     businessHours?: boolean
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: boolean
+    features?: boolean
+    storeFormat?: boolean
+    salesChannels?: boolean
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -8943,6 +9286,8 @@ export namespace Prisma {
     id?: boolean
     companyId?: boolean
     name?: boolean
+    description?: boolean
+    code?: boolean
     type?: boolean
     address?: boolean
     coordinates?: boolean
@@ -8950,16 +9295,28 @@ export namespace Prisma {
     phone?: boolean
     email?: boolean
     managerName?: boolean
+    managerUserId?: boolean
     businessHours?: boolean
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: boolean
+    features?: boolean
+    storeFormat?: boolean
+    salesChannels?: boolean
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type CompanyLocationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "companyId" | "name" | "type" | "address" | "coordinates" | "timezone" | "phone" | "email" | "managerName" | "businessHours" | "isPrimary" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["companyLocation"]>
+  export type CompanyLocationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "companyId" | "name" | "description" | "code" | "type" | "address" | "coordinates" | "timezone" | "phone" | "email" | "managerName" | "managerUserId" | "businessHours" | "isPrimary" | "isActive" | "capacity" | "features" | "storeFormat" | "salesChannels" | "allowsInventory" | "allowsOrders" | "allowsReturns" | "allowsTransfers" | "createdAt" | "updatedAt", ExtArgs["result"]["companyLocation"]>
   export type CompanyLocationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     company?: boolean | CompanyDefaultArgs<ExtArgs>
+    primaryUsers?: boolean | CompanyLocation$primaryUsersArgs<ExtArgs>
+    userAccess?: boolean | CompanyLocation$userAccessArgs<ExtArgs>
+    _count?: boolean | CompanyLocationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CompanyLocationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -8972,11 +9329,15 @@ export namespace Prisma {
     name: "CompanyLocation"
     objects: {
       company: Prisma.$CompanyPayload<ExtArgs>
+      primaryUsers: Prisma.$CompanyUserPayload<ExtArgs>[]
+      userAccess: Prisma.$UserLocationAccessPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       companyId: string
       name: string
+      description: string | null
+      code: string | null
       type: $Enums.LocationType
       address: Prisma.JsonValue
       coordinates: Prisma.JsonValue | null
@@ -8984,9 +9345,18 @@ export namespace Prisma {
       phone: string | null
       email: string | null
       managerName: string | null
+      managerUserId: string | null
       businessHours: Prisma.JsonValue | null
       isPrimary: boolean
       isActive: boolean
+      capacity: Prisma.JsonValue | null
+      features: Prisma.JsonValue | null
+      storeFormat: string | null
+      salesChannels: Prisma.JsonValue | null
+      allowsInventory: boolean
+      allowsOrders: boolean
+      allowsReturns: boolean
+      allowsTransfers: boolean
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["companyLocation"]>
@@ -9384,6 +9754,8 @@ export namespace Prisma {
   export interface Prisma__CompanyLocationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     company<T extends CompanyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CompanyDefaultArgs<ExtArgs>>): Prisma__CompanyClient<$Result.GetResult<Prisma.$CompanyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    primaryUsers<T extends CompanyLocation$primaryUsersArgs<ExtArgs> = {}>(args?: Subset<T, CompanyLocation$primaryUsersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompanyUserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    userAccess<T extends CompanyLocation$userAccessArgs<ExtArgs> = {}>(args?: Subset<T, CompanyLocation$userAccessArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9416,6 +9788,8 @@ export namespace Prisma {
     readonly id: FieldRef<"CompanyLocation", 'String'>
     readonly companyId: FieldRef<"CompanyLocation", 'String'>
     readonly name: FieldRef<"CompanyLocation", 'String'>
+    readonly description: FieldRef<"CompanyLocation", 'String'>
+    readonly code: FieldRef<"CompanyLocation", 'String'>
     readonly type: FieldRef<"CompanyLocation", 'LocationType'>
     readonly address: FieldRef<"CompanyLocation", 'Json'>
     readonly coordinates: FieldRef<"CompanyLocation", 'Json'>
@@ -9423,9 +9797,18 @@ export namespace Prisma {
     readonly phone: FieldRef<"CompanyLocation", 'String'>
     readonly email: FieldRef<"CompanyLocation", 'String'>
     readonly managerName: FieldRef<"CompanyLocation", 'String'>
+    readonly managerUserId: FieldRef<"CompanyLocation", 'String'>
     readonly businessHours: FieldRef<"CompanyLocation", 'Json'>
     readonly isPrimary: FieldRef<"CompanyLocation", 'Boolean'>
     readonly isActive: FieldRef<"CompanyLocation", 'Boolean'>
+    readonly capacity: FieldRef<"CompanyLocation", 'Json'>
+    readonly features: FieldRef<"CompanyLocation", 'Json'>
+    readonly storeFormat: FieldRef<"CompanyLocation", 'String'>
+    readonly salesChannels: FieldRef<"CompanyLocation", 'Json'>
+    readonly allowsInventory: FieldRef<"CompanyLocation", 'Boolean'>
+    readonly allowsOrders: FieldRef<"CompanyLocation", 'Boolean'>
+    readonly allowsReturns: FieldRef<"CompanyLocation", 'Boolean'>
+    readonly allowsTransfers: FieldRef<"CompanyLocation", 'Boolean'>
     readonly createdAt: FieldRef<"CompanyLocation", 'DateTime'>
     readonly updatedAt: FieldRef<"CompanyLocation", 'DateTime'>
   }
@@ -9821,6 +10204,54 @@ export namespace Prisma {
      * Limit how many CompanyLocations to delete.
      */
     limit?: number
+  }
+
+  /**
+   * CompanyLocation.primaryUsers
+   */
+  export type CompanyLocation$primaryUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompanyUser
+     */
+    select?: CompanyUserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompanyUser
+     */
+    omit?: CompanyUserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompanyUserInclude<ExtArgs> | null
+    where?: CompanyUserWhereInput
+    orderBy?: CompanyUserOrderByWithRelationInput | CompanyUserOrderByWithRelationInput[]
+    cursor?: CompanyUserWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompanyUserScalarFieldEnum | CompanyUserScalarFieldEnum[]
+  }
+
+  /**
+   * CompanyLocation.userAccess
+   */
+  export type CompanyLocation$userAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    where?: UserLocationAccessWhereInput
+    orderBy?: UserLocationAccessOrderByWithRelationInput | UserLocationAccessOrderByWithRelationInput[]
+    cursor?: UserLocationAccessWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserLocationAccessScalarFieldEnum | UserLocationAccessScalarFieldEnum[]
   }
 
   /**
@@ -12302,7 +12733,7 @@ export namespace Prisma {
     currency: string | null
     description: string | null
     invoiceNumber: string | null
-    paymentStatus: $Enums.PaymentStatus | null
+    paymentStatus: $Enums.BillingPaymentStatus | null
     paymentMethod: string | null
     paidAt: Date | null
     createdAt: Date | null
@@ -12319,7 +12750,7 @@ export namespace Prisma {
     currency: string | null
     description: string | null
     invoiceNumber: string | null
-    paymentStatus: $Enums.PaymentStatus | null
+    paymentStatus: $Enums.BillingPaymentStatus | null
     paymentMethod: string | null
     paidAt: Date | null
     createdAt: Date | null
@@ -12507,7 +12938,7 @@ export namespace Prisma {
     currency: string
     description: string | null
     invoiceNumber: string | null
-    paymentStatus: $Enums.PaymentStatus
+    paymentStatus: $Enums.BillingPaymentStatus
     paymentMethod: string | null
     paidAt: Date | null
     metadata: JsonValue | null
@@ -12635,7 +13066,7 @@ export namespace Prisma {
       currency: string
       description: string | null
       invoiceNumber: string | null
-      paymentStatus: $Enums.PaymentStatus
+      paymentStatus: $Enums.BillingPaymentStatus
       paymentMethod: string | null
       paidAt: Date | null
       metadata: Prisma.JsonValue | null
@@ -13074,7 +13505,7 @@ export namespace Prisma {
     readonly currency: FieldRef<"BillingHistory", 'String'>
     readonly description: FieldRef<"BillingHistory", 'String'>
     readonly invoiceNumber: FieldRef<"BillingHistory", 'String'>
-    readonly paymentStatus: FieldRef<"BillingHistory", 'PaymentStatus'>
+    readonly paymentStatus: FieldRef<"BillingHistory", 'BillingPaymentStatus'>
     readonly paymentMethod: FieldRef<"BillingHistory", 'String'>
     readonly paidAt: FieldRef<"BillingHistory", 'DateTime'>
     readonly metadata: FieldRef<"BillingHistory", 'Json'>
@@ -27881,6 +28312,1150 @@ export namespace Prisma {
 
 
   /**
+   * Model UserLocationAccess
+   */
+
+  export type AggregateUserLocationAccess = {
+    _count: UserLocationAccessCountAggregateOutputType | null
+    _min: UserLocationAccessMinAggregateOutputType | null
+    _max: UserLocationAccessMaxAggregateOutputType | null
+  }
+
+  export type UserLocationAccessMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    companyId: string | null
+    locationId: string | null
+    accessLevel: $Enums.LocationAccessLevel | null
+    canManage: boolean | null
+    startDate: Date | null
+    endDate: Date | null
+    isActive: boolean | null
+    grantedBy: string | null
+    grantedAt: Date | null
+  }
+
+  export type UserLocationAccessMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    companyId: string | null
+    locationId: string | null
+    accessLevel: $Enums.LocationAccessLevel | null
+    canManage: boolean | null
+    startDate: Date | null
+    endDate: Date | null
+    isActive: boolean | null
+    grantedBy: string | null
+    grantedAt: Date | null
+  }
+
+  export type UserLocationAccessCountAggregateOutputType = {
+    id: number
+    userId: number
+    companyId: number
+    locationId: number
+    accessLevel: number
+    canManage: number
+    startDate: number
+    endDate: number
+    isActive: number
+    grantedBy: number
+    grantedAt: number
+    _all: number
+  }
+
+
+  export type UserLocationAccessMinAggregateInputType = {
+    id?: true
+    userId?: true
+    companyId?: true
+    locationId?: true
+    accessLevel?: true
+    canManage?: true
+    startDate?: true
+    endDate?: true
+    isActive?: true
+    grantedBy?: true
+    grantedAt?: true
+  }
+
+  export type UserLocationAccessMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    companyId?: true
+    locationId?: true
+    accessLevel?: true
+    canManage?: true
+    startDate?: true
+    endDate?: true
+    isActive?: true
+    grantedBy?: true
+    grantedAt?: true
+  }
+
+  export type UserLocationAccessCountAggregateInputType = {
+    id?: true
+    userId?: true
+    companyId?: true
+    locationId?: true
+    accessLevel?: true
+    canManage?: true
+    startDate?: true
+    endDate?: true
+    isActive?: true
+    grantedBy?: true
+    grantedAt?: true
+    _all?: true
+  }
+
+  export type UserLocationAccessAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserLocationAccess to aggregate.
+     */
+    where?: UserLocationAccessWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserLocationAccesses to fetch.
+     */
+    orderBy?: UserLocationAccessOrderByWithRelationInput | UserLocationAccessOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UserLocationAccessWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserLocationAccesses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserLocationAccesses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UserLocationAccesses
+    **/
+    _count?: true | UserLocationAccessCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UserLocationAccessMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UserLocationAccessMaxAggregateInputType
+  }
+
+  export type GetUserLocationAccessAggregateType<T extends UserLocationAccessAggregateArgs> = {
+        [P in keyof T & keyof AggregateUserLocationAccess]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUserLocationAccess[P]>
+      : GetScalarType<T[P], AggregateUserLocationAccess[P]>
+  }
+
+
+
+
+  export type UserLocationAccessGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserLocationAccessWhereInput
+    orderBy?: UserLocationAccessOrderByWithAggregationInput | UserLocationAccessOrderByWithAggregationInput[]
+    by: UserLocationAccessScalarFieldEnum[] | UserLocationAccessScalarFieldEnum
+    having?: UserLocationAccessScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UserLocationAccessCountAggregateInputType | true
+    _min?: UserLocationAccessMinAggregateInputType
+    _max?: UserLocationAccessMaxAggregateInputType
+  }
+
+  export type UserLocationAccessGroupByOutputType = {
+    id: string
+    userId: string
+    companyId: string
+    locationId: string
+    accessLevel: $Enums.LocationAccessLevel
+    canManage: boolean
+    startDate: Date
+    endDate: Date | null
+    isActive: boolean
+    grantedBy: string | null
+    grantedAt: Date
+    _count: UserLocationAccessCountAggregateOutputType | null
+    _min: UserLocationAccessMinAggregateOutputType | null
+    _max: UserLocationAccessMaxAggregateOutputType | null
+  }
+
+  type GetUserLocationAccessGroupByPayload<T extends UserLocationAccessGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UserLocationAccessGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UserLocationAccessGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UserLocationAccessGroupByOutputType[P]>
+            : GetScalarType<T[P], UserLocationAccessGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UserLocationAccessSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    companyId?: boolean
+    locationId?: boolean
+    accessLevel?: boolean
+    canManage?: boolean
+    startDate?: boolean
+    endDate?: boolean
+    isActive?: boolean
+    grantedBy?: boolean
+    grantedAt?: boolean
+    companyUser?: boolean | CompanyUserDefaultArgs<ExtArgs>
+    location?: boolean | CompanyLocationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userLocationAccess"]>
+
+  export type UserLocationAccessSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    companyId?: boolean
+    locationId?: boolean
+    accessLevel?: boolean
+    canManage?: boolean
+    startDate?: boolean
+    endDate?: boolean
+    isActive?: boolean
+    grantedBy?: boolean
+    grantedAt?: boolean
+    companyUser?: boolean | CompanyUserDefaultArgs<ExtArgs>
+    location?: boolean | CompanyLocationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userLocationAccess"]>
+
+  export type UserLocationAccessSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    companyId?: boolean
+    locationId?: boolean
+    accessLevel?: boolean
+    canManage?: boolean
+    startDate?: boolean
+    endDate?: boolean
+    isActive?: boolean
+    grantedBy?: boolean
+    grantedAt?: boolean
+    companyUser?: boolean | CompanyUserDefaultArgs<ExtArgs>
+    location?: boolean | CompanyLocationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userLocationAccess"]>
+
+  export type UserLocationAccessSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    companyId?: boolean
+    locationId?: boolean
+    accessLevel?: boolean
+    canManage?: boolean
+    startDate?: boolean
+    endDate?: boolean
+    isActive?: boolean
+    grantedBy?: boolean
+    grantedAt?: boolean
+  }
+
+  export type UserLocationAccessOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "companyId" | "locationId" | "accessLevel" | "canManage" | "startDate" | "endDate" | "isActive" | "grantedBy" | "grantedAt", ExtArgs["result"]["userLocationAccess"]>
+  export type UserLocationAccessInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    companyUser?: boolean | CompanyUserDefaultArgs<ExtArgs>
+    location?: boolean | CompanyLocationDefaultArgs<ExtArgs>
+  }
+  export type UserLocationAccessIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    companyUser?: boolean | CompanyUserDefaultArgs<ExtArgs>
+    location?: boolean | CompanyLocationDefaultArgs<ExtArgs>
+  }
+  export type UserLocationAccessIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    companyUser?: boolean | CompanyUserDefaultArgs<ExtArgs>
+    location?: boolean | CompanyLocationDefaultArgs<ExtArgs>
+  }
+
+  export type $UserLocationAccessPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UserLocationAccess"
+    objects: {
+      companyUser: Prisma.$CompanyUserPayload<ExtArgs>
+      location: Prisma.$CompanyLocationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      companyId: string
+      locationId: string
+      accessLevel: $Enums.LocationAccessLevel
+      canManage: boolean
+      startDate: Date
+      endDate: Date | null
+      isActive: boolean
+      grantedBy: string | null
+      grantedAt: Date
+    }, ExtArgs["result"]["userLocationAccess"]>
+    composites: {}
+  }
+
+  type UserLocationAccessGetPayload<S extends boolean | null | undefined | UserLocationAccessDefaultArgs> = $Result.GetResult<Prisma.$UserLocationAccessPayload, S>
+
+  type UserLocationAccessCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserLocationAccessFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserLocationAccessCountAggregateInputType | true
+    }
+
+  export interface UserLocationAccessDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UserLocationAccess'], meta: { name: 'UserLocationAccess' } }
+    /**
+     * Find zero or one UserLocationAccess that matches the filter.
+     * @param {UserLocationAccessFindUniqueArgs} args - Arguments to find a UserLocationAccess
+     * @example
+     * // Get one UserLocationAccess
+     * const userLocationAccess = await prisma.userLocationAccess.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UserLocationAccessFindUniqueArgs>(args: SelectSubset<T, UserLocationAccessFindUniqueArgs<ExtArgs>>): Prisma__UserLocationAccessClient<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UserLocationAccess that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UserLocationAccessFindUniqueOrThrowArgs} args - Arguments to find a UserLocationAccess
+     * @example
+     * // Get one UserLocationAccess
+     * const userLocationAccess = await prisma.userLocationAccess.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UserLocationAccessFindUniqueOrThrowArgs>(args: SelectSubset<T, UserLocationAccessFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserLocationAccessClient<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserLocationAccess that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserLocationAccessFindFirstArgs} args - Arguments to find a UserLocationAccess
+     * @example
+     * // Get one UserLocationAccess
+     * const userLocationAccess = await prisma.userLocationAccess.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UserLocationAccessFindFirstArgs>(args?: SelectSubset<T, UserLocationAccessFindFirstArgs<ExtArgs>>): Prisma__UserLocationAccessClient<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserLocationAccess that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserLocationAccessFindFirstOrThrowArgs} args - Arguments to find a UserLocationAccess
+     * @example
+     * // Get one UserLocationAccess
+     * const userLocationAccess = await prisma.userLocationAccess.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UserLocationAccessFindFirstOrThrowArgs>(args?: SelectSubset<T, UserLocationAccessFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserLocationAccessClient<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UserLocationAccesses that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserLocationAccessFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UserLocationAccesses
+     * const userLocationAccesses = await prisma.userLocationAccess.findMany()
+     * 
+     * // Get first 10 UserLocationAccesses
+     * const userLocationAccesses = await prisma.userLocationAccess.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const userLocationAccessWithIdOnly = await prisma.userLocationAccess.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UserLocationAccessFindManyArgs>(args?: SelectSubset<T, UserLocationAccessFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UserLocationAccess.
+     * @param {UserLocationAccessCreateArgs} args - Arguments to create a UserLocationAccess.
+     * @example
+     * // Create one UserLocationAccess
+     * const UserLocationAccess = await prisma.userLocationAccess.create({
+     *   data: {
+     *     // ... data to create a UserLocationAccess
+     *   }
+     * })
+     * 
+     */
+    create<T extends UserLocationAccessCreateArgs>(args: SelectSubset<T, UserLocationAccessCreateArgs<ExtArgs>>): Prisma__UserLocationAccessClient<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UserLocationAccesses.
+     * @param {UserLocationAccessCreateManyArgs} args - Arguments to create many UserLocationAccesses.
+     * @example
+     * // Create many UserLocationAccesses
+     * const userLocationAccess = await prisma.userLocationAccess.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UserLocationAccessCreateManyArgs>(args?: SelectSubset<T, UserLocationAccessCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UserLocationAccesses and returns the data saved in the database.
+     * @param {UserLocationAccessCreateManyAndReturnArgs} args - Arguments to create many UserLocationAccesses.
+     * @example
+     * // Create many UserLocationAccesses
+     * const userLocationAccess = await prisma.userLocationAccess.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UserLocationAccesses and only return the `id`
+     * const userLocationAccessWithIdOnly = await prisma.userLocationAccess.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserLocationAccessCreateManyAndReturnArgs>(args?: SelectSubset<T, UserLocationAccessCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UserLocationAccess.
+     * @param {UserLocationAccessDeleteArgs} args - Arguments to delete one UserLocationAccess.
+     * @example
+     * // Delete one UserLocationAccess
+     * const UserLocationAccess = await prisma.userLocationAccess.delete({
+     *   where: {
+     *     // ... filter to delete one UserLocationAccess
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UserLocationAccessDeleteArgs>(args: SelectSubset<T, UserLocationAccessDeleteArgs<ExtArgs>>): Prisma__UserLocationAccessClient<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UserLocationAccess.
+     * @param {UserLocationAccessUpdateArgs} args - Arguments to update one UserLocationAccess.
+     * @example
+     * // Update one UserLocationAccess
+     * const userLocationAccess = await prisma.userLocationAccess.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UserLocationAccessUpdateArgs>(args: SelectSubset<T, UserLocationAccessUpdateArgs<ExtArgs>>): Prisma__UserLocationAccessClient<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UserLocationAccesses.
+     * @param {UserLocationAccessDeleteManyArgs} args - Arguments to filter UserLocationAccesses to delete.
+     * @example
+     * // Delete a few UserLocationAccesses
+     * const { count } = await prisma.userLocationAccess.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UserLocationAccessDeleteManyArgs>(args?: SelectSubset<T, UserLocationAccessDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserLocationAccesses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserLocationAccessUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UserLocationAccesses
+     * const userLocationAccess = await prisma.userLocationAccess.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UserLocationAccessUpdateManyArgs>(args: SelectSubset<T, UserLocationAccessUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserLocationAccesses and returns the data updated in the database.
+     * @param {UserLocationAccessUpdateManyAndReturnArgs} args - Arguments to update many UserLocationAccesses.
+     * @example
+     * // Update many UserLocationAccesses
+     * const userLocationAccess = await prisma.userLocationAccess.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UserLocationAccesses and only return the `id`
+     * const userLocationAccessWithIdOnly = await prisma.userLocationAccess.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserLocationAccessUpdateManyAndReturnArgs>(args: SelectSubset<T, UserLocationAccessUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UserLocationAccess.
+     * @param {UserLocationAccessUpsertArgs} args - Arguments to update or create a UserLocationAccess.
+     * @example
+     * // Update or create a UserLocationAccess
+     * const userLocationAccess = await prisma.userLocationAccess.upsert({
+     *   create: {
+     *     // ... data to create a UserLocationAccess
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UserLocationAccess we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UserLocationAccessUpsertArgs>(args: SelectSubset<T, UserLocationAccessUpsertArgs<ExtArgs>>): Prisma__UserLocationAccessClient<$Result.GetResult<Prisma.$UserLocationAccessPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UserLocationAccesses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserLocationAccessCountArgs} args - Arguments to filter UserLocationAccesses to count.
+     * @example
+     * // Count the number of UserLocationAccesses
+     * const count = await prisma.userLocationAccess.count({
+     *   where: {
+     *     // ... the filter for the UserLocationAccesses we want to count
+     *   }
+     * })
+    **/
+    count<T extends UserLocationAccessCountArgs>(
+      args?: Subset<T, UserLocationAccessCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UserLocationAccessCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UserLocationAccess.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserLocationAccessAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UserLocationAccessAggregateArgs>(args: Subset<T, UserLocationAccessAggregateArgs>): Prisma.PrismaPromise<GetUserLocationAccessAggregateType<T>>
+
+    /**
+     * Group by UserLocationAccess.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserLocationAccessGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UserLocationAccessGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UserLocationAccessGroupByArgs['orderBy'] }
+        : { orderBy?: UserLocationAccessGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UserLocationAccessGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserLocationAccessGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UserLocationAccess model
+   */
+  readonly fields: UserLocationAccessFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UserLocationAccess.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UserLocationAccessClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    companyUser<T extends CompanyUserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CompanyUserDefaultArgs<ExtArgs>>): Prisma__CompanyUserClient<$Result.GetResult<Prisma.$CompanyUserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    location<T extends CompanyLocationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CompanyLocationDefaultArgs<ExtArgs>>): Prisma__CompanyLocationClient<$Result.GetResult<Prisma.$CompanyLocationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UserLocationAccess model
+   */
+  interface UserLocationAccessFieldRefs {
+    readonly id: FieldRef<"UserLocationAccess", 'String'>
+    readonly userId: FieldRef<"UserLocationAccess", 'String'>
+    readonly companyId: FieldRef<"UserLocationAccess", 'String'>
+    readonly locationId: FieldRef<"UserLocationAccess", 'String'>
+    readonly accessLevel: FieldRef<"UserLocationAccess", 'LocationAccessLevel'>
+    readonly canManage: FieldRef<"UserLocationAccess", 'Boolean'>
+    readonly startDate: FieldRef<"UserLocationAccess", 'DateTime'>
+    readonly endDate: FieldRef<"UserLocationAccess", 'DateTime'>
+    readonly isActive: FieldRef<"UserLocationAccess", 'Boolean'>
+    readonly grantedBy: FieldRef<"UserLocationAccess", 'String'>
+    readonly grantedAt: FieldRef<"UserLocationAccess", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UserLocationAccess findUnique
+   */
+  export type UserLocationAccessFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which UserLocationAccess to fetch.
+     */
+    where: UserLocationAccessWhereUniqueInput
+  }
+
+  /**
+   * UserLocationAccess findUniqueOrThrow
+   */
+  export type UserLocationAccessFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which UserLocationAccess to fetch.
+     */
+    where: UserLocationAccessWhereUniqueInput
+  }
+
+  /**
+   * UserLocationAccess findFirst
+   */
+  export type UserLocationAccessFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which UserLocationAccess to fetch.
+     */
+    where?: UserLocationAccessWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserLocationAccesses to fetch.
+     */
+    orderBy?: UserLocationAccessOrderByWithRelationInput | UserLocationAccessOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserLocationAccesses.
+     */
+    cursor?: UserLocationAccessWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserLocationAccesses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserLocationAccesses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserLocationAccesses.
+     */
+    distinct?: UserLocationAccessScalarFieldEnum | UserLocationAccessScalarFieldEnum[]
+  }
+
+  /**
+   * UserLocationAccess findFirstOrThrow
+   */
+  export type UserLocationAccessFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which UserLocationAccess to fetch.
+     */
+    where?: UserLocationAccessWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserLocationAccesses to fetch.
+     */
+    orderBy?: UserLocationAccessOrderByWithRelationInput | UserLocationAccessOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserLocationAccesses.
+     */
+    cursor?: UserLocationAccessWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserLocationAccesses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserLocationAccesses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserLocationAccesses.
+     */
+    distinct?: UserLocationAccessScalarFieldEnum | UserLocationAccessScalarFieldEnum[]
+  }
+
+  /**
+   * UserLocationAccess findMany
+   */
+  export type UserLocationAccessFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which UserLocationAccesses to fetch.
+     */
+    where?: UserLocationAccessWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserLocationAccesses to fetch.
+     */
+    orderBy?: UserLocationAccessOrderByWithRelationInput | UserLocationAccessOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UserLocationAccesses.
+     */
+    cursor?: UserLocationAccessWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserLocationAccesses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserLocationAccesses.
+     */
+    skip?: number
+    distinct?: UserLocationAccessScalarFieldEnum | UserLocationAccessScalarFieldEnum[]
+  }
+
+  /**
+   * UserLocationAccess create
+   */
+  export type UserLocationAccessCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * The data needed to create a UserLocationAccess.
+     */
+    data: XOR<UserLocationAccessCreateInput, UserLocationAccessUncheckedCreateInput>
+  }
+
+  /**
+   * UserLocationAccess createMany
+   */
+  export type UserLocationAccessCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UserLocationAccesses.
+     */
+    data: UserLocationAccessCreateManyInput | UserLocationAccessCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UserLocationAccess createManyAndReturn
+   */
+  export type UserLocationAccessCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * The data used to create many UserLocationAccesses.
+     */
+    data: UserLocationAccessCreateManyInput | UserLocationAccessCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserLocationAccess update
+   */
+  export type UserLocationAccessUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * The data needed to update a UserLocationAccess.
+     */
+    data: XOR<UserLocationAccessUpdateInput, UserLocationAccessUncheckedUpdateInput>
+    /**
+     * Choose, which UserLocationAccess to update.
+     */
+    where: UserLocationAccessWhereUniqueInput
+  }
+
+  /**
+   * UserLocationAccess updateMany
+   */
+  export type UserLocationAccessUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UserLocationAccesses.
+     */
+    data: XOR<UserLocationAccessUpdateManyMutationInput, UserLocationAccessUncheckedUpdateManyInput>
+    /**
+     * Filter which UserLocationAccesses to update
+     */
+    where?: UserLocationAccessWhereInput
+    /**
+     * Limit how many UserLocationAccesses to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserLocationAccess updateManyAndReturn
+   */
+  export type UserLocationAccessUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * The data used to update UserLocationAccesses.
+     */
+    data: XOR<UserLocationAccessUpdateManyMutationInput, UserLocationAccessUncheckedUpdateManyInput>
+    /**
+     * Filter which UserLocationAccesses to update
+     */
+    where?: UserLocationAccessWhereInput
+    /**
+     * Limit how many UserLocationAccesses to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserLocationAccess upsert
+   */
+  export type UserLocationAccessUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * The filter to search for the UserLocationAccess to update in case it exists.
+     */
+    where: UserLocationAccessWhereUniqueInput
+    /**
+     * In case the UserLocationAccess found by the `where` argument doesn't exist, create a new UserLocationAccess with this data.
+     */
+    create: XOR<UserLocationAccessCreateInput, UserLocationAccessUncheckedCreateInput>
+    /**
+     * In case the UserLocationAccess was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UserLocationAccessUpdateInput, UserLocationAccessUncheckedUpdateInput>
+  }
+
+  /**
+   * UserLocationAccess delete
+   */
+  export type UserLocationAccessDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+    /**
+     * Filter which UserLocationAccess to delete.
+     */
+    where: UserLocationAccessWhereUniqueInput
+  }
+
+  /**
+   * UserLocationAccess deleteMany
+   */
+  export type UserLocationAccessDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserLocationAccesses to delete
+     */
+    where?: UserLocationAccessWhereInput
+    /**
+     * Limit how many UserLocationAccesses to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserLocationAccess without action
+   */
+  export type UserLocationAccessDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserLocationAccess
+     */
+    select?: UserLocationAccessSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserLocationAccess
+     */
+    omit?: UserLocationAccessOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserLocationAccessInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -27946,6 +29521,8 @@ export namespace Prisma {
     title: 'title',
     departmentId: 'departmentId',
     employeeId: 'employeeId',
+    primaryLocationId: 'primaryLocationId',
+    allowedLocationIds: 'allowedLocationIds',
     startDate: 'startDate',
     endDate: 'endDate',
     permissions: 'permissions',
@@ -28009,6 +29586,8 @@ export namespace Prisma {
     id: 'id',
     companyId: 'companyId',
     name: 'name',
+    description: 'description',
+    code: 'code',
     type: 'type',
     address: 'address',
     coordinates: 'coordinates',
@@ -28016,9 +29595,18 @@ export namespace Prisma {
     phone: 'phone',
     email: 'email',
     managerName: 'managerName',
+    managerUserId: 'managerUserId',
     businessHours: 'businessHours',
     isPrimary: 'isPrimary',
     isActive: 'isActive',
+    capacity: 'capacity',
+    features: 'features',
+    storeFormat: 'storeFormat',
+    salesChannels: 'salesChannels',
+    allowsInventory: 'allowsInventory',
+    allowsOrders: 'allowsOrders',
+    allowsReturns: 'allowsReturns',
+    allowsTransfers: 'allowsTransfers',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -28323,6 +29911,23 @@ export namespace Prisma {
   export type ApiKeyScalarFieldEnum = (typeof ApiKeyScalarFieldEnum)[keyof typeof ApiKeyScalarFieldEnum]
 
 
+  export const UserLocationAccessScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    companyId: 'companyId',
+    locationId: 'locationId',
+    accessLevel: 'accessLevel',
+    canManage: 'canManage',
+    startDate: 'startDate',
+    endDate: 'endDate',
+    isActive: 'isActive',
+    grantedBy: 'grantedBy',
+    grantedAt: 'grantedAt'
+  };
+
+  export type UserLocationAccessScalarFieldEnum = (typeof UserLocationAccessScalarFieldEnum)[keyof typeof UserLocationAccessScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -28608,16 +30213,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'PaymentStatus'
+   * Reference to a field of type 'BillingPaymentStatus'
    */
-  export type EnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentStatus'>
+  export type EnumBillingPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingPaymentStatus'>
     
 
 
   /**
-   * Reference to a field of type 'PaymentStatus[]'
+   * Reference to a field of type 'BillingPaymentStatus[]'
    */
-  export type ListEnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentStatus[]'>
+  export type ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingPaymentStatus[]'>
     
 
 
@@ -28646,6 +30251,20 @@ export namespace Prisma {
    * Reference to a field of type 'NotificationPriority[]'
    */
   export type ListEnumNotificationPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationPriority[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'LocationAccessLevel'
+   */
+  export type EnumLocationAccessLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LocationAccessLevel'>
+    
+
+
+  /**
+   * Reference to a field of type 'LocationAccessLevel[]'
+   */
+  export type ListEnumLocationAccessLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LocationAccessLevel[]'>
     
 
 
@@ -28917,6 +30536,8 @@ export namespace Prisma {
     title?: StringNullableFilter<"CompanyUser"> | string | null
     departmentId?: StringNullableFilter<"CompanyUser"> | string | null
     employeeId?: StringNullableFilter<"CompanyUser"> | string | null
+    primaryLocationId?: StringNullableFilter<"CompanyUser"> | string | null
+    allowedLocationIds?: JsonNullableFilter<"CompanyUser">
     startDate?: DateTimeFilter<"CompanyUser"> | Date | string
     endDate?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     permissions?: JsonNullableFilter<"CompanyUser">
@@ -28933,9 +30554,11 @@ export namespace Prisma {
     lastActiveAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     company?: XOR<CompanyScalarRelationFilter, CompanyWhereInput>
     department?: XOR<DepartmentNullableScalarRelationFilter, DepartmentWhereInput> | null
+    primaryLocation?: XOR<CompanyLocationNullableScalarRelationFilter, CompanyLocationWhereInput> | null
     manager?: XOR<CompanyUserNullableScalarRelationFilter, CompanyUserWhereInput> | null
     reports?: CompanyUserListRelationFilter
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    locationAccess?: UserLocationAccessListRelationFilter
   }
 
   export type CompanyUserOrderByWithRelationInput = {
@@ -28946,6 +30569,8 @@ export namespace Prisma {
     title?: SortOrderInput | SortOrder
     departmentId?: SortOrderInput | SortOrder
     employeeId?: SortOrderInput | SortOrder
+    primaryLocationId?: SortOrderInput | SortOrder
+    allowedLocationIds?: SortOrderInput | SortOrder
     startDate?: SortOrder
     endDate?: SortOrderInput | SortOrder
     permissions?: SortOrderInput | SortOrder
@@ -28962,9 +30587,11 @@ export namespace Prisma {
     lastActiveAt?: SortOrderInput | SortOrder
     company?: CompanyOrderByWithRelationInput
     department?: DepartmentOrderByWithRelationInput
+    primaryLocation?: CompanyLocationOrderByWithRelationInput
     manager?: CompanyUserOrderByWithRelationInput
     reports?: CompanyUserOrderByRelationAggregateInput
     user?: UserOrderByWithRelationInput
+    locationAccess?: UserLocationAccessOrderByRelationAggregateInput
   }
 
   export type CompanyUserWhereUniqueInput = Prisma.AtLeast<{
@@ -28979,6 +30606,8 @@ export namespace Prisma {
     title?: StringNullableFilter<"CompanyUser"> | string | null
     departmentId?: StringNullableFilter<"CompanyUser"> | string | null
     employeeId?: StringNullableFilter<"CompanyUser"> | string | null
+    primaryLocationId?: StringNullableFilter<"CompanyUser"> | string | null
+    allowedLocationIds?: JsonNullableFilter<"CompanyUser">
     startDate?: DateTimeFilter<"CompanyUser"> | Date | string
     endDate?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     permissions?: JsonNullableFilter<"CompanyUser">
@@ -28995,9 +30624,11 @@ export namespace Prisma {
     lastActiveAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     company?: XOR<CompanyScalarRelationFilter, CompanyWhereInput>
     department?: XOR<DepartmentNullableScalarRelationFilter, DepartmentWhereInput> | null
+    primaryLocation?: XOR<CompanyLocationNullableScalarRelationFilter, CompanyLocationWhereInput> | null
     manager?: XOR<CompanyUserNullableScalarRelationFilter, CompanyUserWhereInput> | null
     reports?: CompanyUserListRelationFilter
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    locationAccess?: UserLocationAccessListRelationFilter
   }, "id" | "companyId_userId">
 
   export type CompanyUserOrderByWithAggregationInput = {
@@ -29008,6 +30639,8 @@ export namespace Prisma {
     title?: SortOrderInput | SortOrder
     departmentId?: SortOrderInput | SortOrder
     employeeId?: SortOrderInput | SortOrder
+    primaryLocationId?: SortOrderInput | SortOrder
+    allowedLocationIds?: SortOrderInput | SortOrder
     startDate?: SortOrder
     endDate?: SortOrderInput | SortOrder
     permissions?: SortOrderInput | SortOrder
@@ -29038,6 +30671,8 @@ export namespace Prisma {
     title?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
     departmentId?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
     employeeId?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
+    primaryLocationId?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
+    allowedLocationIds?: JsonNullableWithAggregatesFilter<"CompanyUser">
     startDate?: DateTimeWithAggregatesFilter<"CompanyUser"> | Date | string
     endDate?: DateTimeNullableWithAggregatesFilter<"CompanyUser"> | Date | string | null
     permissions?: JsonNullableWithAggregatesFilter<"CompanyUser">
@@ -29277,6 +30912,8 @@ export namespace Prisma {
     id?: StringFilter<"CompanyLocation"> | string
     companyId?: StringFilter<"CompanyLocation"> | string
     name?: StringFilter<"CompanyLocation"> | string
+    description?: StringNullableFilter<"CompanyLocation"> | string | null
+    code?: StringNullableFilter<"CompanyLocation"> | string | null
     type?: EnumLocationTypeFilter<"CompanyLocation"> | $Enums.LocationType
     address?: JsonFilter<"CompanyLocation">
     coordinates?: JsonNullableFilter<"CompanyLocation">
@@ -29284,18 +30921,31 @@ export namespace Prisma {
     phone?: StringNullableFilter<"CompanyLocation"> | string | null
     email?: StringNullableFilter<"CompanyLocation"> | string | null
     managerName?: StringNullableFilter<"CompanyLocation"> | string | null
+    managerUserId?: StringNullableFilter<"CompanyLocation"> | string | null
     businessHours?: JsonNullableFilter<"CompanyLocation">
     isPrimary?: BoolFilter<"CompanyLocation"> | boolean
     isActive?: BoolFilter<"CompanyLocation"> | boolean
+    capacity?: JsonNullableFilter<"CompanyLocation">
+    features?: JsonNullableFilter<"CompanyLocation">
+    storeFormat?: StringNullableFilter<"CompanyLocation"> | string | null
+    salesChannels?: JsonNullableFilter<"CompanyLocation">
+    allowsInventory?: BoolFilter<"CompanyLocation"> | boolean
+    allowsOrders?: BoolFilter<"CompanyLocation"> | boolean
+    allowsReturns?: BoolFilter<"CompanyLocation"> | boolean
+    allowsTransfers?: BoolFilter<"CompanyLocation"> | boolean
     createdAt?: DateTimeFilter<"CompanyLocation"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyLocation"> | Date | string
     company?: XOR<CompanyScalarRelationFilter, CompanyWhereInput>
+    primaryUsers?: CompanyUserListRelationFilter
+    userAccess?: UserLocationAccessListRelationFilter
   }
 
   export type CompanyLocationOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
     name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    code?: SortOrderInput | SortOrder
     type?: SortOrder
     address?: SortOrder
     coordinates?: SortOrderInput | SortOrder
@@ -29303,21 +30953,35 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
     managerName?: SortOrderInput | SortOrder
+    managerUserId?: SortOrderInput | SortOrder
     businessHours?: SortOrderInput | SortOrder
     isPrimary?: SortOrder
     isActive?: SortOrder
+    capacity?: SortOrderInput | SortOrder
+    features?: SortOrderInput | SortOrder
+    storeFormat?: SortOrderInput | SortOrder
+    salesChannels?: SortOrderInput | SortOrder
+    allowsInventory?: SortOrder
+    allowsOrders?: SortOrder
+    allowsReturns?: SortOrder
+    allowsTransfers?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     company?: CompanyOrderByWithRelationInput
+    primaryUsers?: CompanyUserOrderByRelationAggregateInput
+    userAccess?: UserLocationAccessOrderByRelationAggregateInput
   }
 
   export type CompanyLocationWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    companyId_code?: CompanyLocationCompanyIdCodeCompoundUniqueInput
     AND?: CompanyLocationWhereInput | CompanyLocationWhereInput[]
     OR?: CompanyLocationWhereInput[]
     NOT?: CompanyLocationWhereInput | CompanyLocationWhereInput[]
     companyId?: StringFilter<"CompanyLocation"> | string
     name?: StringFilter<"CompanyLocation"> | string
+    description?: StringNullableFilter<"CompanyLocation"> | string | null
+    code?: StringNullableFilter<"CompanyLocation"> | string | null
     type?: EnumLocationTypeFilter<"CompanyLocation"> | $Enums.LocationType
     address?: JsonFilter<"CompanyLocation">
     coordinates?: JsonNullableFilter<"CompanyLocation">
@@ -29325,18 +30989,31 @@ export namespace Prisma {
     phone?: StringNullableFilter<"CompanyLocation"> | string | null
     email?: StringNullableFilter<"CompanyLocation"> | string | null
     managerName?: StringNullableFilter<"CompanyLocation"> | string | null
+    managerUserId?: StringNullableFilter<"CompanyLocation"> | string | null
     businessHours?: JsonNullableFilter<"CompanyLocation">
     isPrimary?: BoolFilter<"CompanyLocation"> | boolean
     isActive?: BoolFilter<"CompanyLocation"> | boolean
+    capacity?: JsonNullableFilter<"CompanyLocation">
+    features?: JsonNullableFilter<"CompanyLocation">
+    storeFormat?: StringNullableFilter<"CompanyLocation"> | string | null
+    salesChannels?: JsonNullableFilter<"CompanyLocation">
+    allowsInventory?: BoolFilter<"CompanyLocation"> | boolean
+    allowsOrders?: BoolFilter<"CompanyLocation"> | boolean
+    allowsReturns?: BoolFilter<"CompanyLocation"> | boolean
+    allowsTransfers?: BoolFilter<"CompanyLocation"> | boolean
     createdAt?: DateTimeFilter<"CompanyLocation"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyLocation"> | Date | string
     company?: XOR<CompanyScalarRelationFilter, CompanyWhereInput>
-  }, "id">
+    primaryUsers?: CompanyUserListRelationFilter
+    userAccess?: UserLocationAccessListRelationFilter
+  }, "id" | "companyId_code">
 
   export type CompanyLocationOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
     name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    code?: SortOrderInput | SortOrder
     type?: SortOrder
     address?: SortOrder
     coordinates?: SortOrderInput | SortOrder
@@ -29344,9 +31021,18 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
     managerName?: SortOrderInput | SortOrder
+    managerUserId?: SortOrderInput | SortOrder
     businessHours?: SortOrderInput | SortOrder
     isPrimary?: SortOrder
     isActive?: SortOrder
+    capacity?: SortOrderInput | SortOrder
+    features?: SortOrderInput | SortOrder
+    storeFormat?: SortOrderInput | SortOrder
+    salesChannels?: SortOrderInput | SortOrder
+    allowsInventory?: SortOrder
+    allowsOrders?: SortOrder
+    allowsReturns?: SortOrder
+    allowsTransfers?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: CompanyLocationCountOrderByAggregateInput
@@ -29361,6 +31047,8 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"CompanyLocation"> | string
     companyId?: StringWithAggregatesFilter<"CompanyLocation"> | string
     name?: StringWithAggregatesFilter<"CompanyLocation"> | string
+    description?: StringNullableWithAggregatesFilter<"CompanyLocation"> | string | null
+    code?: StringNullableWithAggregatesFilter<"CompanyLocation"> | string | null
     type?: EnumLocationTypeWithAggregatesFilter<"CompanyLocation"> | $Enums.LocationType
     address?: JsonWithAggregatesFilter<"CompanyLocation">
     coordinates?: JsonNullableWithAggregatesFilter<"CompanyLocation">
@@ -29368,9 +31056,18 @@ export namespace Prisma {
     phone?: StringNullableWithAggregatesFilter<"CompanyLocation"> | string | null
     email?: StringNullableWithAggregatesFilter<"CompanyLocation"> | string | null
     managerName?: StringNullableWithAggregatesFilter<"CompanyLocation"> | string | null
+    managerUserId?: StringNullableWithAggregatesFilter<"CompanyLocation"> | string | null
     businessHours?: JsonNullableWithAggregatesFilter<"CompanyLocation">
     isPrimary?: BoolWithAggregatesFilter<"CompanyLocation"> | boolean
     isActive?: BoolWithAggregatesFilter<"CompanyLocation"> | boolean
+    capacity?: JsonNullableWithAggregatesFilter<"CompanyLocation">
+    features?: JsonNullableWithAggregatesFilter<"CompanyLocation">
+    storeFormat?: StringNullableWithAggregatesFilter<"CompanyLocation"> | string | null
+    salesChannels?: JsonNullableWithAggregatesFilter<"CompanyLocation">
+    allowsInventory?: BoolWithAggregatesFilter<"CompanyLocation"> | boolean
+    allowsOrders?: BoolWithAggregatesFilter<"CompanyLocation"> | boolean
+    allowsReturns?: BoolWithAggregatesFilter<"CompanyLocation"> | boolean
+    allowsTransfers?: BoolWithAggregatesFilter<"CompanyLocation"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"CompanyLocation"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CompanyLocation"> | Date | string
   }
@@ -29617,7 +31314,7 @@ export namespace Prisma {
     currency?: StringFilter<"BillingHistory"> | string
     description?: StringNullableFilter<"BillingHistory"> | string | null
     invoiceNumber?: StringNullableFilter<"BillingHistory"> | string | null
-    paymentStatus?: EnumPaymentStatusFilter<"BillingHistory"> | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFilter<"BillingHistory"> | $Enums.BillingPaymentStatus
     paymentMethod?: StringNullableFilter<"BillingHistory"> | string | null
     paidAt?: DateTimeNullableFilter<"BillingHistory"> | Date | string | null
     metadata?: JsonNullableFilter<"BillingHistory">
@@ -29658,7 +31355,7 @@ export namespace Prisma {
     total?: DecimalFilter<"BillingHistory"> | Decimal | DecimalJsLike | number | string
     currency?: StringFilter<"BillingHistory"> | string
     description?: StringNullableFilter<"BillingHistory"> | string | null
-    paymentStatus?: EnumPaymentStatusFilter<"BillingHistory"> | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFilter<"BillingHistory"> | $Enums.BillingPaymentStatus
     paymentMethod?: StringNullableFilter<"BillingHistory"> | string | null
     paidAt?: DateTimeNullableFilter<"BillingHistory"> | Date | string | null
     metadata?: JsonNullableFilter<"BillingHistory">
@@ -29703,7 +31400,7 @@ export namespace Prisma {
     currency?: StringWithAggregatesFilter<"BillingHistory"> | string
     description?: StringNullableWithAggregatesFilter<"BillingHistory"> | string | null
     invoiceNumber?: StringNullableWithAggregatesFilter<"BillingHistory"> | string | null
-    paymentStatus?: EnumPaymentStatusWithAggregatesFilter<"BillingHistory"> | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusWithAggregatesFilter<"BillingHistory"> | $Enums.BillingPaymentStatus
     paymentMethod?: StringNullableWithAggregatesFilter<"BillingHistory"> | string | null
     paidAt?: DateTimeNullableWithAggregatesFilter<"BillingHistory"> | Date | string | null
     metadata?: JsonNullableWithAggregatesFilter<"BillingHistory">
@@ -30910,6 +32607,95 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ApiKey"> | Date | string
   }
 
+  export type UserLocationAccessWhereInput = {
+    AND?: UserLocationAccessWhereInput | UserLocationAccessWhereInput[]
+    OR?: UserLocationAccessWhereInput[]
+    NOT?: UserLocationAccessWhereInput | UserLocationAccessWhereInput[]
+    id?: StringFilter<"UserLocationAccess"> | string
+    userId?: StringFilter<"UserLocationAccess"> | string
+    companyId?: StringFilter<"UserLocationAccess"> | string
+    locationId?: StringFilter<"UserLocationAccess"> | string
+    accessLevel?: EnumLocationAccessLevelFilter<"UserLocationAccess"> | $Enums.LocationAccessLevel
+    canManage?: BoolFilter<"UserLocationAccess"> | boolean
+    startDate?: DateTimeFilter<"UserLocationAccess"> | Date | string
+    endDate?: DateTimeNullableFilter<"UserLocationAccess"> | Date | string | null
+    isActive?: BoolFilter<"UserLocationAccess"> | boolean
+    grantedBy?: StringNullableFilter<"UserLocationAccess"> | string | null
+    grantedAt?: DateTimeFilter<"UserLocationAccess"> | Date | string
+    companyUser?: XOR<CompanyUserScalarRelationFilter, CompanyUserWhereInput>
+    location?: XOR<CompanyLocationScalarRelationFilter, CompanyLocationWhereInput>
+  }
+
+  export type UserLocationAccessOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    locationId?: SortOrder
+    accessLevel?: SortOrder
+    canManage?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    grantedBy?: SortOrderInput | SortOrder
+    grantedAt?: SortOrder
+    companyUser?: CompanyUserOrderByWithRelationInput
+    location?: CompanyLocationOrderByWithRelationInput
+  }
+
+  export type UserLocationAccessWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_locationId?: UserLocationAccessUserIdLocationIdCompoundUniqueInput
+    AND?: UserLocationAccessWhereInput | UserLocationAccessWhereInput[]
+    OR?: UserLocationAccessWhereInput[]
+    NOT?: UserLocationAccessWhereInput | UserLocationAccessWhereInput[]
+    userId?: StringFilter<"UserLocationAccess"> | string
+    companyId?: StringFilter<"UserLocationAccess"> | string
+    locationId?: StringFilter<"UserLocationAccess"> | string
+    accessLevel?: EnumLocationAccessLevelFilter<"UserLocationAccess"> | $Enums.LocationAccessLevel
+    canManage?: BoolFilter<"UserLocationAccess"> | boolean
+    startDate?: DateTimeFilter<"UserLocationAccess"> | Date | string
+    endDate?: DateTimeNullableFilter<"UserLocationAccess"> | Date | string | null
+    isActive?: BoolFilter<"UserLocationAccess"> | boolean
+    grantedBy?: StringNullableFilter<"UserLocationAccess"> | string | null
+    grantedAt?: DateTimeFilter<"UserLocationAccess"> | Date | string
+    companyUser?: XOR<CompanyUserScalarRelationFilter, CompanyUserWhereInput>
+    location?: XOR<CompanyLocationScalarRelationFilter, CompanyLocationWhereInput>
+  }, "id" | "userId_locationId">
+
+  export type UserLocationAccessOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    locationId?: SortOrder
+    accessLevel?: SortOrder
+    canManage?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    grantedBy?: SortOrderInput | SortOrder
+    grantedAt?: SortOrder
+    _count?: UserLocationAccessCountOrderByAggregateInput
+    _max?: UserLocationAccessMaxOrderByAggregateInput
+    _min?: UserLocationAccessMinOrderByAggregateInput
+  }
+
+  export type UserLocationAccessScalarWhereWithAggregatesInput = {
+    AND?: UserLocationAccessScalarWhereWithAggregatesInput | UserLocationAccessScalarWhereWithAggregatesInput[]
+    OR?: UserLocationAccessScalarWhereWithAggregatesInput[]
+    NOT?: UserLocationAccessScalarWhereWithAggregatesInput | UserLocationAccessScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"UserLocationAccess"> | string
+    userId?: StringWithAggregatesFilter<"UserLocationAccess"> | string
+    companyId?: StringWithAggregatesFilter<"UserLocationAccess"> | string
+    locationId?: StringWithAggregatesFilter<"UserLocationAccess"> | string
+    accessLevel?: EnumLocationAccessLevelWithAggregatesFilter<"UserLocationAccess"> | $Enums.LocationAccessLevel
+    canManage?: BoolWithAggregatesFilter<"UserLocationAccess"> | boolean
+    startDate?: DateTimeWithAggregatesFilter<"UserLocationAccess"> | Date | string
+    endDate?: DateTimeNullableWithAggregatesFilter<"UserLocationAccess"> | Date | string | null
+    isActive?: BoolWithAggregatesFilter<"UserLocationAccess"> | boolean
+    grantedBy?: StringNullableWithAggregatesFilter<"UserLocationAccess"> | string | null
+    grantedAt?: DateTimeWithAggregatesFilter<"UserLocationAccess"> | Date | string
+  }
+
   export type CompanyCreateInput = {
     id?: string
     name: string
@@ -31230,6 +33016,7 @@ export namespace Prisma {
     role?: $Enums.CompanyRole
     title?: string | null
     employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -31245,9 +33032,11 @@ export namespace Prisma {
     lastActiveAt?: Date | string | null
     company: CompanyCreateNestedOneWithoutCompanyUsersInput
     department?: DepartmentCreateNestedOneWithoutEmployeesInput
+    primaryLocation?: CompanyLocationCreateNestedOneWithoutPrimaryUsersInput
     manager?: CompanyUserCreateNestedOneWithoutReportsInput
     reports?: CompanyUserCreateNestedManyWithoutManagerInput
     user: UserCreateNestedOneWithoutCompanyUsersInput
+    locationAccess?: UserLocationAccessCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserUncheckedCreateInput = {
@@ -31258,6 +33047,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -31273,6 +33064,7 @@ export namespace Prisma {
     joinedAt?: Date | string
     lastActiveAt?: Date | string | null
     reports?: CompanyUserUncheckedCreateNestedManyWithoutManagerInput
+    locationAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserUpdateInput = {
@@ -31280,6 +33072,7 @@ export namespace Prisma {
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -31295,9 +33088,11 @@ export namespace Prisma {
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     company?: CompanyUpdateOneRequiredWithoutCompanyUsersNestedInput
     department?: DepartmentUpdateOneWithoutEmployeesNestedInput
+    primaryLocation?: CompanyLocationUpdateOneWithoutPrimaryUsersNestedInput
     manager?: CompanyUserUpdateOneWithoutReportsNestedInput
     reports?: CompanyUserUpdateManyWithoutManagerNestedInput
     user?: UserUpdateOneRequiredWithoutCompanyUsersNestedInput
+    locationAccess?: UserLocationAccessUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateInput = {
@@ -31308,6 +33103,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -31323,6 +33120,7 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     reports?: CompanyUserUncheckedUpdateManyWithoutManagerNestedInput
+    locationAccess?: UserLocationAccessUncheckedUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserCreateManyInput = {
@@ -31333,6 +33131,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -31354,6 +33154,7 @@ export namespace Prisma {
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -31377,6 +33178,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -31638,6 +33441,8 @@ export namespace Prisma {
   export type CompanyLocationCreateInput = {
     id?: string
     name: string
+    description?: string | null
+    code?: string | null
     type?: $Enums.LocationType
     address: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -31645,18 +33450,31 @@ export namespace Prisma {
     phone?: string | null
     email?: string | null
     managerName?: string | null
+    managerUserId?: string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutLocationsInput
+    primaryUsers?: CompanyUserCreateNestedManyWithoutPrimaryLocationInput
+    userAccess?: UserLocationAccessCreateNestedManyWithoutLocationInput
   }
 
   export type CompanyLocationUncheckedCreateInput = {
     id?: string
     companyId: string
     name: string
+    description?: string | null
+    code?: string | null
     type?: $Enums.LocationType
     address: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -31664,16 +33482,29 @@ export namespace Prisma {
     phone?: string | null
     email?: string | null
     managerName?: string | null
+    managerUserId?: string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    primaryUsers?: CompanyUserUncheckedCreateNestedManyWithoutPrimaryLocationInput
+    userAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutLocationInput
   }
 
   export type CompanyLocationUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
     type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
     address?: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -31681,18 +33512,31 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutLocationsNestedInput
+    primaryUsers?: CompanyUserUpdateManyWithoutPrimaryLocationNestedInput
+    userAccess?: UserLocationAccessUpdateManyWithoutLocationNestedInput
   }
 
   export type CompanyLocationUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
     type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
     address?: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -31700,17 +33544,30 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    primaryUsers?: CompanyUserUncheckedUpdateManyWithoutPrimaryLocationNestedInput
+    userAccess?: UserLocationAccessUncheckedUpdateManyWithoutLocationNestedInput
   }
 
   export type CompanyLocationCreateManyInput = {
     id?: string
     companyId: string
     name: string
+    description?: string | null
+    code?: string | null
     type?: $Enums.LocationType
     address: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -31718,9 +33575,18 @@ export namespace Prisma {
     phone?: string | null
     email?: string | null
     managerName?: string | null
+    managerUserId?: string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -31728,6 +33594,8 @@ export namespace Prisma {
   export type CompanyLocationUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
     type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
     address?: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -31735,9 +33603,18 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -31746,6 +33623,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
     type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
     address?: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -31753,9 +33632,18 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32041,7 +33929,7 @@ export namespace Prisma {
     currency?: string
     description?: string | null
     invoiceNumber?: string | null
-    paymentStatus?: $Enums.PaymentStatus
+    paymentStatus?: $Enums.BillingPaymentStatus
     paymentMethod?: string | null
     paidAt?: Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -32060,7 +33948,7 @@ export namespace Prisma {
     currency?: string
     description?: string | null
     invoiceNumber?: string | null
-    paymentStatus?: $Enums.PaymentStatus
+    paymentStatus?: $Enums.BillingPaymentStatus
     paymentMethod?: string | null
     paidAt?: Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -32077,7 +33965,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFieldUpdateOperationsInput | $Enums.BillingPaymentStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -32096,7 +33984,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFieldUpdateOperationsInput | $Enums.BillingPaymentStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -32114,7 +34002,7 @@ export namespace Prisma {
     currency?: string
     description?: string | null
     invoiceNumber?: string | null
-    paymentStatus?: $Enums.PaymentStatus
+    paymentStatus?: $Enums.BillingPaymentStatus
     paymentMethod?: string | null
     paidAt?: Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -32131,7 +34019,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFieldUpdateOperationsInput | $Enums.BillingPaymentStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -32149,7 +34037,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFieldUpdateOperationsInput | $Enums.BillingPaymentStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -33562,6 +35450,102 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type UserLocationAccessCreateInput = {
+    id?: string
+    companyId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+    companyUser: CompanyUserCreateNestedOneWithoutLocationAccessInput
+    location: CompanyLocationCreateNestedOneWithoutUserAccessInput
+  }
+
+  export type UserLocationAccessUncheckedCreateInput = {
+    id?: string
+    userId: string
+    companyId: string
+    locationId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+  }
+
+  export type UserLocationAccessUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    companyUser?: CompanyUserUpdateOneRequiredWithoutLocationAccessNestedInput
+    location?: CompanyLocationUpdateOneRequiredWithoutUserAccessNestedInput
+  }
+
+  export type UserLocationAccessUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserLocationAccessCreateManyInput = {
+    id?: string
+    userId: string
+    companyId: string
+    locationId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+  }
+
+  export type UserLocationAccessUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserLocationAccessUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -34063,6 +36047,11 @@ export namespace Prisma {
     isNot?: DepartmentWhereInput | null
   }
 
+  export type CompanyLocationNullableScalarRelationFilter = {
+    is?: CompanyLocationWhereInput | null
+    isNot?: CompanyLocationWhereInput | null
+  }
+
   export type CompanyUserNullableScalarRelationFilter = {
     is?: CompanyUserWhereInput | null
     isNot?: CompanyUserWhereInput | null
@@ -34071,6 +36060,16 @@ export namespace Prisma {
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
+  }
+
+  export type UserLocationAccessListRelationFilter = {
+    every?: UserLocationAccessWhereInput
+    some?: UserLocationAccessWhereInput
+    none?: UserLocationAccessWhereInput
+  }
+
+  export type UserLocationAccessOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type CompanyUserCompanyIdUserIdCompoundUniqueInput = {
@@ -34086,6 +36085,8 @@ export namespace Prisma {
     title?: SortOrder
     departmentId?: SortOrder
     employeeId?: SortOrder
+    primaryLocationId?: SortOrder
+    allowedLocationIds?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
     permissions?: SortOrder
@@ -34110,6 +36111,7 @@ export namespace Prisma {
     title?: SortOrder
     departmentId?: SortOrder
     employeeId?: SortOrder
+    primaryLocationId?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
     isActive?: SortOrder
@@ -34132,6 +36134,7 @@ export namespace Prisma {
     title?: SortOrder
     departmentId?: SortOrder
     employeeId?: SortOrder
+    primaryLocationId?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
     isActive?: SortOrder
@@ -34362,10 +36365,17 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type CompanyLocationCompanyIdCodeCompoundUniqueInput = {
+    companyId: string
+    code: string
+  }
+
   export type CompanyLocationCountOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
     name?: SortOrder
+    description?: SortOrder
+    code?: SortOrder
     type?: SortOrder
     address?: SortOrder
     coordinates?: SortOrder
@@ -34373,9 +36383,18 @@ export namespace Prisma {
     phone?: SortOrder
     email?: SortOrder
     managerName?: SortOrder
+    managerUserId?: SortOrder
     businessHours?: SortOrder
     isPrimary?: SortOrder
     isActive?: SortOrder
+    capacity?: SortOrder
+    features?: SortOrder
+    storeFormat?: SortOrder
+    salesChannels?: SortOrder
+    allowsInventory?: SortOrder
+    allowsOrders?: SortOrder
+    allowsReturns?: SortOrder
+    allowsTransfers?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -34384,13 +36403,21 @@ export namespace Prisma {
     id?: SortOrder
     companyId?: SortOrder
     name?: SortOrder
+    description?: SortOrder
+    code?: SortOrder
     type?: SortOrder
     timezone?: SortOrder
     phone?: SortOrder
     email?: SortOrder
     managerName?: SortOrder
+    managerUserId?: SortOrder
     isPrimary?: SortOrder
     isActive?: SortOrder
+    storeFormat?: SortOrder
+    allowsInventory?: SortOrder
+    allowsOrders?: SortOrder
+    allowsReturns?: SortOrder
+    allowsTransfers?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -34399,13 +36426,21 @@ export namespace Prisma {
     id?: SortOrder
     companyId?: SortOrder
     name?: SortOrder
+    description?: SortOrder
+    code?: SortOrder
     type?: SortOrder
     timezone?: SortOrder
     phone?: SortOrder
     email?: SortOrder
     managerName?: SortOrder
+    managerUserId?: SortOrder
     isPrimary?: SortOrder
     isActive?: SortOrder
+    storeFormat?: SortOrder
+    allowsInventory?: SortOrder
+    allowsOrders?: SortOrder
+    allowsReturns?: SortOrder
+    allowsTransfers?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -34626,11 +36661,11 @@ export namespace Prisma {
     not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
   }
 
-  export type EnumPaymentStatusFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
+  export type EnumBillingPaymentStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.BillingPaymentStatus | EnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BillingPaymentStatus[] | ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BillingPaymentStatus[] | ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumBillingPaymentStatusFilter<$PrismaModel> | $Enums.BillingPaymentStatus
   }
 
   export type BillingHistoryCountOrderByAggregateInput = {
@@ -34713,14 +36748,14 @@ export namespace Prisma {
     _max?: NestedDecimalFilter<$PrismaModel>
   }
 
-  export type EnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel> | $Enums.PaymentStatus
+  export type EnumBillingPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BillingPaymentStatus | EnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BillingPaymentStatus[] | ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BillingPaymentStatus[] | ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumBillingPaymentStatusWithAggregatesFilter<$PrismaModel> | $Enums.BillingPaymentStatus
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
-    _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
+    _min?: NestedEnumBillingPaymentStatusFilter<$PrismaModel>
+    _max?: NestedEnumBillingPaymentStatusFilter<$PrismaModel>
   }
 
   export type ApiKeyListRelationFilter = {
@@ -35489,6 +37524,80 @@ export namespace Prisma {
     _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
+  export type EnumLocationAccessLevelFilter<$PrismaModel = never> = {
+    equals?: $Enums.LocationAccessLevel | EnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.LocationAccessLevel[] | ListEnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.LocationAccessLevel[] | ListEnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumLocationAccessLevelFilter<$PrismaModel> | $Enums.LocationAccessLevel
+  }
+
+  export type CompanyUserScalarRelationFilter = {
+    is?: CompanyUserWhereInput
+    isNot?: CompanyUserWhereInput
+  }
+
+  export type CompanyLocationScalarRelationFilter = {
+    is?: CompanyLocationWhereInput
+    isNot?: CompanyLocationWhereInput
+  }
+
+  export type UserLocationAccessUserIdLocationIdCompoundUniqueInput = {
+    userId: string
+    locationId: string
+  }
+
+  export type UserLocationAccessCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    locationId?: SortOrder
+    accessLevel?: SortOrder
+    canManage?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrder
+    isActive?: SortOrder
+    grantedBy?: SortOrder
+    grantedAt?: SortOrder
+  }
+
+  export type UserLocationAccessMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    locationId?: SortOrder
+    accessLevel?: SortOrder
+    canManage?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrder
+    isActive?: SortOrder
+    grantedBy?: SortOrder
+    grantedAt?: SortOrder
+  }
+
+  export type UserLocationAccessMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    locationId?: SortOrder
+    accessLevel?: SortOrder
+    canManage?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrder
+    isActive?: SortOrder
+    grantedBy?: SortOrder
+    grantedAt?: SortOrder
+  }
+
+  export type EnumLocationAccessLevelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.LocationAccessLevel | EnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.LocationAccessLevel[] | ListEnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.LocationAccessLevel[] | ListEnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumLocationAccessLevelWithAggregatesFilter<$PrismaModel> | $Enums.LocationAccessLevel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumLocationAccessLevelFilter<$PrismaModel>
+    _max?: NestedEnumLocationAccessLevelFilter<$PrismaModel>
+  }
+
   export type BillingHistoryCreateNestedManyWithoutCompanyInput = {
     create?: XOR<BillingHistoryCreateWithoutCompanyInput, BillingHistoryUncheckedCreateWithoutCompanyInput> | BillingHistoryCreateWithoutCompanyInput[] | BillingHistoryUncheckedCreateWithoutCompanyInput[]
     connectOrCreate?: BillingHistoryCreateOrConnectWithoutCompanyInput | BillingHistoryCreateOrConnectWithoutCompanyInput[]
@@ -35839,6 +37948,12 @@ export namespace Prisma {
     connect?: DepartmentWhereUniqueInput
   }
 
+  export type CompanyLocationCreateNestedOneWithoutPrimaryUsersInput = {
+    create?: XOR<CompanyLocationCreateWithoutPrimaryUsersInput, CompanyLocationUncheckedCreateWithoutPrimaryUsersInput>
+    connectOrCreate?: CompanyLocationCreateOrConnectWithoutPrimaryUsersInput
+    connect?: CompanyLocationWhereUniqueInput
+  }
+
   export type CompanyUserCreateNestedOneWithoutReportsInput = {
     create?: XOR<CompanyUserCreateWithoutReportsInput, CompanyUserUncheckedCreateWithoutReportsInput>
     connectOrCreate?: CompanyUserCreateOrConnectWithoutReportsInput
@@ -35858,11 +37973,25 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type UserLocationAccessCreateNestedManyWithoutCompanyUserInput = {
+    create?: XOR<UserLocationAccessCreateWithoutCompanyUserInput, UserLocationAccessUncheckedCreateWithoutCompanyUserInput> | UserLocationAccessCreateWithoutCompanyUserInput[] | UserLocationAccessUncheckedCreateWithoutCompanyUserInput[]
+    connectOrCreate?: UserLocationAccessCreateOrConnectWithoutCompanyUserInput | UserLocationAccessCreateOrConnectWithoutCompanyUserInput[]
+    createMany?: UserLocationAccessCreateManyCompanyUserInputEnvelope
+    connect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+  }
+
   export type CompanyUserUncheckedCreateNestedManyWithoutManagerInput = {
     create?: XOR<CompanyUserCreateWithoutManagerInput, CompanyUserUncheckedCreateWithoutManagerInput> | CompanyUserCreateWithoutManagerInput[] | CompanyUserUncheckedCreateWithoutManagerInput[]
     connectOrCreate?: CompanyUserCreateOrConnectWithoutManagerInput | CompanyUserCreateOrConnectWithoutManagerInput[]
     createMany?: CompanyUserCreateManyManagerInputEnvelope
     connect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+  }
+
+  export type UserLocationAccessUncheckedCreateNestedManyWithoutCompanyUserInput = {
+    create?: XOR<UserLocationAccessCreateWithoutCompanyUserInput, UserLocationAccessUncheckedCreateWithoutCompanyUserInput> | UserLocationAccessCreateWithoutCompanyUserInput[] | UserLocationAccessUncheckedCreateWithoutCompanyUserInput[]
+    connectOrCreate?: UserLocationAccessCreateOrConnectWithoutCompanyUserInput | UserLocationAccessCreateOrConnectWithoutCompanyUserInput[]
+    createMany?: UserLocationAccessCreateManyCompanyUserInputEnvelope
+    connect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
   }
 
   export type EnumCompanyRoleFieldUpdateOperationsInput = {
@@ -35889,6 +38018,16 @@ export namespace Prisma {
     delete?: DepartmentWhereInput | boolean
     connect?: DepartmentWhereUniqueInput
     update?: XOR<XOR<DepartmentUpdateToOneWithWhereWithoutEmployeesInput, DepartmentUpdateWithoutEmployeesInput>, DepartmentUncheckedUpdateWithoutEmployeesInput>
+  }
+
+  export type CompanyLocationUpdateOneWithoutPrimaryUsersNestedInput = {
+    create?: XOR<CompanyLocationCreateWithoutPrimaryUsersInput, CompanyLocationUncheckedCreateWithoutPrimaryUsersInput>
+    connectOrCreate?: CompanyLocationCreateOrConnectWithoutPrimaryUsersInput
+    upsert?: CompanyLocationUpsertWithoutPrimaryUsersInput
+    disconnect?: CompanyLocationWhereInput | boolean
+    delete?: CompanyLocationWhereInput | boolean
+    connect?: CompanyLocationWhereUniqueInput
+    update?: XOR<XOR<CompanyLocationUpdateToOneWithWhereWithoutPrimaryUsersInput, CompanyLocationUpdateWithoutPrimaryUsersInput>, CompanyLocationUncheckedUpdateWithoutPrimaryUsersInput>
   }
 
   export type CompanyUserUpdateOneWithoutReportsNestedInput = {
@@ -35923,6 +38062,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCompanyUsersInput, UserUpdateWithoutCompanyUsersInput>, UserUncheckedUpdateWithoutCompanyUsersInput>
   }
 
+  export type UserLocationAccessUpdateManyWithoutCompanyUserNestedInput = {
+    create?: XOR<UserLocationAccessCreateWithoutCompanyUserInput, UserLocationAccessUncheckedCreateWithoutCompanyUserInput> | UserLocationAccessCreateWithoutCompanyUserInput[] | UserLocationAccessUncheckedCreateWithoutCompanyUserInput[]
+    connectOrCreate?: UserLocationAccessCreateOrConnectWithoutCompanyUserInput | UserLocationAccessCreateOrConnectWithoutCompanyUserInput[]
+    upsert?: UserLocationAccessUpsertWithWhereUniqueWithoutCompanyUserInput | UserLocationAccessUpsertWithWhereUniqueWithoutCompanyUserInput[]
+    createMany?: UserLocationAccessCreateManyCompanyUserInputEnvelope
+    set?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    disconnect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    delete?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    connect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    update?: UserLocationAccessUpdateWithWhereUniqueWithoutCompanyUserInput | UserLocationAccessUpdateWithWhereUniqueWithoutCompanyUserInput[]
+    updateMany?: UserLocationAccessUpdateManyWithWhereWithoutCompanyUserInput | UserLocationAccessUpdateManyWithWhereWithoutCompanyUserInput[]
+    deleteMany?: UserLocationAccessScalarWhereInput | UserLocationAccessScalarWhereInput[]
+  }
+
   export type CompanyUserUncheckedUpdateManyWithoutManagerNestedInput = {
     create?: XOR<CompanyUserCreateWithoutManagerInput, CompanyUserUncheckedCreateWithoutManagerInput> | CompanyUserCreateWithoutManagerInput[] | CompanyUserUncheckedCreateWithoutManagerInput[]
     connectOrCreate?: CompanyUserCreateOrConnectWithoutManagerInput | CompanyUserCreateOrConnectWithoutManagerInput[]
@@ -35935,6 +38088,20 @@ export namespace Prisma {
     update?: CompanyUserUpdateWithWhereUniqueWithoutManagerInput | CompanyUserUpdateWithWhereUniqueWithoutManagerInput[]
     updateMany?: CompanyUserUpdateManyWithWhereWithoutManagerInput | CompanyUserUpdateManyWithWhereWithoutManagerInput[]
     deleteMany?: CompanyUserScalarWhereInput | CompanyUserScalarWhereInput[]
+  }
+
+  export type UserLocationAccessUncheckedUpdateManyWithoutCompanyUserNestedInput = {
+    create?: XOR<UserLocationAccessCreateWithoutCompanyUserInput, UserLocationAccessUncheckedCreateWithoutCompanyUserInput> | UserLocationAccessCreateWithoutCompanyUserInput[] | UserLocationAccessUncheckedCreateWithoutCompanyUserInput[]
+    connectOrCreate?: UserLocationAccessCreateOrConnectWithoutCompanyUserInput | UserLocationAccessCreateOrConnectWithoutCompanyUserInput[]
+    upsert?: UserLocationAccessUpsertWithWhereUniqueWithoutCompanyUserInput | UserLocationAccessUpsertWithWhereUniqueWithoutCompanyUserInput[]
+    createMany?: UserLocationAccessCreateManyCompanyUserInputEnvelope
+    set?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    disconnect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    delete?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    connect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    update?: UserLocationAccessUpdateWithWhereUniqueWithoutCompanyUserInput | UserLocationAccessUpdateWithWhereUniqueWithoutCompanyUserInput[]
+    updateMany?: UserLocationAccessUpdateManyWithWhereWithoutCompanyUserInput | UserLocationAccessUpdateManyWithWhereWithoutCompanyUserInput[]
+    deleteMany?: UserLocationAccessScalarWhereInput | UserLocationAccessScalarWhereInput[]
   }
 
   export type CompanyUserCreateNestedManyWithoutDepartmentInput = {
@@ -36097,6 +38264,34 @@ export namespace Prisma {
     connect?: CompanyWhereUniqueInput
   }
 
+  export type CompanyUserCreateNestedManyWithoutPrimaryLocationInput = {
+    create?: XOR<CompanyUserCreateWithoutPrimaryLocationInput, CompanyUserUncheckedCreateWithoutPrimaryLocationInput> | CompanyUserCreateWithoutPrimaryLocationInput[] | CompanyUserUncheckedCreateWithoutPrimaryLocationInput[]
+    connectOrCreate?: CompanyUserCreateOrConnectWithoutPrimaryLocationInput | CompanyUserCreateOrConnectWithoutPrimaryLocationInput[]
+    createMany?: CompanyUserCreateManyPrimaryLocationInputEnvelope
+    connect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+  }
+
+  export type UserLocationAccessCreateNestedManyWithoutLocationInput = {
+    create?: XOR<UserLocationAccessCreateWithoutLocationInput, UserLocationAccessUncheckedCreateWithoutLocationInput> | UserLocationAccessCreateWithoutLocationInput[] | UserLocationAccessUncheckedCreateWithoutLocationInput[]
+    connectOrCreate?: UserLocationAccessCreateOrConnectWithoutLocationInput | UserLocationAccessCreateOrConnectWithoutLocationInput[]
+    createMany?: UserLocationAccessCreateManyLocationInputEnvelope
+    connect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+  }
+
+  export type CompanyUserUncheckedCreateNestedManyWithoutPrimaryLocationInput = {
+    create?: XOR<CompanyUserCreateWithoutPrimaryLocationInput, CompanyUserUncheckedCreateWithoutPrimaryLocationInput> | CompanyUserCreateWithoutPrimaryLocationInput[] | CompanyUserUncheckedCreateWithoutPrimaryLocationInput[]
+    connectOrCreate?: CompanyUserCreateOrConnectWithoutPrimaryLocationInput | CompanyUserCreateOrConnectWithoutPrimaryLocationInput[]
+    createMany?: CompanyUserCreateManyPrimaryLocationInputEnvelope
+    connect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+  }
+
+  export type UserLocationAccessUncheckedCreateNestedManyWithoutLocationInput = {
+    create?: XOR<UserLocationAccessCreateWithoutLocationInput, UserLocationAccessUncheckedCreateWithoutLocationInput> | UserLocationAccessCreateWithoutLocationInput[] | UserLocationAccessUncheckedCreateWithoutLocationInput[]
+    connectOrCreate?: UserLocationAccessCreateOrConnectWithoutLocationInput | UserLocationAccessCreateOrConnectWithoutLocationInput[]
+    createMany?: UserLocationAccessCreateManyLocationInputEnvelope
+    connect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+  }
+
   export type EnumLocationTypeFieldUpdateOperationsInput = {
     set?: $Enums.LocationType
   }
@@ -36107,6 +38302,62 @@ export namespace Prisma {
     upsert?: CompanyUpsertWithoutLocationsInput
     connect?: CompanyWhereUniqueInput
     update?: XOR<XOR<CompanyUpdateToOneWithWhereWithoutLocationsInput, CompanyUpdateWithoutLocationsInput>, CompanyUncheckedUpdateWithoutLocationsInput>
+  }
+
+  export type CompanyUserUpdateManyWithoutPrimaryLocationNestedInput = {
+    create?: XOR<CompanyUserCreateWithoutPrimaryLocationInput, CompanyUserUncheckedCreateWithoutPrimaryLocationInput> | CompanyUserCreateWithoutPrimaryLocationInput[] | CompanyUserUncheckedCreateWithoutPrimaryLocationInput[]
+    connectOrCreate?: CompanyUserCreateOrConnectWithoutPrimaryLocationInput | CompanyUserCreateOrConnectWithoutPrimaryLocationInput[]
+    upsert?: CompanyUserUpsertWithWhereUniqueWithoutPrimaryLocationInput | CompanyUserUpsertWithWhereUniqueWithoutPrimaryLocationInput[]
+    createMany?: CompanyUserCreateManyPrimaryLocationInputEnvelope
+    set?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+    disconnect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+    delete?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+    connect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+    update?: CompanyUserUpdateWithWhereUniqueWithoutPrimaryLocationInput | CompanyUserUpdateWithWhereUniqueWithoutPrimaryLocationInput[]
+    updateMany?: CompanyUserUpdateManyWithWhereWithoutPrimaryLocationInput | CompanyUserUpdateManyWithWhereWithoutPrimaryLocationInput[]
+    deleteMany?: CompanyUserScalarWhereInput | CompanyUserScalarWhereInput[]
+  }
+
+  export type UserLocationAccessUpdateManyWithoutLocationNestedInput = {
+    create?: XOR<UserLocationAccessCreateWithoutLocationInput, UserLocationAccessUncheckedCreateWithoutLocationInput> | UserLocationAccessCreateWithoutLocationInput[] | UserLocationAccessUncheckedCreateWithoutLocationInput[]
+    connectOrCreate?: UserLocationAccessCreateOrConnectWithoutLocationInput | UserLocationAccessCreateOrConnectWithoutLocationInput[]
+    upsert?: UserLocationAccessUpsertWithWhereUniqueWithoutLocationInput | UserLocationAccessUpsertWithWhereUniqueWithoutLocationInput[]
+    createMany?: UserLocationAccessCreateManyLocationInputEnvelope
+    set?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    disconnect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    delete?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    connect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    update?: UserLocationAccessUpdateWithWhereUniqueWithoutLocationInput | UserLocationAccessUpdateWithWhereUniqueWithoutLocationInput[]
+    updateMany?: UserLocationAccessUpdateManyWithWhereWithoutLocationInput | UserLocationAccessUpdateManyWithWhereWithoutLocationInput[]
+    deleteMany?: UserLocationAccessScalarWhereInput | UserLocationAccessScalarWhereInput[]
+  }
+
+  export type CompanyUserUncheckedUpdateManyWithoutPrimaryLocationNestedInput = {
+    create?: XOR<CompanyUserCreateWithoutPrimaryLocationInput, CompanyUserUncheckedCreateWithoutPrimaryLocationInput> | CompanyUserCreateWithoutPrimaryLocationInput[] | CompanyUserUncheckedCreateWithoutPrimaryLocationInput[]
+    connectOrCreate?: CompanyUserCreateOrConnectWithoutPrimaryLocationInput | CompanyUserCreateOrConnectWithoutPrimaryLocationInput[]
+    upsert?: CompanyUserUpsertWithWhereUniqueWithoutPrimaryLocationInput | CompanyUserUpsertWithWhereUniqueWithoutPrimaryLocationInput[]
+    createMany?: CompanyUserCreateManyPrimaryLocationInputEnvelope
+    set?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+    disconnect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+    delete?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+    connect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+    update?: CompanyUserUpdateWithWhereUniqueWithoutPrimaryLocationInput | CompanyUserUpdateWithWhereUniqueWithoutPrimaryLocationInput[]
+    updateMany?: CompanyUserUpdateManyWithWhereWithoutPrimaryLocationInput | CompanyUserUpdateManyWithWhereWithoutPrimaryLocationInput[]
+    deleteMany?: CompanyUserScalarWhereInput | CompanyUserScalarWhereInput[]
+  }
+
+  export type UserLocationAccessUncheckedUpdateManyWithoutLocationNestedInput = {
+    create?: XOR<UserLocationAccessCreateWithoutLocationInput, UserLocationAccessUncheckedCreateWithoutLocationInput> | UserLocationAccessCreateWithoutLocationInput[] | UserLocationAccessUncheckedCreateWithoutLocationInput[]
+    connectOrCreate?: UserLocationAccessCreateOrConnectWithoutLocationInput | UserLocationAccessCreateOrConnectWithoutLocationInput[]
+    upsert?: UserLocationAccessUpsertWithWhereUniqueWithoutLocationInput | UserLocationAccessUpsertWithWhereUniqueWithoutLocationInput[]
+    createMany?: UserLocationAccessCreateManyLocationInputEnvelope
+    set?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    disconnect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    delete?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    connect?: UserLocationAccessWhereUniqueInput | UserLocationAccessWhereUniqueInput[]
+    update?: UserLocationAccessUpdateWithWhereUniqueWithoutLocationInput | UserLocationAccessUpdateWithWhereUniqueWithoutLocationInput[]
+    updateMany?: UserLocationAccessUpdateManyWithWhereWithoutLocationInput | UserLocationAccessUpdateManyWithWhereWithoutLocationInput[]
+    deleteMany?: UserLocationAccessScalarWhereInput | UserLocationAccessScalarWhereInput[]
   }
 
   export type CompanyCreateNestedOneWithoutIntegrationsInput = {
@@ -36163,8 +38414,8 @@ export namespace Prisma {
     divide?: Decimal | DecimalJsLike | number | string
   }
 
-  export type EnumPaymentStatusFieldUpdateOperationsInput = {
-    set?: $Enums.PaymentStatus
+  export type EnumBillingPaymentStatusFieldUpdateOperationsInput = {
+    set?: $Enums.BillingPaymentStatus
   }
 
   export type CompanyUpdateOneRequiredWithoutBillingHistoryNestedInput = {
@@ -36897,6 +39148,38 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutApiKeysInput, UserUpdateWithoutApiKeysInput>, UserUncheckedUpdateWithoutApiKeysInput>
   }
 
+  export type CompanyUserCreateNestedOneWithoutLocationAccessInput = {
+    create?: XOR<CompanyUserCreateWithoutLocationAccessInput, CompanyUserUncheckedCreateWithoutLocationAccessInput>
+    connectOrCreate?: CompanyUserCreateOrConnectWithoutLocationAccessInput
+    connect?: CompanyUserWhereUniqueInput
+  }
+
+  export type CompanyLocationCreateNestedOneWithoutUserAccessInput = {
+    create?: XOR<CompanyLocationCreateWithoutUserAccessInput, CompanyLocationUncheckedCreateWithoutUserAccessInput>
+    connectOrCreate?: CompanyLocationCreateOrConnectWithoutUserAccessInput
+    connect?: CompanyLocationWhereUniqueInput
+  }
+
+  export type EnumLocationAccessLevelFieldUpdateOperationsInput = {
+    set?: $Enums.LocationAccessLevel
+  }
+
+  export type CompanyUserUpdateOneRequiredWithoutLocationAccessNestedInput = {
+    create?: XOR<CompanyUserCreateWithoutLocationAccessInput, CompanyUserUncheckedCreateWithoutLocationAccessInput>
+    connectOrCreate?: CompanyUserCreateOrConnectWithoutLocationAccessInput
+    upsert?: CompanyUserUpsertWithoutLocationAccessInput
+    connect?: CompanyUserWhereUniqueInput
+    update?: XOR<XOR<CompanyUserUpdateToOneWithWhereWithoutLocationAccessInput, CompanyUserUpdateWithoutLocationAccessInput>, CompanyUserUncheckedUpdateWithoutLocationAccessInput>
+  }
+
+  export type CompanyLocationUpdateOneRequiredWithoutUserAccessNestedInput = {
+    create?: XOR<CompanyLocationCreateWithoutUserAccessInput, CompanyLocationUncheckedCreateWithoutUserAccessInput>
+    connectOrCreate?: CompanyLocationCreateOrConnectWithoutUserAccessInput
+    upsert?: CompanyLocationUpsertWithoutUserAccessInput
+    connect?: CompanyLocationWhereUniqueInput
+    update?: XOR<XOR<CompanyLocationUpdateToOneWithWhereWithoutUserAccessInput, CompanyLocationUpdateWithoutUserAccessInput>, CompanyLocationUncheckedUpdateWithoutUserAccessInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -37342,11 +39625,11 @@ export namespace Prisma {
     not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
   }
 
-  export type NestedEnumPaymentStatusFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
+  export type NestedEnumBillingPaymentStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.BillingPaymentStatus | EnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BillingPaymentStatus[] | ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BillingPaymentStatus[] | ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumBillingPaymentStatusFilter<$PrismaModel> | $Enums.BillingPaymentStatus
   }
 
   export type NestedDecimalWithAggregatesFilter<$PrismaModel = never> = {
@@ -37365,14 +39648,14 @@ export namespace Prisma {
     _max?: NestedDecimalFilter<$PrismaModel>
   }
 
-  export type NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel> | $Enums.PaymentStatus
+  export type NestedEnumBillingPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BillingPaymentStatus | EnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BillingPaymentStatus[] | ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BillingPaymentStatus[] | ListEnumBillingPaymentStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumBillingPaymentStatusWithAggregatesFilter<$PrismaModel> | $Enums.BillingPaymentStatus
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
-    _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
+    _min?: NestedEnumBillingPaymentStatusFilter<$PrismaModel>
+    _max?: NestedEnumBillingPaymentStatusFilter<$PrismaModel>
   }
 
   export type NestedEnumNotificationTypeFilter<$PrismaModel = never> = {
@@ -37436,6 +39719,23 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedEnumLocationAccessLevelFilter<$PrismaModel = never> = {
+    equals?: $Enums.LocationAccessLevel | EnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.LocationAccessLevel[] | ListEnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.LocationAccessLevel[] | ListEnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumLocationAccessLevelFilter<$PrismaModel> | $Enums.LocationAccessLevel
+  }
+
+  export type NestedEnumLocationAccessLevelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.LocationAccessLevel | EnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.LocationAccessLevel[] | ListEnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.LocationAccessLevel[] | ListEnumLocationAccessLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumLocationAccessLevelWithAggregatesFilter<$PrismaModel> | $Enums.LocationAccessLevel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumLocationAccessLevelFilter<$PrismaModel>
+    _max?: NestedEnumLocationAccessLevelFilter<$PrismaModel>
+  }
+
   export type BillingHistoryCreateWithoutCompanyInput = {
     id?: string
     periodStart: Date | string
@@ -37446,7 +39746,7 @@ export namespace Prisma {
     currency?: string
     description?: string | null
     invoiceNumber?: string | null
-    paymentStatus?: $Enums.PaymentStatus
+    paymentStatus?: $Enums.BillingPaymentStatus
     paymentMethod?: string | null
     paidAt?: Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -37463,7 +39763,7 @@ export namespace Prisma {
     currency?: string
     description?: string | null
     invoiceNumber?: string | null
-    paymentStatus?: $Enums.PaymentStatus
+    paymentStatus?: $Enums.BillingPaymentStatus
     paymentMethod?: string | null
     paidAt?: Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -37577,6 +39877,8 @@ export namespace Prisma {
   export type CompanyLocationCreateWithoutCompanyInput = {
     id?: string
     name: string
+    description?: string | null
+    code?: string | null
     type?: $Enums.LocationType
     address: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -37584,16 +39886,29 @@ export namespace Prisma {
     phone?: string | null
     email?: string | null
     managerName?: string | null
+    managerUserId?: string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    primaryUsers?: CompanyUserCreateNestedManyWithoutPrimaryLocationInput
+    userAccess?: UserLocationAccessCreateNestedManyWithoutLocationInput
   }
 
   export type CompanyLocationUncheckedCreateWithoutCompanyInput = {
     id?: string
     name: string
+    description?: string | null
+    code?: string | null
     type?: $Enums.LocationType
     address: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -37601,11 +39916,22 @@ export namespace Prisma {
     phone?: string | null
     email?: string | null
     managerName?: string | null
+    managerUserId?: string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    primaryUsers?: CompanyUserUncheckedCreateNestedManyWithoutPrimaryLocationInput
+    userAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutLocationInput
   }
 
   export type CompanyLocationCreateOrConnectWithoutCompanyInput = {
@@ -37623,6 +39949,7 @@ export namespace Prisma {
     role?: $Enums.CompanyRole
     title?: string | null
     employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -37637,9 +39964,11 @@ export namespace Prisma {
     joinedAt?: Date | string
     lastActiveAt?: Date | string | null
     department?: DepartmentCreateNestedOneWithoutEmployeesInput
+    primaryLocation?: CompanyLocationCreateNestedOneWithoutPrimaryUsersInput
     manager?: CompanyUserCreateNestedOneWithoutReportsInput
     reports?: CompanyUserCreateNestedManyWithoutManagerInput
     user: UserCreateNestedOneWithoutCompanyUsersInput
+    locationAccess?: UserLocationAccessCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserUncheckedCreateWithoutCompanyInput = {
@@ -37649,6 +39978,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -37664,6 +39995,7 @@ export namespace Prisma {
     joinedAt?: Date | string
     lastActiveAt?: Date | string | null
     reports?: CompanyUserUncheckedCreateNestedManyWithoutManagerInput
+    locationAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserCreateOrConnectWithoutCompanyInput = {
@@ -37794,7 +40126,7 @@ export namespace Prisma {
     currency?: StringFilter<"BillingHistory"> | string
     description?: StringNullableFilter<"BillingHistory"> | string | null
     invoiceNumber?: StringNullableFilter<"BillingHistory"> | string | null
-    paymentStatus?: EnumPaymentStatusFilter<"BillingHistory"> | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFilter<"BillingHistory"> | $Enums.BillingPaymentStatus
     paymentMethod?: StringNullableFilter<"BillingHistory"> | string | null
     paidAt?: DateTimeNullableFilter<"BillingHistory"> | Date | string | null
     metadata?: JsonNullableFilter<"BillingHistory">
@@ -37901,6 +40233,8 @@ export namespace Prisma {
     id?: StringFilter<"CompanyLocation"> | string
     companyId?: StringFilter<"CompanyLocation"> | string
     name?: StringFilter<"CompanyLocation"> | string
+    description?: StringNullableFilter<"CompanyLocation"> | string | null
+    code?: StringNullableFilter<"CompanyLocation"> | string | null
     type?: EnumLocationTypeFilter<"CompanyLocation"> | $Enums.LocationType
     address?: JsonFilter<"CompanyLocation">
     coordinates?: JsonNullableFilter<"CompanyLocation">
@@ -37908,9 +40242,18 @@ export namespace Prisma {
     phone?: StringNullableFilter<"CompanyLocation"> | string | null
     email?: StringNullableFilter<"CompanyLocation"> | string | null
     managerName?: StringNullableFilter<"CompanyLocation"> | string | null
+    managerUserId?: StringNullableFilter<"CompanyLocation"> | string | null
     businessHours?: JsonNullableFilter<"CompanyLocation">
     isPrimary?: BoolFilter<"CompanyLocation"> | boolean
     isActive?: BoolFilter<"CompanyLocation"> | boolean
+    capacity?: JsonNullableFilter<"CompanyLocation">
+    features?: JsonNullableFilter<"CompanyLocation">
+    storeFormat?: StringNullableFilter<"CompanyLocation"> | string | null
+    salesChannels?: JsonNullableFilter<"CompanyLocation">
+    allowsInventory?: BoolFilter<"CompanyLocation"> | boolean
+    allowsOrders?: BoolFilter<"CompanyLocation"> | boolean
+    allowsReturns?: BoolFilter<"CompanyLocation"> | boolean
+    allowsTransfers?: BoolFilter<"CompanyLocation"> | boolean
     createdAt?: DateTimeFilter<"CompanyLocation"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyLocation"> | Date | string
   }
@@ -37942,6 +40285,8 @@ export namespace Prisma {
     title?: StringNullableFilter<"CompanyUser"> | string | null
     departmentId?: StringNullableFilter<"CompanyUser"> | string | null
     employeeId?: StringNullableFilter<"CompanyUser"> | string | null
+    primaryLocationId?: StringNullableFilter<"CompanyUser"> | string | null
+    allowedLocationIds?: JsonNullableFilter<"CompanyUser">
     startDate?: DateTimeFilter<"CompanyUser"> | Date | string
     endDate?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     permissions?: JsonNullableFilter<"CompanyUser">
@@ -38168,11 +40513,77 @@ export namespace Prisma {
     create: XOR<DepartmentCreateWithoutEmployeesInput, DepartmentUncheckedCreateWithoutEmployeesInput>
   }
 
+  export type CompanyLocationCreateWithoutPrimaryUsersInput = {
+    id?: string
+    name: string
+    description?: string | null
+    code?: string | null
+    type?: $Enums.LocationType
+    address: JsonNullValueInput | InputJsonValue
+    coordinates?: NullableJsonNullValueInput | InputJsonValue
+    timezone?: string
+    phone?: string | null
+    email?: string | null
+    managerName?: string | null
+    managerUserId?: string | null
+    businessHours?: NullableJsonNullValueInput | InputJsonValue
+    isPrimary?: boolean
+    isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutLocationsInput
+    userAccess?: UserLocationAccessCreateNestedManyWithoutLocationInput
+  }
+
+  export type CompanyLocationUncheckedCreateWithoutPrimaryUsersInput = {
+    id?: string
+    companyId: string
+    name: string
+    description?: string | null
+    code?: string | null
+    type?: $Enums.LocationType
+    address: JsonNullValueInput | InputJsonValue
+    coordinates?: NullableJsonNullValueInput | InputJsonValue
+    timezone?: string
+    phone?: string | null
+    email?: string | null
+    managerName?: string | null
+    managerUserId?: string | null
+    businessHours?: NullableJsonNullValueInput | InputJsonValue
+    isPrimary?: boolean
+    isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    userAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutLocationInput
+  }
+
+  export type CompanyLocationCreateOrConnectWithoutPrimaryUsersInput = {
+    where: CompanyLocationWhereUniqueInput
+    create: XOR<CompanyLocationCreateWithoutPrimaryUsersInput, CompanyLocationUncheckedCreateWithoutPrimaryUsersInput>
+  }
+
   export type CompanyUserCreateWithoutReportsInput = {
     id?: string
     role?: $Enums.CompanyRole
     title?: string | null
     employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -38188,8 +40599,10 @@ export namespace Prisma {
     lastActiveAt?: Date | string | null
     company: CompanyCreateNestedOneWithoutCompanyUsersInput
     department?: DepartmentCreateNestedOneWithoutEmployeesInput
+    primaryLocation?: CompanyLocationCreateNestedOneWithoutPrimaryUsersInput
     manager?: CompanyUserCreateNestedOneWithoutReportsInput
     user: UserCreateNestedOneWithoutCompanyUsersInput
+    locationAccess?: UserLocationAccessCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserUncheckedCreateWithoutReportsInput = {
@@ -38200,6 +40613,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -38214,6 +40629,7 @@ export namespace Prisma {
     invitedAt?: Date | string | null
     joinedAt?: Date | string
     lastActiveAt?: Date | string | null
+    locationAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserCreateOrConnectWithoutReportsInput = {
@@ -38226,6 +40642,7 @@ export namespace Prisma {
     role?: $Enums.CompanyRole
     title?: string | null
     employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -38241,8 +40658,10 @@ export namespace Prisma {
     lastActiveAt?: Date | string | null
     company: CompanyCreateNestedOneWithoutCompanyUsersInput
     department?: DepartmentCreateNestedOneWithoutEmployeesInput
+    primaryLocation?: CompanyLocationCreateNestedOneWithoutPrimaryUsersInput
     reports?: CompanyUserCreateNestedManyWithoutManagerInput
     user: UserCreateNestedOneWithoutCompanyUsersInput
+    locationAccess?: UserLocationAccessCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserUncheckedCreateWithoutManagerInput = {
@@ -38253,6 +40672,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -38267,6 +40688,7 @@ export namespace Prisma {
     joinedAt?: Date | string
     lastActiveAt?: Date | string | null
     reports?: CompanyUserUncheckedCreateNestedManyWithoutManagerInput
+    locationAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserCreateOrConnectWithoutManagerInput = {
@@ -38358,6 +40780,42 @@ export namespace Prisma {
   export type UserCreateOrConnectWithoutCompanyUsersInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutCompanyUsersInput, UserUncheckedCreateWithoutCompanyUsersInput>
+  }
+
+  export type UserLocationAccessCreateWithoutCompanyUserInput = {
+    id?: string
+    companyId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+    location: CompanyLocationCreateNestedOneWithoutUserAccessInput
+  }
+
+  export type UserLocationAccessUncheckedCreateWithoutCompanyUserInput = {
+    id?: string
+    companyId: string
+    locationId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+  }
+
+  export type UserLocationAccessCreateOrConnectWithoutCompanyUserInput = {
+    where: UserLocationAccessWhereUniqueInput
+    create: XOR<UserLocationAccessCreateWithoutCompanyUserInput, UserLocationAccessUncheckedCreateWithoutCompanyUserInput>
+  }
+
+  export type UserLocationAccessCreateManyCompanyUserInputEnvelope = {
+    data: UserLocationAccessCreateManyCompanyUserInput | UserLocationAccessCreateManyCompanyUserInput[]
+    skipDuplicates?: boolean
   }
 
   export type CompanyUpsertWithoutCompanyUsersInput = {
@@ -38510,6 +40968,77 @@ export namespace Prisma {
     children?: DepartmentUncheckedUpdateManyWithoutParentNestedInput
   }
 
+  export type CompanyLocationUpsertWithoutPrimaryUsersInput = {
+    update: XOR<CompanyLocationUpdateWithoutPrimaryUsersInput, CompanyLocationUncheckedUpdateWithoutPrimaryUsersInput>
+    create: XOR<CompanyLocationCreateWithoutPrimaryUsersInput, CompanyLocationUncheckedCreateWithoutPrimaryUsersInput>
+    where?: CompanyLocationWhereInput
+  }
+
+  export type CompanyLocationUpdateToOneWithWhereWithoutPrimaryUsersInput = {
+    where?: CompanyLocationWhereInput
+    data: XOR<CompanyLocationUpdateWithoutPrimaryUsersInput, CompanyLocationUncheckedUpdateWithoutPrimaryUsersInput>
+  }
+
+  export type CompanyLocationUpdateWithoutPrimaryUsersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
+    address?: JsonNullValueInput | InputJsonValue
+    coordinates?: NullableJsonNullValueInput | InputJsonValue
+    timezone?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    businessHours?: NullableJsonNullValueInput | InputJsonValue
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutLocationsNestedInput
+    userAccess?: UserLocationAccessUpdateManyWithoutLocationNestedInput
+  }
+
+  export type CompanyLocationUncheckedUpdateWithoutPrimaryUsersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
+    address?: JsonNullValueInput | InputJsonValue
+    coordinates?: NullableJsonNullValueInput | InputJsonValue
+    timezone?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    businessHours?: NullableJsonNullValueInput | InputJsonValue
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userAccess?: UserLocationAccessUncheckedUpdateManyWithoutLocationNestedInput
+  }
+
   export type CompanyUserUpsertWithoutReportsInput = {
     update: XOR<CompanyUserUpdateWithoutReportsInput, CompanyUserUncheckedUpdateWithoutReportsInput>
     create: XOR<CompanyUserCreateWithoutReportsInput, CompanyUserUncheckedCreateWithoutReportsInput>
@@ -38526,6 +41055,7 @@ export namespace Prisma {
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -38541,8 +41071,10 @@ export namespace Prisma {
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     company?: CompanyUpdateOneRequiredWithoutCompanyUsersNestedInput
     department?: DepartmentUpdateOneWithoutEmployeesNestedInput
+    primaryLocation?: CompanyLocationUpdateOneWithoutPrimaryUsersNestedInput
     manager?: CompanyUserUpdateOneWithoutReportsNestedInput
     user?: UserUpdateOneRequiredWithoutCompanyUsersNestedInput
+    locationAccess?: UserLocationAccessUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateWithoutReportsInput = {
@@ -38553,6 +41085,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -38567,6 +41101,7 @@ export namespace Prisma {
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    locationAccess?: UserLocationAccessUncheckedUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUpsertWithWhereUniqueWithoutManagerInput = {
@@ -38672,11 +41207,45 @@ export namespace Prisma {
     companyInvites?: CompanyInviteUncheckedUpdateManyWithoutInvitedByNestedInput
   }
 
+  export type UserLocationAccessUpsertWithWhereUniqueWithoutCompanyUserInput = {
+    where: UserLocationAccessWhereUniqueInput
+    update: XOR<UserLocationAccessUpdateWithoutCompanyUserInput, UserLocationAccessUncheckedUpdateWithoutCompanyUserInput>
+    create: XOR<UserLocationAccessCreateWithoutCompanyUserInput, UserLocationAccessUncheckedCreateWithoutCompanyUserInput>
+  }
+
+  export type UserLocationAccessUpdateWithWhereUniqueWithoutCompanyUserInput = {
+    where: UserLocationAccessWhereUniqueInput
+    data: XOR<UserLocationAccessUpdateWithoutCompanyUserInput, UserLocationAccessUncheckedUpdateWithoutCompanyUserInput>
+  }
+
+  export type UserLocationAccessUpdateManyWithWhereWithoutCompanyUserInput = {
+    where: UserLocationAccessScalarWhereInput
+    data: XOR<UserLocationAccessUpdateManyMutationInput, UserLocationAccessUncheckedUpdateManyWithoutCompanyUserInput>
+  }
+
+  export type UserLocationAccessScalarWhereInput = {
+    AND?: UserLocationAccessScalarWhereInput | UserLocationAccessScalarWhereInput[]
+    OR?: UserLocationAccessScalarWhereInput[]
+    NOT?: UserLocationAccessScalarWhereInput | UserLocationAccessScalarWhereInput[]
+    id?: StringFilter<"UserLocationAccess"> | string
+    userId?: StringFilter<"UserLocationAccess"> | string
+    companyId?: StringFilter<"UserLocationAccess"> | string
+    locationId?: StringFilter<"UserLocationAccess"> | string
+    accessLevel?: EnumLocationAccessLevelFilter<"UserLocationAccess"> | $Enums.LocationAccessLevel
+    canManage?: BoolFilter<"UserLocationAccess"> | boolean
+    startDate?: DateTimeFilter<"UserLocationAccess"> | Date | string
+    endDate?: DateTimeNullableFilter<"UserLocationAccess"> | Date | string | null
+    isActive?: BoolFilter<"UserLocationAccess"> | boolean
+    grantedBy?: StringNullableFilter<"UserLocationAccess"> | string | null
+    grantedAt?: DateTimeFilter<"UserLocationAccess"> | Date | string
+  }
+
   export type CompanyUserCreateWithoutDepartmentInput = {
     id?: string
     role?: $Enums.CompanyRole
     title?: string | null
     employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -38691,9 +41260,11 @@ export namespace Prisma {
     joinedAt?: Date | string
     lastActiveAt?: Date | string | null
     company: CompanyCreateNestedOneWithoutCompanyUsersInput
+    primaryLocation?: CompanyLocationCreateNestedOneWithoutPrimaryUsersInput
     manager?: CompanyUserCreateNestedOneWithoutReportsInput
     reports?: CompanyUserCreateNestedManyWithoutManagerInput
     user: UserCreateNestedOneWithoutCompanyUsersInput
+    locationAccess?: UserLocationAccessCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserUncheckedCreateWithoutDepartmentInput = {
@@ -38703,6 +41274,8 @@ export namespace Prisma {
     role?: $Enums.CompanyRole
     title?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -38718,6 +41291,7 @@ export namespace Prisma {
     joinedAt?: Date | string
     lastActiveAt?: Date | string | null
     reports?: CompanyUserUncheckedCreateNestedManyWithoutManagerInput
+    locationAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserCreateOrConnectWithoutDepartmentInput = {
@@ -39565,6 +42139,106 @@ export namespace Prisma {
     create: XOR<CompanyCreateWithoutLocationsInput, CompanyUncheckedCreateWithoutLocationsInput>
   }
 
+  export type CompanyUserCreateWithoutPrimaryLocationInput = {
+    id?: string
+    role?: $Enums.CompanyRole
+    title?: string | null
+    employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: Date | string
+    endDate?: Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    isOwner?: boolean
+    canInvite?: boolean
+    canManageBilling?: boolean
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: $Enums.EmploymentStatus
+    invitedBy?: string | null
+    invitedAt?: Date | string | null
+    joinedAt?: Date | string
+    lastActiveAt?: Date | string | null
+    company: CompanyCreateNestedOneWithoutCompanyUsersInput
+    department?: DepartmentCreateNestedOneWithoutEmployeesInput
+    manager?: CompanyUserCreateNestedOneWithoutReportsInput
+    reports?: CompanyUserCreateNestedManyWithoutManagerInput
+    user: UserCreateNestedOneWithoutCompanyUsersInput
+    locationAccess?: UserLocationAccessCreateNestedManyWithoutCompanyUserInput
+  }
+
+  export type CompanyUserUncheckedCreateWithoutPrimaryLocationInput = {
+    id?: string
+    companyId: string
+    userId: string
+    role?: $Enums.CompanyRole
+    title?: string | null
+    departmentId?: string | null
+    employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: Date | string
+    endDate?: Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    isOwner?: boolean
+    canInvite?: boolean
+    canManageBilling?: boolean
+    managerId?: string | null
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: $Enums.EmploymentStatus
+    invitedBy?: string | null
+    invitedAt?: Date | string | null
+    joinedAt?: Date | string
+    lastActiveAt?: Date | string | null
+    reports?: CompanyUserUncheckedCreateNestedManyWithoutManagerInput
+    locationAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutCompanyUserInput
+  }
+
+  export type CompanyUserCreateOrConnectWithoutPrimaryLocationInput = {
+    where: CompanyUserWhereUniqueInput
+    create: XOR<CompanyUserCreateWithoutPrimaryLocationInput, CompanyUserUncheckedCreateWithoutPrimaryLocationInput>
+  }
+
+  export type CompanyUserCreateManyPrimaryLocationInputEnvelope = {
+    data: CompanyUserCreateManyPrimaryLocationInput | CompanyUserCreateManyPrimaryLocationInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserLocationAccessCreateWithoutLocationInput = {
+    id?: string
+    companyId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+    companyUser: CompanyUserCreateNestedOneWithoutLocationAccessInput
+  }
+
+  export type UserLocationAccessUncheckedCreateWithoutLocationInput = {
+    id?: string
+    userId: string
+    companyId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+  }
+
+  export type UserLocationAccessCreateOrConnectWithoutLocationInput = {
+    where: UserLocationAccessWhereUniqueInput
+    create: XOR<UserLocationAccessCreateWithoutLocationInput, UserLocationAccessUncheckedCreateWithoutLocationInput>
+  }
+
+  export type UserLocationAccessCreateManyLocationInputEnvelope = {
+    data: UserLocationAccessCreateManyLocationInput | UserLocationAccessCreateManyLocationInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CompanyUpsertWithoutLocationsInput = {
     update: XOR<CompanyUpdateWithoutLocationsInput, CompanyUncheckedUpdateWithoutLocationsInput>
     create: XOR<CompanyCreateWithoutLocationsInput, CompanyUncheckedCreateWithoutLocationsInput>
@@ -39668,6 +42342,38 @@ export namespace Prisma {
     companyUsers?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
     departments?: DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
     companyInvites?: CompanyInviteUncheckedUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CompanyUserUpsertWithWhereUniqueWithoutPrimaryLocationInput = {
+    where: CompanyUserWhereUniqueInput
+    update: XOR<CompanyUserUpdateWithoutPrimaryLocationInput, CompanyUserUncheckedUpdateWithoutPrimaryLocationInput>
+    create: XOR<CompanyUserCreateWithoutPrimaryLocationInput, CompanyUserUncheckedCreateWithoutPrimaryLocationInput>
+  }
+
+  export type CompanyUserUpdateWithWhereUniqueWithoutPrimaryLocationInput = {
+    where: CompanyUserWhereUniqueInput
+    data: XOR<CompanyUserUpdateWithoutPrimaryLocationInput, CompanyUserUncheckedUpdateWithoutPrimaryLocationInput>
+  }
+
+  export type CompanyUserUpdateManyWithWhereWithoutPrimaryLocationInput = {
+    where: CompanyUserScalarWhereInput
+    data: XOR<CompanyUserUpdateManyMutationInput, CompanyUserUncheckedUpdateManyWithoutPrimaryLocationInput>
+  }
+
+  export type UserLocationAccessUpsertWithWhereUniqueWithoutLocationInput = {
+    where: UserLocationAccessWhereUniqueInput
+    update: XOR<UserLocationAccessUpdateWithoutLocationInput, UserLocationAccessUncheckedUpdateWithoutLocationInput>
+    create: XOR<UserLocationAccessCreateWithoutLocationInput, UserLocationAccessUncheckedCreateWithoutLocationInput>
+  }
+
+  export type UserLocationAccessUpdateWithWhereUniqueWithoutLocationInput = {
+    where: UserLocationAccessWhereUniqueInput
+    data: XOR<UserLocationAccessUpdateWithoutLocationInput, UserLocationAccessUncheckedUpdateWithoutLocationInput>
+  }
+
+  export type UserLocationAccessUpdateManyWithWhereWithoutLocationInput = {
+    where: UserLocationAccessScalarWhereInput
+    data: XOR<UserLocationAccessUpdateManyMutationInput, UserLocationAccessUncheckedUpdateManyWithoutLocationInput>
   }
 
   export type CompanyCreateWithoutIntegrationsInput = {
@@ -40377,6 +43083,7 @@ export namespace Prisma {
     role?: $Enums.CompanyRole
     title?: string | null
     employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -40392,8 +43099,10 @@ export namespace Prisma {
     lastActiveAt?: Date | string | null
     company: CompanyCreateNestedOneWithoutCompanyUsersInput
     department?: DepartmentCreateNestedOneWithoutEmployeesInput
+    primaryLocation?: CompanyLocationCreateNestedOneWithoutPrimaryUsersInput
     manager?: CompanyUserCreateNestedOneWithoutReportsInput
     reports?: CompanyUserCreateNestedManyWithoutManagerInput
+    locationAccess?: UserLocationAccessCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserUncheckedCreateWithoutUserInput = {
@@ -40403,6 +43112,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -40418,6 +43129,7 @@ export namespace Prisma {
     joinedAt?: Date | string
     lastActiveAt?: Date | string | null
     reports?: CompanyUserUncheckedCreateNestedManyWithoutManagerInput
+    locationAccess?: UserLocationAccessUncheckedCreateNestedManyWithoutCompanyUserInput
   }
 
   export type CompanyUserCreateOrConnectWithoutUserInput = {
@@ -42933,6 +45645,266 @@ export namespace Prisma {
     companyInvites?: CompanyInviteUncheckedUpdateManyWithoutInvitedByNestedInput
   }
 
+  export type CompanyUserCreateWithoutLocationAccessInput = {
+    id?: string
+    role?: $Enums.CompanyRole
+    title?: string | null
+    employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: Date | string
+    endDate?: Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    isOwner?: boolean
+    canInvite?: boolean
+    canManageBilling?: boolean
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: $Enums.EmploymentStatus
+    invitedBy?: string | null
+    invitedAt?: Date | string | null
+    joinedAt?: Date | string
+    lastActiveAt?: Date | string | null
+    company: CompanyCreateNestedOneWithoutCompanyUsersInput
+    department?: DepartmentCreateNestedOneWithoutEmployeesInput
+    primaryLocation?: CompanyLocationCreateNestedOneWithoutPrimaryUsersInput
+    manager?: CompanyUserCreateNestedOneWithoutReportsInput
+    reports?: CompanyUserCreateNestedManyWithoutManagerInput
+    user: UserCreateNestedOneWithoutCompanyUsersInput
+  }
+
+  export type CompanyUserUncheckedCreateWithoutLocationAccessInput = {
+    id?: string
+    companyId: string
+    userId: string
+    role?: $Enums.CompanyRole
+    title?: string | null
+    departmentId?: string | null
+    employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: Date | string
+    endDate?: Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    isOwner?: boolean
+    canInvite?: boolean
+    canManageBilling?: boolean
+    managerId?: string | null
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: $Enums.EmploymentStatus
+    invitedBy?: string | null
+    invitedAt?: Date | string | null
+    joinedAt?: Date | string
+    lastActiveAt?: Date | string | null
+    reports?: CompanyUserUncheckedCreateNestedManyWithoutManagerInput
+  }
+
+  export type CompanyUserCreateOrConnectWithoutLocationAccessInput = {
+    where: CompanyUserWhereUniqueInput
+    create: XOR<CompanyUserCreateWithoutLocationAccessInput, CompanyUserUncheckedCreateWithoutLocationAccessInput>
+  }
+
+  export type CompanyLocationCreateWithoutUserAccessInput = {
+    id?: string
+    name: string
+    description?: string | null
+    code?: string | null
+    type?: $Enums.LocationType
+    address: JsonNullValueInput | InputJsonValue
+    coordinates?: NullableJsonNullValueInput | InputJsonValue
+    timezone?: string
+    phone?: string | null
+    email?: string | null
+    managerName?: string | null
+    managerUserId?: string | null
+    businessHours?: NullableJsonNullValueInput | InputJsonValue
+    isPrimary?: boolean
+    isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutLocationsInput
+    primaryUsers?: CompanyUserCreateNestedManyWithoutPrimaryLocationInput
+  }
+
+  export type CompanyLocationUncheckedCreateWithoutUserAccessInput = {
+    id?: string
+    companyId: string
+    name: string
+    description?: string | null
+    code?: string | null
+    type?: $Enums.LocationType
+    address: JsonNullValueInput | InputJsonValue
+    coordinates?: NullableJsonNullValueInput | InputJsonValue
+    timezone?: string
+    phone?: string | null
+    email?: string | null
+    managerName?: string | null
+    managerUserId?: string | null
+    businessHours?: NullableJsonNullValueInput | InputJsonValue
+    isPrimary?: boolean
+    isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    primaryUsers?: CompanyUserUncheckedCreateNestedManyWithoutPrimaryLocationInput
+  }
+
+  export type CompanyLocationCreateOrConnectWithoutUserAccessInput = {
+    where: CompanyLocationWhereUniqueInput
+    create: XOR<CompanyLocationCreateWithoutUserAccessInput, CompanyLocationUncheckedCreateWithoutUserAccessInput>
+  }
+
+  export type CompanyUserUpsertWithoutLocationAccessInput = {
+    update: XOR<CompanyUserUpdateWithoutLocationAccessInput, CompanyUserUncheckedUpdateWithoutLocationAccessInput>
+    create: XOR<CompanyUserCreateWithoutLocationAccessInput, CompanyUserUncheckedCreateWithoutLocationAccessInput>
+    where?: CompanyUserWhereInput
+  }
+
+  export type CompanyUserUpdateToOneWithWhereWithoutLocationAccessInput = {
+    where?: CompanyUserWhereInput
+    data: XOR<CompanyUserUpdateWithoutLocationAccessInput, CompanyUserUncheckedUpdateWithoutLocationAccessInput>
+  }
+
+  export type CompanyUserUpdateWithoutLocationAccessInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isOwner?: BoolFieldUpdateOperationsInput | boolean
+    canInvite?: BoolFieldUpdateOperationsInput | boolean
+    canManageBilling?: BoolFieldUpdateOperationsInput | boolean
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: EnumEmploymentStatusFieldUpdateOperationsInput | $Enums.EmploymentStatus
+    invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    company?: CompanyUpdateOneRequiredWithoutCompanyUsersNestedInput
+    department?: DepartmentUpdateOneWithoutEmployeesNestedInput
+    primaryLocation?: CompanyLocationUpdateOneWithoutPrimaryUsersNestedInput
+    manager?: CompanyUserUpdateOneWithoutReportsNestedInput
+    reports?: CompanyUserUpdateManyWithoutManagerNestedInput
+    user?: UserUpdateOneRequiredWithoutCompanyUsersNestedInput
+  }
+
+  export type CompanyUserUncheckedUpdateWithoutLocationAccessInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    departmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isOwner?: BoolFieldUpdateOperationsInput | boolean
+    canInvite?: BoolFieldUpdateOperationsInput | boolean
+    canManageBilling?: BoolFieldUpdateOperationsInput | boolean
+    managerId?: NullableStringFieldUpdateOperationsInput | string | null
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: EnumEmploymentStatusFieldUpdateOperationsInput | $Enums.EmploymentStatus
+    invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reports?: CompanyUserUncheckedUpdateManyWithoutManagerNestedInput
+  }
+
+  export type CompanyLocationUpsertWithoutUserAccessInput = {
+    update: XOR<CompanyLocationUpdateWithoutUserAccessInput, CompanyLocationUncheckedUpdateWithoutUserAccessInput>
+    create: XOR<CompanyLocationCreateWithoutUserAccessInput, CompanyLocationUncheckedCreateWithoutUserAccessInput>
+    where?: CompanyLocationWhereInput
+  }
+
+  export type CompanyLocationUpdateToOneWithWhereWithoutUserAccessInput = {
+    where?: CompanyLocationWhereInput
+    data: XOR<CompanyLocationUpdateWithoutUserAccessInput, CompanyLocationUncheckedUpdateWithoutUserAccessInput>
+  }
+
+  export type CompanyLocationUpdateWithoutUserAccessInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
+    address?: JsonNullValueInput | InputJsonValue
+    coordinates?: NullableJsonNullValueInput | InputJsonValue
+    timezone?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    businessHours?: NullableJsonNullValueInput | InputJsonValue
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutLocationsNestedInput
+    primaryUsers?: CompanyUserUpdateManyWithoutPrimaryLocationNestedInput
+  }
+
+  export type CompanyLocationUncheckedUpdateWithoutUserAccessInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
+    address?: JsonNullValueInput | InputJsonValue
+    coordinates?: NullableJsonNullValueInput | InputJsonValue
+    timezone?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    businessHours?: NullableJsonNullValueInput | InputJsonValue
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    primaryUsers?: CompanyUserUncheckedUpdateManyWithoutPrimaryLocationNestedInput
+  }
+
   export type BillingHistoryCreateManyCompanyInput = {
     id?: string
     periodStart: Date | string
@@ -42943,7 +45915,7 @@ export namespace Prisma {
     currency?: string
     description?: string | null
     invoiceNumber?: string | null
-    paymentStatus?: $Enums.PaymentStatus
+    paymentStatus?: $Enums.BillingPaymentStatus
     paymentMethod?: string | null
     paidAt?: Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -42990,6 +45962,8 @@ export namespace Prisma {
   export type CompanyLocationCreateManyCompanyInput = {
     id?: string
     name: string
+    description?: string | null
+    code?: string | null
     type?: $Enums.LocationType
     address: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -42997,9 +45971,18 @@ export namespace Prisma {
     phone?: string | null
     email?: string | null
     managerName?: string | null
+    managerUserId?: string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: boolean
     isActive?: boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: boolean
+    allowsOrders?: boolean
+    allowsReturns?: boolean
+    allowsTransfers?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -43011,6 +45994,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43069,7 +46054,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFieldUpdateOperationsInput | $Enums.BillingPaymentStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -43086,7 +46071,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFieldUpdateOperationsInput | $Enums.BillingPaymentStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -43103,7 +46088,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    paymentStatus?: EnumBillingPaymentStatusFieldUpdateOperationsInput | $Enums.BillingPaymentStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -43224,6 +46209,8 @@ export namespace Prisma {
   export type CompanyLocationUpdateWithoutCompanyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
     type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
     address?: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -43231,16 +46218,29 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    primaryUsers?: CompanyUserUpdateManyWithoutPrimaryLocationNestedInput
+    userAccess?: UserLocationAccessUpdateManyWithoutLocationNestedInput
   }
 
   export type CompanyLocationUncheckedUpdateWithoutCompanyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
     type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
     address?: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -43248,16 +46248,29 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    primaryUsers?: CompanyUserUncheckedUpdateManyWithoutPrimaryLocationNestedInput
+    userAccess?: UserLocationAccessUncheckedUpdateManyWithoutLocationNestedInput
   }
 
   export type CompanyLocationUncheckedUpdateManyWithoutCompanyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: NullableStringFieldUpdateOperationsInput | string | null
     type?: EnumLocationTypeFieldUpdateOperationsInput | $Enums.LocationType
     address?: JsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
@@ -43265,9 +46278,18 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
+    managerUserId?: NullableStringFieldUpdateOperationsInput | string | null
     businessHours?: NullableJsonNullValueInput | InputJsonValue
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    capacity?: NullableJsonNullValueInput | InputJsonValue
+    features?: NullableJsonNullValueInput | InputJsonValue
+    storeFormat?: NullableStringFieldUpdateOperationsInput | string | null
+    salesChannels?: NullableJsonNullValueInput | InputJsonValue
+    allowsInventory?: BoolFieldUpdateOperationsInput | boolean
+    allowsOrders?: BoolFieldUpdateOperationsInput | boolean
+    allowsReturns?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -43277,6 +46299,7 @@ export namespace Prisma {
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43291,9 +46314,11 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     department?: DepartmentUpdateOneWithoutEmployeesNestedInput
+    primaryLocation?: CompanyLocationUpdateOneWithoutPrimaryUsersNestedInput
     manager?: CompanyUserUpdateOneWithoutReportsNestedInput
     reports?: CompanyUserUpdateManyWithoutManagerNestedInput
     user?: UserUpdateOneRequiredWithoutCompanyUsersNestedInput
+    locationAccess?: UserLocationAccessUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateWithoutCompanyInput = {
@@ -43303,6 +46328,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43318,6 +46345,7 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     reports?: CompanyUserUncheckedUpdateManyWithoutManagerNestedInput
+    locationAccess?: UserLocationAccessUncheckedUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateManyWithoutCompanyInput = {
@@ -43327,6 +46355,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43451,6 +46481,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43466,11 +46498,25 @@ export namespace Prisma {
     lastActiveAt?: Date | string | null
   }
 
+  export type UserLocationAccessCreateManyCompanyUserInput = {
+    id?: string
+    companyId: string
+    locationId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+  }
+
   export type CompanyUserUpdateWithoutManagerInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43486,8 +46532,10 @@ export namespace Prisma {
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     company?: CompanyUpdateOneRequiredWithoutCompanyUsersNestedInput
     department?: DepartmentUpdateOneWithoutEmployeesNestedInput
+    primaryLocation?: CompanyLocationUpdateOneWithoutPrimaryUsersNestedInput
     reports?: CompanyUserUpdateManyWithoutManagerNestedInput
     user?: UserUpdateOneRequiredWithoutCompanyUsersNestedInput
+    locationAccess?: UserLocationAccessUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateWithoutManagerInput = {
@@ -43498,6 +46546,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43512,6 +46562,7 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     reports?: CompanyUserUncheckedUpdateManyWithoutManagerNestedInput
+    locationAccess?: UserLocationAccessUncheckedUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateManyWithoutManagerInput = {
@@ -43522,6 +46573,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43537,6 +46590,45 @@ export namespace Prisma {
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type UserLocationAccessUpdateWithoutCompanyUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    location?: CompanyLocationUpdateOneRequiredWithoutUserAccessNestedInput
+  }
+
+  export type UserLocationAccessUncheckedUpdateWithoutCompanyUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserLocationAccessUncheckedUpdateManyWithoutCompanyUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type CompanyUserCreateManyDepartmentInput = {
     id?: string
     companyId: string
@@ -43544,6 +46636,8 @@ export namespace Prisma {
     role?: $Enums.CompanyRole
     title?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43580,6 +46674,7 @@ export namespace Prisma {
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43594,9 +46689,11 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     company?: CompanyUpdateOneRequiredWithoutCompanyUsersNestedInput
+    primaryLocation?: CompanyLocationUpdateOneWithoutPrimaryUsersNestedInput
     manager?: CompanyUserUpdateOneWithoutReportsNestedInput
     reports?: CompanyUserUpdateManyWithoutManagerNestedInput
     user?: UserUpdateOneRequiredWithoutCompanyUsersNestedInput
+    locationAccess?: UserLocationAccessUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateWithoutDepartmentInput = {
@@ -43606,6 +46703,8 @@ export namespace Prisma {
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43621,6 +46720,7 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     reports?: CompanyUserUncheckedUpdateManyWithoutManagerNestedInput
+    locationAccess?: UserLocationAccessUncheckedUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateManyWithoutDepartmentInput = {
@@ -43630,6 +46730,8 @@ export namespace Prisma {
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43695,6 +46797,162 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CompanyUserCreateManyPrimaryLocationInput = {
+    id?: string
+    companyId: string
+    userId: string
+    role?: $Enums.CompanyRole
+    title?: string | null
+    departmentId?: string | null
+    employeeId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: Date | string
+    endDate?: Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    isOwner?: boolean
+    canInvite?: boolean
+    canManageBilling?: boolean
+    managerId?: string | null
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: $Enums.EmploymentStatus
+    invitedBy?: string | null
+    invitedAt?: Date | string | null
+    joinedAt?: Date | string
+    lastActiveAt?: Date | string | null
+  }
+
+  export type UserLocationAccessCreateManyLocationInput = {
+    id?: string
+    userId: string
+    companyId: string
+    accessLevel?: $Enums.LocationAccessLevel
+    canManage?: boolean
+    startDate?: Date | string
+    endDate?: Date | string | null
+    isActive?: boolean
+    grantedBy?: string | null
+    grantedAt?: Date | string
+  }
+
+  export type CompanyUserUpdateWithoutPrimaryLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isOwner?: BoolFieldUpdateOperationsInput | boolean
+    canInvite?: BoolFieldUpdateOperationsInput | boolean
+    canManageBilling?: BoolFieldUpdateOperationsInput | boolean
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: EnumEmploymentStatusFieldUpdateOperationsInput | $Enums.EmploymentStatus
+    invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    company?: CompanyUpdateOneRequiredWithoutCompanyUsersNestedInput
+    department?: DepartmentUpdateOneWithoutEmployeesNestedInput
+    manager?: CompanyUserUpdateOneWithoutReportsNestedInput
+    reports?: CompanyUserUpdateManyWithoutManagerNestedInput
+    user?: UserUpdateOneRequiredWithoutCompanyUsersNestedInput
+    locationAccess?: UserLocationAccessUpdateManyWithoutCompanyUserNestedInput
+  }
+
+  export type CompanyUserUncheckedUpdateWithoutPrimaryLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    departmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isOwner?: BoolFieldUpdateOperationsInput | boolean
+    canInvite?: BoolFieldUpdateOperationsInput | boolean
+    canManageBilling?: BoolFieldUpdateOperationsInput | boolean
+    managerId?: NullableStringFieldUpdateOperationsInput | string | null
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: EnumEmploymentStatusFieldUpdateOperationsInput | $Enums.EmploymentStatus
+    invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reports?: CompanyUserUncheckedUpdateManyWithoutManagerNestedInput
+    locationAccess?: UserLocationAccessUncheckedUpdateManyWithoutCompanyUserNestedInput
+  }
+
+  export type CompanyUserUncheckedUpdateManyWithoutPrimaryLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    departmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    permissions?: NullableJsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isOwner?: BoolFieldUpdateOperationsInput | boolean
+    canInvite?: BoolFieldUpdateOperationsInput | boolean
+    canManageBilling?: BoolFieldUpdateOperationsInput | boolean
+    managerId?: NullableStringFieldUpdateOperationsInput | string | null
+    directReports?: NullableJsonNullValueInput | InputJsonValue
+    status?: EnumEmploymentStatusFieldUpdateOperationsInput | $Enums.EmploymentStatus
+    invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type UserLocationAccessUpdateWithoutLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    companyUser?: CompanyUserUpdateOneRequiredWithoutLocationAccessNestedInput
+  }
+
+  export type UserLocationAccessUncheckedUpdateWithoutLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserLocationAccessUncheckedUpdateManyWithoutLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
+    canManage?: BoolFieldUpdateOperationsInput | boolean
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    grantedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ApiKeyCreateManyUserInput = {
     id?: string
     name: string
@@ -43737,6 +46995,8 @@ export namespace Prisma {
     title?: string | null
     departmentId?: string | null
     employeeId?: string | null
+    primaryLocationId?: string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: Date | string
     endDate?: Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -43992,6 +47252,7 @@ export namespace Prisma {
     role?: EnumCompanyRoleFieldUpdateOperationsInput | $Enums.CompanyRole
     title?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -44007,8 +47268,10 @@ export namespace Prisma {
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     company?: CompanyUpdateOneRequiredWithoutCompanyUsersNestedInput
     department?: DepartmentUpdateOneWithoutEmployeesNestedInput
+    primaryLocation?: CompanyLocationUpdateOneWithoutPrimaryUsersNestedInput
     manager?: CompanyUserUpdateOneWithoutReportsNestedInput
     reports?: CompanyUserUpdateManyWithoutManagerNestedInput
+    locationAccess?: UserLocationAccessUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateWithoutUserInput = {
@@ -44018,6 +47281,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue
@@ -44033,6 +47298,7 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     reports?: CompanyUserUncheckedUpdateManyWithoutManagerNestedInput
+    locationAccess?: UserLocationAccessUncheckedUpdateManyWithoutCompanyUserNestedInput
   }
 
   export type CompanyUserUncheckedUpdateManyWithoutUserInput = {
@@ -44042,6 +47308,8 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     departmentId?: NullableStringFieldUpdateOperationsInput | string | null
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryLocationId?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedLocationIds?: NullableJsonNullValueInput | InputJsonValue
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     permissions?: NullableJsonNullValueInput | InputJsonValue

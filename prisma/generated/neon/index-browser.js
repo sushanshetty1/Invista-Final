@@ -217,6 +217,7 @@ exports.Prisma.ProductBundleScalarFieldEnum = {
 exports.Prisma.WarehouseScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
+  locationId: 'locationId',
   name: 'name',
   code: 'code',
   description: 'description',
@@ -235,6 +236,10 @@ exports.Prisma.WarehouseScalarFieldEnum = {
   hasBarcode: 'hasBarcode',
   temperatureControl: 'temperatureControl',
   securityLevel: 'securityLevel',
+  allowsReceiving: 'allowsReceiving',
+  allowsShipping: 'allowsShipping',
+  allowsTransfers: 'allowsTransfers',
+  allowsCrossDock: 'allowsCrossDock',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -819,7 +824,11 @@ exports.WarehouseType = exports.$Enums.WarehouseType = {
   RETAIL_STORE: 'RETAIL_STORE',
   FULFILLMENT_CENTER: 'FULFILLMENT_CENTER',
   CROSS_DOCK: 'CROSS_DOCK',
-  COLD_STORAGE: 'COLD_STORAGE'
+  COLD_STORAGE: 'COLD_STORAGE',
+  AUTOMATED: 'AUTOMATED',
+  BONDED: 'BONDED',
+  CONSIGNMENT: 'CONSIGNMENT',
+  QUARANTINE: 'QUARANTINE'
 };
 
 exports.InventoryStatus = exports.$Enums.InventoryStatus = {

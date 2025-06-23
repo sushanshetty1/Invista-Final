@@ -194,7 +194,11 @@ export const WarehouseType: {
   RETAIL_STORE: 'RETAIL_STORE',
   FULFILLMENT_CENTER: 'FULFILLMENT_CENTER',
   CROSS_DOCK: 'CROSS_DOCK',
-  COLD_STORAGE: 'COLD_STORAGE'
+  COLD_STORAGE: 'COLD_STORAGE',
+  AUTOMATED: 'AUTOMATED',
+  BONDED: 'BONDED',
+  CONSIGNMENT: 'CONSIGNMENT',
+  QUARANTINE: 'QUARANTINE'
 };
 
 export type WarehouseType = (typeof WarehouseType)[keyof typeof WarehouseType]
@@ -11918,6 +11922,7 @@ export namespace Prisma {
   export type WarehouseMinAggregateOutputType = {
     id: string | null
     companyId: string | null
+    locationId: string | null
     name: string | null
     code: string | null
     description: string | null
@@ -11933,6 +11938,10 @@ export namespace Prisma {
     hasBarcode: boolean | null
     temperatureControl: boolean | null
     securityLevel: string | null
+    allowsReceiving: boolean | null
+    allowsShipping: boolean | null
+    allowsTransfers: boolean | null
+    allowsCrossDock: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -11940,6 +11949,7 @@ export namespace Prisma {
   export type WarehouseMaxAggregateOutputType = {
     id: string | null
     companyId: string | null
+    locationId: string | null
     name: string | null
     code: string | null
     description: string | null
@@ -11955,6 +11965,10 @@ export namespace Prisma {
     hasBarcode: boolean | null
     temperatureControl: boolean | null
     securityLevel: string | null
+    allowsReceiving: boolean | null
+    allowsShipping: boolean | null
+    allowsTransfers: boolean | null
+    allowsCrossDock: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -11962,6 +11976,7 @@ export namespace Prisma {
   export type WarehouseCountAggregateOutputType = {
     id: number
     companyId: number
+    locationId: number
     name: number
     code: number
     description: number
@@ -11980,6 +11995,10 @@ export namespace Prisma {
     hasBarcode: number
     temperatureControl: number
     securityLevel: number
+    allowsReceiving: number
+    allowsShipping: number
+    allowsTransfers: number
+    allowsCrossDock: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -11989,6 +12008,7 @@ export namespace Prisma {
   export type WarehouseMinAggregateInputType = {
     id?: true
     companyId?: true
+    locationId?: true
     name?: true
     code?: true
     description?: true
@@ -12004,6 +12024,10 @@ export namespace Prisma {
     hasBarcode?: true
     temperatureControl?: true
     securityLevel?: true
+    allowsReceiving?: true
+    allowsShipping?: true
+    allowsTransfers?: true
+    allowsCrossDock?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -12011,6 +12035,7 @@ export namespace Prisma {
   export type WarehouseMaxAggregateInputType = {
     id?: true
     companyId?: true
+    locationId?: true
     name?: true
     code?: true
     description?: true
@@ -12026,6 +12051,10 @@ export namespace Prisma {
     hasBarcode?: true
     temperatureControl?: true
     securityLevel?: true
+    allowsReceiving?: true
+    allowsShipping?: true
+    allowsTransfers?: true
+    allowsCrossDock?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -12033,6 +12062,7 @@ export namespace Prisma {
   export type WarehouseCountAggregateInputType = {
     id?: true
     companyId?: true
+    locationId?: true
     name?: true
     code?: true
     description?: true
@@ -12051,6 +12081,10 @@ export namespace Prisma {
     hasBarcode?: true
     temperatureControl?: true
     securityLevel?: true
+    allowsReceiving?: true
+    allowsShipping?: true
+    allowsTransfers?: true
+    allowsCrossDock?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -12131,10 +12165,11 @@ export namespace Prisma {
   export type WarehouseGroupByOutputType = {
     id: string
     companyId: string
+    locationId: string | null
     name: string
     code: string
     description: string | null
-    address: JsonValue
+    address: JsonValue | null
     coordinates: JsonValue | null
     timezone: string | null
     managerName: string | null
@@ -12149,6 +12184,10 @@ export namespace Prisma {
     hasBarcode: boolean
     temperatureControl: boolean
     securityLevel: string | null
+    allowsReceiving: boolean
+    allowsShipping: boolean
+    allowsTransfers: boolean
+    allowsCrossDock: boolean
     createdAt: Date
     updatedAt: Date
     _count: WarehouseCountAggregateOutputType | null
@@ -12173,6 +12212,7 @@ export namespace Prisma {
   export type WarehouseSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     companyId?: boolean
+    locationId?: boolean
     name?: boolean
     code?: boolean
     description?: boolean
@@ -12191,6 +12231,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: boolean
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     inventoryItems?: boolean | Warehouse$inventoryItemsArgs<ExtArgs>
@@ -12209,6 +12253,7 @@ export namespace Prisma {
   export type WarehouseSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     companyId?: boolean
+    locationId?: boolean
     name?: boolean
     code?: boolean
     description?: boolean
@@ -12227,6 +12272,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: boolean
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["warehouse"]>
@@ -12234,6 +12283,7 @@ export namespace Prisma {
   export type WarehouseSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     companyId?: boolean
+    locationId?: boolean
     name?: boolean
     code?: boolean
     description?: boolean
@@ -12252,6 +12302,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: boolean
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["warehouse"]>
@@ -12259,6 +12313,7 @@ export namespace Prisma {
   export type WarehouseSelectScalar = {
     id?: boolean
     companyId?: boolean
+    locationId?: boolean
     name?: boolean
     code?: boolean
     description?: boolean
@@ -12277,11 +12332,15 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: boolean
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type WarehouseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "companyId" | "name" | "code" | "description" | "address" | "coordinates" | "timezone" | "managerName" | "managerEmail" | "managerPhone" | "phone" | "email" | "type" | "capacity" | "isActive" | "hasRfid" | "hasBarcode" | "temperatureControl" | "securityLevel" | "createdAt" | "updatedAt", ExtArgs["result"]["warehouse"]>
+  export type WarehouseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "companyId" | "locationId" | "name" | "code" | "description" | "address" | "coordinates" | "timezone" | "managerName" | "managerEmail" | "managerPhone" | "phone" | "email" | "type" | "capacity" | "isActive" | "hasRfid" | "hasBarcode" | "temperatureControl" | "securityLevel" | "allowsReceiving" | "allowsShipping" | "allowsTransfers" | "allowsCrossDock" | "createdAt" | "updatedAt", ExtArgs["result"]["warehouse"]>
   export type WarehouseInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     inventoryItems?: boolean | Warehouse$inventoryItemsArgs<ExtArgs>
     movements?: boolean | Warehouse$movementsArgs<ExtArgs>
@@ -12315,10 +12374,11 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       companyId: string
+      locationId: string | null
       name: string
       code: string
       description: string | null
-      address: Prisma.JsonValue
+      address: Prisma.JsonValue | null
       coordinates: Prisma.JsonValue | null
       timezone: string | null
       managerName: string | null
@@ -12333,6 +12393,10 @@ export namespace Prisma {
       hasBarcode: boolean
       temperatureControl: boolean
       securityLevel: string | null
+      allowsReceiving: boolean
+      allowsShipping: boolean
+      allowsTransfers: boolean
+      allowsCrossDock: boolean
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["warehouse"]>
@@ -12770,6 +12834,7 @@ export namespace Prisma {
   interface WarehouseFieldRefs {
     readonly id: FieldRef<"Warehouse", 'String'>
     readonly companyId: FieldRef<"Warehouse", 'String'>
+    readonly locationId: FieldRef<"Warehouse", 'String'>
     readonly name: FieldRef<"Warehouse", 'String'>
     readonly code: FieldRef<"Warehouse", 'String'>
     readonly description: FieldRef<"Warehouse", 'String'>
@@ -12788,6 +12853,10 @@ export namespace Prisma {
     readonly hasBarcode: FieldRef<"Warehouse", 'Boolean'>
     readonly temperatureControl: FieldRef<"Warehouse", 'Boolean'>
     readonly securityLevel: FieldRef<"Warehouse", 'String'>
+    readonly allowsReceiving: FieldRef<"Warehouse", 'Boolean'>
+    readonly allowsShipping: FieldRef<"Warehouse", 'Boolean'>
+    readonly allowsTransfers: FieldRef<"Warehouse", 'Boolean'>
+    readonly allowsCrossDock: FieldRef<"Warehouse", 'Boolean'>
     readonly createdAt: FieldRef<"Warehouse", 'DateTime'>
     readonly updatedAt: FieldRef<"Warehouse", 'DateTime'>
   }
@@ -47153,6 +47222,7 @@ export namespace Prisma {
   export const WarehouseScalarFieldEnum: {
     id: 'id',
     companyId: 'companyId',
+    locationId: 'locationId',
     name: 'name',
     code: 'code',
     description: 'description',
@@ -47171,6 +47241,10 @@ export namespace Prisma {
     hasBarcode: 'hasBarcode',
     temperatureControl: 'temperatureControl',
     securityLevel: 'securityLevel',
+    allowsReceiving: 'allowsReceiving',
+    allowsShipping: 'allowsShipping',
+    allowsTransfers: 'allowsTransfers',
+    allowsCrossDock: 'allowsCrossDock',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -48992,10 +49066,11 @@ export namespace Prisma {
     NOT?: WarehouseWhereInput | WarehouseWhereInput[]
     id?: StringFilter<"Warehouse"> | string
     companyId?: StringFilter<"Warehouse"> | string
+    locationId?: StringNullableFilter<"Warehouse"> | string | null
     name?: StringFilter<"Warehouse"> | string
     code?: StringFilter<"Warehouse"> | string
     description?: StringNullableFilter<"Warehouse"> | string | null
-    address?: JsonFilter<"Warehouse">
+    address?: JsonNullableFilter<"Warehouse">
     coordinates?: JsonNullableFilter<"Warehouse">
     timezone?: StringNullableFilter<"Warehouse"> | string | null
     managerName?: StringNullableFilter<"Warehouse"> | string | null
@@ -49010,6 +49085,10 @@ export namespace Prisma {
     hasBarcode?: BoolFilter<"Warehouse"> | boolean
     temperatureControl?: BoolFilter<"Warehouse"> | boolean
     securityLevel?: StringNullableFilter<"Warehouse"> | string | null
+    allowsReceiving?: BoolFilter<"Warehouse"> | boolean
+    allowsShipping?: BoolFilter<"Warehouse"> | boolean
+    allowsTransfers?: BoolFilter<"Warehouse"> | boolean
+    allowsCrossDock?: BoolFilter<"Warehouse"> | boolean
     createdAt?: DateTimeFilter<"Warehouse"> | Date | string
     updatedAt?: DateTimeFilter<"Warehouse"> | Date | string
     inventoryItems?: InventoryItemListRelationFilter
@@ -49027,10 +49106,11 @@ export namespace Prisma {
   export type WarehouseOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
+    locationId?: SortOrderInput | SortOrder
     name?: SortOrder
     code?: SortOrder
     description?: SortOrderInput | SortOrder
-    address?: SortOrder
+    address?: SortOrderInput | SortOrder
     coordinates?: SortOrderInput | SortOrder
     timezone?: SortOrderInput | SortOrder
     managerName?: SortOrderInput | SortOrder
@@ -49045,6 +49125,10 @@ export namespace Prisma {
     hasBarcode?: SortOrder
     temperatureControl?: SortOrder
     securityLevel?: SortOrderInput | SortOrder
+    allowsReceiving?: SortOrder
+    allowsShipping?: SortOrder
+    allowsTransfers?: SortOrder
+    allowsCrossDock?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     inventoryItems?: InventoryItemOrderByRelationAggregateInput
@@ -49066,9 +49150,10 @@ export namespace Prisma {
     OR?: WarehouseWhereInput[]
     NOT?: WarehouseWhereInput | WarehouseWhereInput[]
     companyId?: StringFilter<"Warehouse"> | string
+    locationId?: StringNullableFilter<"Warehouse"> | string | null
     name?: StringFilter<"Warehouse"> | string
     description?: StringNullableFilter<"Warehouse"> | string | null
-    address?: JsonFilter<"Warehouse">
+    address?: JsonNullableFilter<"Warehouse">
     coordinates?: JsonNullableFilter<"Warehouse">
     timezone?: StringNullableFilter<"Warehouse"> | string | null
     managerName?: StringNullableFilter<"Warehouse"> | string | null
@@ -49083,6 +49168,10 @@ export namespace Prisma {
     hasBarcode?: BoolFilter<"Warehouse"> | boolean
     temperatureControl?: BoolFilter<"Warehouse"> | boolean
     securityLevel?: StringNullableFilter<"Warehouse"> | string | null
+    allowsReceiving?: BoolFilter<"Warehouse"> | boolean
+    allowsShipping?: BoolFilter<"Warehouse"> | boolean
+    allowsTransfers?: BoolFilter<"Warehouse"> | boolean
+    allowsCrossDock?: BoolFilter<"Warehouse"> | boolean
     createdAt?: DateTimeFilter<"Warehouse"> | Date | string
     updatedAt?: DateTimeFilter<"Warehouse"> | Date | string
     inventoryItems?: InventoryItemListRelationFilter
@@ -49100,10 +49189,11 @@ export namespace Prisma {
   export type WarehouseOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
+    locationId?: SortOrderInput | SortOrder
     name?: SortOrder
     code?: SortOrder
     description?: SortOrderInput | SortOrder
-    address?: SortOrder
+    address?: SortOrderInput | SortOrder
     coordinates?: SortOrderInput | SortOrder
     timezone?: SortOrderInput | SortOrder
     managerName?: SortOrderInput | SortOrder
@@ -49118,6 +49208,10 @@ export namespace Prisma {
     hasBarcode?: SortOrder
     temperatureControl?: SortOrder
     securityLevel?: SortOrderInput | SortOrder
+    allowsReceiving?: SortOrder
+    allowsShipping?: SortOrder
+    allowsTransfers?: SortOrder
+    allowsCrossDock?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: WarehouseCountOrderByAggregateInput
@@ -49131,10 +49225,11 @@ export namespace Prisma {
     NOT?: WarehouseScalarWhereWithAggregatesInput | WarehouseScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Warehouse"> | string
     companyId?: StringWithAggregatesFilter<"Warehouse"> | string
+    locationId?: StringNullableWithAggregatesFilter<"Warehouse"> | string | null
     name?: StringWithAggregatesFilter<"Warehouse"> | string
     code?: StringWithAggregatesFilter<"Warehouse"> | string
     description?: StringNullableWithAggregatesFilter<"Warehouse"> | string | null
-    address?: JsonWithAggregatesFilter<"Warehouse">
+    address?: JsonNullableWithAggregatesFilter<"Warehouse">
     coordinates?: JsonNullableWithAggregatesFilter<"Warehouse">
     timezone?: StringNullableWithAggregatesFilter<"Warehouse"> | string | null
     managerName?: StringNullableWithAggregatesFilter<"Warehouse"> | string | null
@@ -49149,6 +49244,10 @@ export namespace Prisma {
     hasBarcode?: BoolWithAggregatesFilter<"Warehouse"> | boolean
     temperatureControl?: BoolWithAggregatesFilter<"Warehouse"> | boolean
     securityLevel?: StringNullableWithAggregatesFilter<"Warehouse"> | string | null
+    allowsReceiving?: BoolWithAggregatesFilter<"Warehouse"> | boolean
+    allowsShipping?: BoolWithAggregatesFilter<"Warehouse"> | boolean
+    allowsTransfers?: BoolWithAggregatesFilter<"Warehouse"> | boolean
+    allowsCrossDock?: BoolWithAggregatesFilter<"Warehouse"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Warehouse"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Warehouse"> | Date | string
   }
@@ -53162,10 +53261,11 @@ export namespace Prisma {
   export type WarehouseCreateInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -53180,6 +53280,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -53197,10 +53301,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -53215,6 +53320,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -53232,10 +53341,11 @@ export namespace Prisma {
   export type WarehouseUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53250,6 +53360,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -53267,10 +53381,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53285,6 +53400,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -53302,10 +53421,11 @@ export namespace Prisma {
   export type WarehouseCreateManyInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -53320,6 +53440,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -53327,10 +53451,11 @@ export namespace Prisma {
   export type WarehouseUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53345,6 +53470,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -53352,10 +53481,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53370,6 +53500,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -58055,6 +58189,7 @@ export namespace Prisma {
   export type WarehouseCountOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
+    locationId?: SortOrder
     name?: SortOrder
     code?: SortOrder
     description?: SortOrder
@@ -58073,6 +58208,10 @@ export namespace Prisma {
     hasBarcode?: SortOrder
     temperatureControl?: SortOrder
     securityLevel?: SortOrder
+    allowsReceiving?: SortOrder
+    allowsShipping?: SortOrder
+    allowsTransfers?: SortOrder
+    allowsCrossDock?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -58080,6 +58219,7 @@ export namespace Prisma {
   export type WarehouseMaxOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
+    locationId?: SortOrder
     name?: SortOrder
     code?: SortOrder
     description?: SortOrder
@@ -58095,6 +58235,10 @@ export namespace Prisma {
     hasBarcode?: SortOrder
     temperatureControl?: SortOrder
     securityLevel?: SortOrder
+    allowsReceiving?: SortOrder
+    allowsShipping?: SortOrder
+    allowsTransfers?: SortOrder
+    allowsCrossDock?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -58102,6 +58246,7 @@ export namespace Prisma {
   export type WarehouseMinOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
+    locationId?: SortOrder
     name?: SortOrder
     code?: SortOrder
     description?: SortOrder
@@ -58117,6 +58262,10 @@ export namespace Prisma {
     hasBarcode?: SortOrder
     temperatureControl?: SortOrder
     securityLevel?: SortOrder
+    allowsReceiving?: SortOrder
+    allowsShipping?: SortOrder
+    allowsTransfers?: SortOrder
+    allowsCrossDock?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -68441,10 +68590,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutInventoryItemsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -68459,6 +68609,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     movements?: InventoryMovementCreateNestedManyWithoutWarehouseInput
@@ -68475,10 +68629,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutInventoryItemsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -68493,6 +68648,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     movements?: InventoryMovementUncheckedCreateNestedManyWithoutWarehouseInput
@@ -68797,10 +68956,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutInventoryItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -68815,6 +68975,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     movements?: InventoryMovementUpdateManyWithoutWarehouseNestedInput
@@ -68831,10 +68995,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutInventoryItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -68849,6 +69014,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     movements?: InventoryMovementUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -69069,10 +69238,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutMovementsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -69087,6 +69257,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -69103,10 +69277,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutMovementsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -69121,6 +69296,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -69380,10 +69559,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutMovementsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -69398,6 +69578,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -69414,10 +69598,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutMovementsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -69432,6 +69617,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -70667,10 +70856,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutPurchaseOrdersInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -70685,6 +70875,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -70701,10 +70895,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutPurchaseOrdersInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -70719,6 +70914,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -70974,10 +71173,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutPurchaseOrdersInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -70992,6 +71192,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -71008,10 +71212,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutPurchaseOrdersInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71026,6 +71231,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -71607,10 +71816,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutGoodsReceiptsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -71625,6 +71835,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -71641,10 +71855,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutGoodsReceiptsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -71659,6 +71874,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -71814,10 +72033,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutGoodsReceiptsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71832,6 +72052,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -71848,10 +72072,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutGoodsReceiptsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71866,6 +72091,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -72767,10 +72996,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutOrdersInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -72785,6 +73015,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -72801,10 +73035,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutOrdersInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -72819,6 +73054,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -73082,10 +73321,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutOrdersInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -73100,6 +73340,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -73116,10 +73360,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutOrdersInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -73134,6 +73379,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -73757,10 +74006,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutShipmentsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -73775,6 +74025,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -73791,10 +74045,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutShipmentsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -73809,6 +74064,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -73990,10 +74249,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutShipmentsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74008,6 +74268,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -74024,10 +74288,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutShipmentsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74042,6 +74307,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -74360,10 +74629,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutTransfersInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -74378,6 +74648,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -74394,10 +74668,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutTransfersInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -74412,6 +74687,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -74433,10 +74712,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutReceivedTransfersInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -74451,6 +74731,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -74467,10 +74751,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutReceivedTransfersInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -74485,6 +74770,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -74561,10 +74850,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutTransfersInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74579,6 +74869,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -74595,10 +74889,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutTransfersInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74613,6 +74908,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -74640,10 +74939,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutReceivedTransfersInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74658,6 +74958,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -74674,10 +74978,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutReceivedTransfersInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74692,6 +74997,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -75856,10 +76165,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutAuditsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -75874,6 +76184,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -75890,10 +76204,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutAuditsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -75908,6 +76223,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -76099,10 +76418,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutAuditsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76117,6 +76437,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -76133,10 +76457,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutAuditsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76151,6 +76476,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput
@@ -76493,10 +76822,11 @@ export namespace Prisma {
   export type WarehouseCreateWithoutAuditItemsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -76511,6 +76841,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemCreateNestedManyWithoutWarehouseInput
@@ -76527,10 +76861,11 @@ export namespace Prisma {
   export type WarehouseUncheckedCreateWithoutAuditItemsInput = {
     id?: string
     companyId: string
+    locationId?: string | null
     name: string
     code: string
     description?: string | null
-    address: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: string | null
     managerName?: string | null
@@ -76545,6 +76880,10 @@ export namespace Prisma {
     hasBarcode?: boolean
     temperatureControl?: boolean
     securityLevel?: string | null
+    allowsReceiving?: boolean
+    allowsShipping?: boolean
+    allowsTransfers?: boolean
+    allowsCrossDock?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutWarehouseInput
@@ -76796,10 +77135,11 @@ export namespace Prisma {
   export type WarehouseUpdateWithoutAuditItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76814,6 +77154,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUpdateManyWithoutWarehouseNestedInput
@@ -76830,10 +77174,11 @@ export namespace Prisma {
   export type WarehouseUncheckedUpdateWithoutAuditItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: JsonNullValueInput | InputJsonValue
+    address?: NullableJsonNullValueInput | InputJsonValue
     coordinates?: NullableJsonNullValueInput | InputJsonValue
     timezone?: NullableStringFieldUpdateOperationsInput | string | null
     managerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76848,6 +77193,10 @@ export namespace Prisma {
     hasBarcode?: BoolFieldUpdateOperationsInput | boolean
     temperatureControl?: BoolFieldUpdateOperationsInput | boolean
     securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    allowsReceiving?: BoolFieldUpdateOperationsInput | boolean
+    allowsShipping?: BoolFieldUpdateOperationsInput | boolean
+    allowsTransfers?: BoolFieldUpdateOperationsInput | boolean
+    allowsCrossDock?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     inventoryItems?: InventoryItemUncheckedUpdateManyWithoutWarehouseNestedInput

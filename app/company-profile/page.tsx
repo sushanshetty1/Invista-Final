@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import LocationManager from "@/components/company/LocationManager";
+import UserLocationAssignment from "@/components/company/UserLocationAssignment";
 
 interface CompanyProfile {
   id: string;
@@ -375,7 +377,7 @@ export default function CompanyProfilePage() {
         </Button>
       </div>
       </div>      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px] bg-muted/30 p-1 rounded-xl">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[600px] bg-muted/30 p-1 rounded-xl">
           <TabsTrigger 
             value="profile" 
             className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg"
@@ -390,7 +392,14 @@ export default function CompanyProfilePage() {
             <Users className="h-4 w-4" />
             Team Management
           </TabsTrigger>
-        </TabsList>        <TabsContent value="profile" className="space-y-8">
+          <TabsTrigger 
+            value="locations"
+            className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg"
+          >
+            <Building2 className="h-4 w-4" />
+            Locations
+          </TabsTrigger>
+        </TabsList><TabsContent value="profile" className="space-y-8">
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Company Logo Section */}
             <Card className="lg:col-span-1 h-fit profile-card hover:shadow-lg transition-all duration-300">
@@ -719,10 +728,51 @@ export default function CompanyProfilePage() {
                     </div>
                   ))}
                 </div>
-              )}
-            </CardContent>
+              )}            </CardContent>
           </Card>
-        </TabsContent>      </Tabs>
+        </TabsContent>
+
+        <TabsContent value="locations" className="space-y-8">
+          <div className="grid gap-8">
+            {/* Location Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Location Management
+                </CardTitle>
+                <CardDescription>
+                  Manage warehouses, retail outlets, offices, and other company locations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {companyProfile?.id && (
+                  <LocationManager companyId={companyProfile.id} />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* User Location Assignments */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  User Location Assignments
+                </CardTitle>
+                <CardDescription>
+                  Assign team members to locations and manage their access permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {companyProfile?.id && (
+                  <UserLocationAssignment companyId={companyProfile.id} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+      </Tabs>
     </div>
     </DashboardGuard>
   );
