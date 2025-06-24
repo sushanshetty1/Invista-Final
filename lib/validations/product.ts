@@ -4,10 +4,11 @@ import { z } from 'zod'
 export const baseProductSchema = z.object({
   name: z.string().min(1, 'Product name is required').max(255),
   description: z.string().optional(), sku: z.string().min(1, 'SKU is required').max(100),
-  barcode: z.string().optional(),
-  slug: z.string().optional(),
+  barcode: z.string().optional(), slug: z.string().optional(),
   categoryId: z.string().optional(),
   brandId: z.string().optional(),
+  categoryName: z.string().optional(),
+  brandName: z.string().optional(),
   weight: z.number().positive().optional(),
   dimensions: z.object({
     length: z.number().positive(),
