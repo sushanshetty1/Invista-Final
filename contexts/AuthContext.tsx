@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
+import { dataPreloader } from '@/hooks/use-data-preloader'
 
 type AuthContextType = {
     user: any
@@ -27,12 +28,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [hasCompanyAccess, setHasCompanyAccess] = useState(false)
     const router = useRouter()
     
+    // Add debouncing to prevent multiple rapid access checks
+    const [lastAccessCheck, setLastAccessCheck] = useState<number>(0)
+    const ACCESS_CHECK_DEBOUNCE = 1000 // 1 second
+    
     const checkUserAccess = async () => {
         if (!user?.email || !user?.id) {
             setUserType(null);
             setHasCompanyAccess(false);
             return;
         }
+        
+        // Debouncing - prevent multiple rapid checks
+        const now = Date.now();
+        if (now - lastAccessCheck < ACCESS_CHECK_DEBOUNCE) {
+            console.log('AuthContext - Access check debounced');
+            return;
+        }
+        setLastAccessCheck(now);
         
         console.log('AuthContext - Checking user access');
         
@@ -45,41 +58,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setHasCompanyAccess(true);
                 return;
             }
-        }
+        }try {
+            // Optimized single query approach - check for company access first
+            const { data: companyUserData, error: companyUserError } = await supabase
+                .from('company_users')
+                .select(`
+                    id,
+                    role,
+                    isOwner,
+                    isActive,
+                    companyId,
+                    userId,
+                    company:companies!inner(id, name, isActive)
+                `)
+                .eq('userId', user.id)
+                .eq('isActive', true)
+                .eq('company.isActive', true)
+                .limit(1);
 
-        try {
-            // Simplified access check - use Promise.all to reduce database calls
-            const [companyUserResult, userRecordsResult, companyResult, inviteResult] = await Promise.all([
-                // Check company_users with Auth user ID
-                supabase
-                    .from('company_users')
-                    .select('id, role, isOwner, isActive, companyId, userId')
-                    .eq('userId', user.id)
-                    .eq('isActive', true),
-                    
-                // Get user records by email
-                supabase
-                    .from('users')
-                    .select('id, email')
-                    .eq('email', user.email),
-                    
-                // Check companies created by user
-                supabase
-                    .from('companies')
-                    .select('id, name, createdBy')
-                    .eq('createdBy', user.id)
-                    .eq('isActive', true),
-                    
-                // Check user invitations
-                supabase
-                    .from('user_invitations')
-                    .select('id, status, email')
-                    .eq('email', user.email)
-                    .eq('status', 'ACCEPTED')
-            ]);
-
-            // Check company user access (Auth ID)
-            if (companyUserResult.data && companyUserResult.data.length > 0) {
+            if (!companyUserError && companyUserData && companyUserData.length > 0) {
+                console.log('AuthContext - User found in company_users');
                 setUserType('company');
                 setHasCompanyAccess(true);
                 if (typeof window !== 'undefined') {
@@ -88,8 +86,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 return;
             }
 
-            // Check company ownership
-            if (companyResult.data && companyResult.data.length > 0) {
+            // If not found as company user, check if user owns a company
+            const { data: ownedCompany, error: ownedError } = await supabase
+                .from('companies')
+                .select('id, name, createdBy')
+                .eq('createdBy', user.id)
+                .eq('isActive', true)
+                .limit(1);
+
+            if (!ownedError && ownedCompany && ownedCompany.length > 0) {
+                console.log('AuthContext - User owns a company');
                 setUserType('company');
                 setHasCompanyAccess(true);
                 if (typeof window !== 'undefined') {
@@ -98,51 +104,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 return;
             }
 
-            // Check invitations
-            if (inviteResult.data && inviteResult.data.length > 0) {
+            // Final fallback - check user invitations by email
+            const { data: inviteData, error: inviteError } = await supabase
+                .from('user_invitations')
+                .select('id, status, email')
+                .eq('email', user.email)
+                .eq('status', 'ACCEPTED')
+                .limit(1);
+
+            if (!inviteError && inviteData && inviteData.length > 0) {
+                console.log('AuthContext - User has accepted invitation');
                 setUserType('individual');
                 setHasCompanyAccess(true);
                 if (typeof window !== 'undefined') {
                     localStorage.setItem(`invista_has_access_${user.id}`, 'true');
                 }
                 return;
-            }
-
-            // Check with internal user IDs if no direct match found
-            if (userRecordsResult.data && userRecordsResult.data.length > 0) {
-                const internalUserIds = userRecordsResult.data.map(u => u.id);
-                
-                const [companyUserByInternal, companyByInternal] = await Promise.all([
-                    supabase
-                        .from('company_users')
-                        .select('id, role, isOwner, isActive, companyId, userId')
-                        .in('userId', internalUserIds)
-                        .eq('isActive', true),
-                        
-                    supabase
-                        .from('companies')
-                        .select('id, name, createdBy')
-                        .in('createdBy', internalUserIds)
-                        .eq('isActive', true)
-                ]);
-
-                if (companyUserByInternal.data && companyUserByInternal.data.length > 0) {
-                    setUserType('company');
-                    setHasCompanyAccess(true);
-                    if (typeof window !== 'undefined') {
-                        localStorage.setItem(`invista_has_access_${user.id}`, 'true');
-                    }
-                    return;
-                }
-
-                if (companyByInternal.data && companyByInternal.data.length > 0) {
-                    setUserType('company');
-                    setHasCompanyAccess(true);
-                    if (typeof window !== 'undefined') {
-                        localStorage.setItem(`invista_has_access_${user.id}`, 'true');
-                    }
-                    return;
-                }
             }
 
             // If we reach here, no company access was found
@@ -184,14 +161,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 
                 if (isMounted) {
                     clearTimeout(timeoutId);
-                    
-                    if (currentSession?.user) {
+                      if (currentSession?.user) {
                         console.log('AuthContext - Session found:', currentSession.user.email);
                         setUser(currentSession.user);
                         
-                        // Check user access
+                        // Check user access and start preloading
                         try {
                             await checkUserAccess();
+                            // Start preloading company data in the background
+                            dataPreloader.preloadCompanyData(currentSession.user.id).catch(console.error);
                         } catch (accessError) {
                             console.error('AuthContext - Error checking user access:', accessError);
                             // Don't fail initialization if access check fails
@@ -252,12 +230,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                                         updatedAt: new Date().toISOString()
                                     });
                             }
-                            
-                            // Only check user access for new sign-ins, not token refreshes
+                              // Only check user access for new sign-ins, not token refreshes
                             if (event === 'SIGNED_IN' && isMounted) {
-                                // Small delay to allow user creation to complete
-                                setTimeout(() => {
-                                    checkUserAccess();
+                                // Small delay to allow user creation to complete, then start preloading
+                                setTimeout(async () => {
+                                    await checkUserAccess();
+                                    // Start preloading company data in the background
+                                    if (session.user.id) {
+                                        dataPreloader.preloadCompanyData(session.user.id).catch(console.error);
+                                    }
                                 }, 500);
                             }
                         }
