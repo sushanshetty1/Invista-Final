@@ -5231,11 +5231,13 @@ export namespace Prisma {
     companyId: string | null
     name: string | null
     description: string | null
+    categoryId: string | null
+    brandId: string | null
+    categoryName: string | null
+    brandName: string | null
     sku: string | null
     barcode: string | null
     slug: string | null
-    categoryId: string | null
-    brandId: string | null
     weight: Decimal | null
     color: string | null
     size: string | null
@@ -5265,11 +5267,13 @@ export namespace Prisma {
     companyId: string | null
     name: string | null
     description: string | null
+    categoryId: string | null
+    brandId: string | null
+    categoryName: string | null
+    brandName: string | null
     sku: string | null
     barcode: string | null
     slug: string | null
-    categoryId: string | null
-    brandId: string | null
     weight: Decimal | null
     color: string | null
     size: string | null
@@ -5299,11 +5303,13 @@ export namespace Prisma {
     companyId: number
     name: number
     description: number
+    categoryId: number
+    brandId: number
+    categoryName: number
+    brandName: number
     sku: number
     barcode: number
     slug: number
-    categoryId: number
-    brandId: number
     weight: number
     dimensions: number
     color: number
@@ -5364,11 +5370,13 @@ export namespace Prisma {
     companyId?: true
     name?: true
     description?: true
+    categoryId?: true
+    brandId?: true
+    categoryName?: true
+    brandName?: true
     sku?: true
     barcode?: true
     slug?: true
-    categoryId?: true
-    brandId?: true
     weight?: true
     color?: true
     size?: true
@@ -5398,11 +5406,13 @@ export namespace Prisma {
     companyId?: true
     name?: true
     description?: true
+    categoryId?: true
+    brandId?: true
+    categoryName?: true
+    brandName?: true
     sku?: true
     barcode?: true
     slug?: true
-    categoryId?: true
-    brandId?: true
     weight?: true
     color?: true
     size?: true
@@ -5432,11 +5442,13 @@ export namespace Prisma {
     companyId?: true
     name?: true
     description?: true
+    categoryId?: true
+    brandId?: true
+    categoryName?: true
+    brandName?: true
     sku?: true
     barcode?: true
     slug?: true
-    categoryId?: true
-    brandId?: true
     weight?: true
     dimensions?: true
     color?: true
@@ -5556,11 +5568,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description: string | null
+    categoryId: string | null
+    brandId: string | null
+    categoryName: string | null
+    brandName: string | null
     sku: string
     barcode: string | null
     slug: string | null
-    categoryId: string | null
-    brandId: string | null
     weight: Decimal | null
     dimensions: JsonValue | null
     color: string | null
@@ -5612,11 +5626,13 @@ export namespace Prisma {
     companyId?: boolean
     name?: boolean
     description?: boolean
+    categoryId?: boolean
+    brandId?: boolean
+    categoryName?: boolean
+    brandName?: boolean
     sku?: boolean
     barcode?: boolean
     slug?: boolean
-    categoryId?: boolean
-    brandId?: boolean
     weight?: boolean
     dimensions?: boolean
     color?: boolean
@@ -5665,11 +5681,13 @@ export namespace Prisma {
     companyId?: boolean
     name?: boolean
     description?: boolean
+    categoryId?: boolean
+    brandId?: boolean
+    categoryName?: boolean
+    brandName?: boolean
     sku?: boolean
     barcode?: boolean
     slug?: boolean
-    categoryId?: boolean
-    brandId?: boolean
     weight?: boolean
     dimensions?: boolean
     color?: boolean
@@ -5704,11 +5722,13 @@ export namespace Prisma {
     companyId?: boolean
     name?: boolean
     description?: boolean
+    categoryId?: boolean
+    brandId?: boolean
+    categoryName?: boolean
+    brandName?: boolean
     sku?: boolean
     barcode?: boolean
     slug?: boolean
-    categoryId?: boolean
-    brandId?: boolean
     weight?: boolean
     dimensions?: boolean
     color?: boolean
@@ -5743,11 +5763,13 @@ export namespace Prisma {
     companyId?: boolean
     name?: boolean
     description?: boolean
+    categoryId?: boolean
+    brandId?: boolean
+    categoryName?: boolean
+    brandName?: boolean
     sku?: boolean
     barcode?: boolean
     slug?: boolean
-    categoryId?: boolean
-    brandId?: boolean
     weight?: boolean
     dimensions?: boolean
     color?: boolean
@@ -5775,7 +5797,7 @@ export namespace Prisma {
     createdBy?: boolean
   }
 
-  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "companyId" | "name" | "description" | "sku" | "barcode" | "slug" | "categoryId" | "brandId" | "weight" | "dimensions" | "color" | "size" | "material" | "costPrice" | "sellingPrice" | "wholesalePrice" | "minStockLevel" | "maxStockLevel" | "reorderPoint" | "reorderQuantity" | "status" | "isTrackable" | "isSerialized" | "images" | "primaryImage" | "metaTitle" | "metaDescription" | "tags" | "leadTimeSupply" | "shelfLife" | "createdAt" | "updatedAt" | "createdBy", ExtArgs["result"]["product"]>
+  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "companyId" | "name" | "description" | "categoryId" | "brandId" | "categoryName" | "brandName" | "sku" | "barcode" | "slug" | "weight" | "dimensions" | "color" | "size" | "material" | "costPrice" | "sellingPrice" | "wholesalePrice" | "minStockLevel" | "maxStockLevel" | "reorderPoint" | "reorderQuantity" | "status" | "isTrackable" | "isSerialized" | "images" | "primaryImage" | "metaTitle" | "metaDescription" | "tags" | "leadTimeSupply" | "shelfLife" | "createdAt" | "updatedAt" | "createdBy", ExtArgs["result"]["product"]>
   export type ProductInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     BundleItems?: boolean | Product$BundleItemsArgs<ExtArgs>
     BundleProducts?: boolean | Product$BundleProductsArgs<ExtArgs>
@@ -5827,11 +5849,13 @@ export namespace Prisma {
       companyId: string
       name: string
       description: string | null
+      categoryId: string | null
+      brandId: string | null
+      categoryName: string | null
+      brandName: string | null
       sku: string
       barcode: string | null
       slug: string | null
-      categoryId: string | null
-      brandId: string | null
       weight: Prisma.Decimal | null
       dimensions: Prisma.JsonValue | null
       color: string | null
@@ -6299,11 +6323,13 @@ export namespace Prisma {
     readonly companyId: FieldRef<"Product", 'String'>
     readonly name: FieldRef<"Product", 'String'>
     readonly description: FieldRef<"Product", 'String'>
+    readonly categoryId: FieldRef<"Product", 'String'>
+    readonly brandId: FieldRef<"Product", 'String'>
+    readonly categoryName: FieldRef<"Product", 'String'>
+    readonly brandName: FieldRef<"Product", 'String'>
     readonly sku: FieldRef<"Product", 'String'>
     readonly barcode: FieldRef<"Product", 'String'>
     readonly slug: FieldRef<"Product", 'String'>
-    readonly categoryId: FieldRef<"Product", 'String'>
-    readonly brandId: FieldRef<"Product", 'String'>
     readonly weight: FieldRef<"Product", 'Decimal'>
     readonly dimensions: FieldRef<"Product", 'Json'>
     readonly color: FieldRef<"Product", 'String'>
@@ -49351,11 +49377,13 @@ export namespace Prisma {
     companyId: 'companyId',
     name: 'name',
     description: 'description',
+    categoryId: 'categoryId',
+    brandId: 'brandId',
+    categoryName: 'categoryName',
+    brandName: 'brandName',
     sku: 'sku',
     barcode: 'barcode',
     slug: 'slug',
-    categoryId: 'categoryId',
-    brandId: 'brandId',
     weight: 'weight',
     dimensions: 'dimensions',
     color: 'color',
@@ -50695,11 +50723,13 @@ export namespace Prisma {
     companyId?: StringFilter<"Product"> | string
     name?: StringFilter<"Product"> | string
     description?: StringNullableFilter<"Product"> | string | null
+    categoryId?: StringNullableFilter<"Product"> | string | null
+    brandId?: StringNullableFilter<"Product"> | string | null
+    categoryName?: StringNullableFilter<"Product"> | string | null
+    brandName?: StringNullableFilter<"Product"> | string | null
     sku?: StringFilter<"Product"> | string
     barcode?: StringNullableFilter<"Product"> | string | null
     slug?: StringNullableFilter<"Product"> | string | null
-    categoryId?: StringNullableFilter<"Product"> | string | null
-    brandId?: StringNullableFilter<"Product"> | string | null
     weight?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
     dimensions?: JsonNullableFilter<"Product">
     color?: StringNullableFilter<"Product"> | string | null
@@ -50747,11 +50777,13 @@ export namespace Prisma {
     companyId?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
+    categoryId?: SortOrderInput | SortOrder
+    brandId?: SortOrderInput | SortOrder
+    categoryName?: SortOrderInput | SortOrder
+    brandName?: SortOrderInput | SortOrder
     sku?: SortOrder
     barcode?: SortOrderInput | SortOrder
     slug?: SortOrderInput | SortOrder
-    categoryId?: SortOrderInput | SortOrder
-    brandId?: SortOrderInput | SortOrder
     weight?: SortOrderInput | SortOrder
     dimensions?: SortOrderInput | SortOrder
     color?: SortOrderInput | SortOrder
@@ -50807,6 +50839,8 @@ export namespace Prisma {
     description?: StringNullableFilter<"Product"> | string | null
     categoryId?: StringNullableFilter<"Product"> | string | null
     brandId?: StringNullableFilter<"Product"> | string | null
+    categoryName?: StringNullableFilter<"Product"> | string | null
+    brandName?: StringNullableFilter<"Product"> | string | null
     weight?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
     dimensions?: JsonNullableFilter<"Product">
     color?: StringNullableFilter<"Product"> | string | null
@@ -50854,11 +50888,13 @@ export namespace Prisma {
     companyId?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
+    categoryId?: SortOrderInput | SortOrder
+    brandId?: SortOrderInput | SortOrder
+    categoryName?: SortOrderInput | SortOrder
+    brandName?: SortOrderInput | SortOrder
     sku?: SortOrder
     barcode?: SortOrderInput | SortOrder
     slug?: SortOrderInput | SortOrder
-    categoryId?: SortOrderInput | SortOrder
-    brandId?: SortOrderInput | SortOrder
     weight?: SortOrderInput | SortOrder
     dimensions?: SortOrderInput | SortOrder
     color?: SortOrderInput | SortOrder
@@ -50899,11 +50935,13 @@ export namespace Prisma {
     companyId?: StringWithAggregatesFilter<"Product"> | string
     name?: StringWithAggregatesFilter<"Product"> | string
     description?: StringNullableWithAggregatesFilter<"Product"> | string | null
+    categoryId?: StringNullableWithAggregatesFilter<"Product"> | string | null
+    brandId?: StringNullableWithAggregatesFilter<"Product"> | string | null
+    categoryName?: StringNullableWithAggregatesFilter<"Product"> | string | null
+    brandName?: StringNullableWithAggregatesFilter<"Product"> | string | null
     sku?: StringWithAggregatesFilter<"Product"> | string
     barcode?: StringNullableWithAggregatesFilter<"Product"> | string | null
     slug?: StringNullableWithAggregatesFilter<"Product"> | string | null
-    categoryId?: StringNullableWithAggregatesFilter<"Product"> | string | null
-    brandId?: StringNullableWithAggregatesFilter<"Product"> | string | null
     weight?: DecimalNullableWithAggregatesFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
     dimensions?: JsonNullableWithAggregatesFilter<"Product">
     color?: StringNullableWithAggregatesFilter<"Product"> | string | null
@@ -54849,6 +54887,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -54899,11 +54939,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -54949,6 +54991,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -54999,11 +55043,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -55049,11 +55095,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -55086,6 +55134,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -55121,11 +55171,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -59977,11 +60029,13 @@ export namespace Prisma {
     companyId?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    categoryId?: SortOrder
+    brandId?: SortOrder
+    categoryName?: SortOrder
+    brandName?: SortOrder
     sku?: SortOrder
     barcode?: SortOrder
     slug?: SortOrder
-    categoryId?: SortOrder
-    brandId?: SortOrder
     weight?: SortOrder
     dimensions?: SortOrder
     color?: SortOrder
@@ -60027,11 +60081,13 @@ export namespace Prisma {
     companyId?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    categoryId?: SortOrder
+    brandId?: SortOrder
+    categoryName?: SortOrder
+    brandName?: SortOrder
     sku?: SortOrder
     barcode?: SortOrder
     slug?: SortOrder
-    categoryId?: SortOrder
-    brandId?: SortOrder
     weight?: SortOrder
     color?: SortOrder
     size?: SortOrder
@@ -60061,11 +60117,13 @@ export namespace Prisma {
     companyId?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    categoryId?: SortOrder
+    brandId?: SortOrder
+    categoryName?: SortOrder
+    brandName?: SortOrder
     sku?: SortOrder
     barcode?: SortOrder
     slug?: SortOrder
-    categoryId?: SortOrder
-    brandId?: SortOrder
     weight?: SortOrder
     color?: SortOrder
     size?: SortOrder
@@ -68951,6 +69009,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -69000,11 +69060,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -69237,6 +69299,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -69286,11 +69350,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -69450,6 +69516,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -69499,10 +69567,12 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -69657,11 +69727,13 @@ export namespace Prisma {
     companyId?: StringFilter<"Product"> | string
     name?: StringFilter<"Product"> | string
     description?: StringNullableFilter<"Product"> | string | null
+    categoryId?: StringNullableFilter<"Product"> | string | null
+    brandId?: StringNullableFilter<"Product"> | string | null
+    categoryName?: StringNullableFilter<"Product"> | string | null
+    brandName?: StringNullableFilter<"Product"> | string | null
     sku?: StringFilter<"Product"> | string
     barcode?: StringNullableFilter<"Product"> | string | null
     slug?: StringNullableFilter<"Product"> | string | null
-    categoryId?: StringNullableFilter<"Product"> | string | null
-    brandId?: StringNullableFilter<"Product"> | string | null
     weight?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
     dimensions?: JsonNullableFilter<"Product">
     color?: StringNullableFilter<"Product"> | string | null
@@ -69694,6 +69766,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -69743,10 +69817,12 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -70780,6 +70856,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -70829,11 +70907,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -71134,6 +71214,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71183,11 +71265,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71491,6 +71575,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -71540,11 +71626,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -71806,6 +71894,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71855,11 +71945,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -72429,6 +72521,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -72478,11 +72572,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -72620,6 +72716,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -72669,11 +72767,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -73641,6 +73741,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -73690,11 +73792,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -73869,6 +73973,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -73918,11 +74024,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74508,6 +74616,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -74557,11 +74667,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -74716,6 +74828,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -74765,11 +74879,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -75868,6 +75984,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -75917,11 +76035,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -76116,6 +76236,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76165,11 +76287,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77375,6 +77499,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -77424,11 +77550,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -77579,6 +77707,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77628,11 +77758,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78563,6 +78695,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -78612,11 +78746,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -78776,6 +78912,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78825,11 +78963,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79012,6 +79152,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -79061,11 +79203,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -79313,6 +79457,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79362,11 +79508,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79555,6 +79703,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -79604,11 +79754,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -79669,6 +79821,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79718,11 +79872,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79767,6 +79923,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -79816,11 +79974,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -79912,6 +80072,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79961,11 +80123,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -80047,6 +80211,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
@@ -80096,11 +80262,13 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -80192,6 +80360,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -80241,11 +80411,13 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -81882,10 +82054,12 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    brandId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    brandId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -81967,6 +82141,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82016,10 +82192,12 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82065,10 +82243,12 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82101,10 +82281,12 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    categoryName?: string | null
+    brandName?: string | null
     sku: string
     barcode?: string | null
     slug?: string | null
-    categoryId?: string | null
     weight?: Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: string | null
@@ -82137,6 +82319,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82186,10 +82370,12 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82235,10 +82421,12 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
+    brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     dimensions?: NullableJsonNullValueInput | InputJsonValue
     color?: NullableStringFieldUpdateOperationsInput | string | null

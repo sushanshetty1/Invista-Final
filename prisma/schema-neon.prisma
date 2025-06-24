@@ -14,11 +14,13 @@ model Product {
   companyId         String
   name              String
   description       String?
+  categoryId        String?              @default(uuid())
+  brandId           String?              @default(uuid())
+  categoryName      String?
+  brandName         String?
   sku               String               @unique
   barcode           String?              @unique
   slug              String?              @unique
-  categoryId        String?
-  brandId           String?
   weight            Decimal?
   dimensions        Json?
   color             String?
