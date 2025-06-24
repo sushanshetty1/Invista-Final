@@ -79,10 +79,9 @@ export default function WaitingPage() {
   // Simplified access check - only check once every 30 seconds to avoid excessive polling
   useEffect(() => {
     if (!user || hasCompanyAccess) return;
-    
-    const accessCheckInterval = setInterval(async () => {
+      const accessCheckInterval = setInterval(async () => {
       console.log('WaitingPage - Periodic access check');
-      await checkUserAccess(0);
+      await checkUserAccess();
     }, 30000); // Check every 30 seconds instead of 10
 
     return () => clearInterval(accessCheckInterval);
@@ -121,9 +120,8 @@ export default function WaitingPage() {
           localStorage.setItem(`invista_has_access_time_${user.id}`, Date.now().toString());
           localStorage.setItem(`invista_access_source_${user.id}`, 'invite_acceptance');
         }
-        
-        // Force refresh access check immediately
-        await checkUserAccess(0);
+          // Force refresh access check immediately
+        await checkUserAccess();
         
         // Small delay to ensure state updates, then redirect
         setTimeout(() => {

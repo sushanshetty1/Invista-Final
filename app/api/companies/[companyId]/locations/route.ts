@@ -4,10 +4,10 @@ import { supabaseClient, neonClient } from '@/lib/db';
 // GET /api/companies/[companyId]/locations - Get all locations for a company
 export async function GET(
   request: NextRequest,
-  { params }: { params: { companyId: string } }
+  { params }: { params: Promise<{ companyId: string }> }
 ) {
   try {
-    const { companyId } = params;    // Get locations from Supabase
+    const { companyId } = await params;// Get locations from Supabase
     const locations = await supabaseClient.companyLocation.findMany({
       where: {
         companyId,
@@ -66,10 +66,10 @@ export async function GET(
 // POST /api/companies/[companyId]/locations - Create a new location
 export async function POST(
   request: NextRequest,
-  { params }: { params: { companyId: string } }
+  { params }: { params: Promise<{ companyId: string }> }
 ) {
   try {
-    const { companyId } = params;
+    const { companyId } = await params;
     const body = await request.json();
 
     const {

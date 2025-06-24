@@ -83,19 +83,22 @@ export default function CompanyProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  console.log('CompanyProfile component mounted, user:', user?.id, 'company:', companyProfile?.id);useEffect(() => {
+  console.log('CompanyProfile component mounted, user:', user?.id, 'company:', companyProfile?.id);
+  
+  useEffect(() => {
     if (user) {
       fetchCompanyProfile();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  useEffect(() => {
-    if (companyProfile?.id) {
+  useEffect(() => {    if (companyProfile?.id) {
       fetchTeamMembers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyProfile?.id]);  const fetchCompanyProfile = async () => {
+  }, [companyProfile?.id]);
+  
+  const fetchCompanyProfile = async () => {
     try {
       console.log('Fetching company profile for user:', user?.id);
       
@@ -136,11 +139,12 @@ export default function CompanyProfilePage() {
       console.log('Company profile data:', data);
       setCompanyProfile(data);
     } catch (error) {
-      console.error('Error fetching company profile:', error);
-    } finally {
+      console.error('Error fetching company profile:', error);    } finally {
       setLoading(false);
     }
-  };  const fetchTeamMembers = async () => {
+  };
+  
+  const fetchTeamMembers = async () => {
     try {
       if (!companyProfile?.id) {
         console.log('No company profile ID available for fetching team members');
@@ -227,11 +231,12 @@ export default function CompanyProfilePage() {
       ];
 
       console.log('Combined team members list:', teamMembersList);
-      setTeamMembers(teamMembersList);
-    } catch (error) {
+      setTeamMembers(teamMembersList);    } catch (error) {
       console.error('Error fetching team members:', error);
     }
-  };const handleInviteUsers = async () => {
+  };
+
+  const handleInviteUsers = async () => {
     if (!inviteForm.emails.trim() || !inviteForm.role) return;
 
     setIsInviting(true);
@@ -344,7 +349,8 @@ export default function CompanyProfilePage() {
       console.error('Error updating company profile:', error);
     }
   };
-  const removeTeamMember = async (memberId: string) => {    try {
+  const removeTeamMember = async (memberId: string) => {
+    try {
       // First try to remove from company_invites (for pending invites)
       const { data: invite } = await supabase
         .from('company_invites')
@@ -409,23 +415,25 @@ export default function CompanyProfilePage() {
   }
   return (
     <DashboardGuard>
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between"><div className="flex flex-col gap-2">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-          Company Profile
-        </h1>
-        <p className="text-muted-foreground text-lg">Manage your company information and team members</p>
-      </div>
-      <div className="flex gap-2">
-        <Button 
-          onClick={() => router.push('/dashboard')} 
-          variant="outline"
-          className="hover:bg-primary/10"
-        >
-          Back to Dashboard
-        </Button>
-      </div>
-      </div>      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+      <div className="container mx-auto p-6 space-y-6">        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Company Profile
+            </h1>
+            <p className="text-muted-foreground text-lg">Manage your company information and team members</p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => router.push('/dashboard')} 
+              variant="outline"
+              className="hover:bg-primary/10"
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
         <TabsList className="grid w-full grid-cols-3 lg:w-[600px] bg-muted/30 p-1 rounded-xl">
           <TabsTrigger 
             value="profile" 
@@ -448,7 +456,9 @@ export default function CompanyProfilePage() {
             <Building2 className="h-4 w-4" />
             Locations
           </TabsTrigger>
-        </TabsList><TabsContent value="profile" className="space-y-8">
+        </TabsList>
+        
+        <TabsContent value="profile" className="space-y-8">
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Company Logo Section */}
             <Card className="lg:col-span-1 h-fit profile-card hover:shadow-lg transition-all duration-300">
@@ -688,7 +698,9 @@ export default function CompanyProfilePage() {
                 </div>
               </DialogContent>
             </Dialog>
-          </div>          <Card className="profile-card hover:shadow-lg transition-all duration-300">
+          </div>
+          
+          <Card className="profile-card hover:shadow-lg transition-all duration-300">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-3 text-xl">
                 <Users className="h-6 w-6 text-primary" />
@@ -725,10 +737,9 @@ export default function CompanyProfilePage() {
                       }`}
                     >
                       <div className="flex items-center space-x-4">
-                        <div className="relative">
-                          <div className="w-12 h-12 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                        <div className="relative">                          <div className="w-12 h-12 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center shadow-lg">
                             <span className="text-white font-semibold text-sm">
-                              {member.firstName ? member.firstName[0] : member.email[0].toUpperCase()}
+                              {member.firstName ? member.firstName[0].toUpperCase() : (member.email && member.email.length > 0 ? member.email[0].toUpperCase() : '?')}
                             </span>
                           </div>
                           {member.status === 'ACTIVE' && (
@@ -777,7 +788,8 @@ export default function CompanyProfilePage() {
                     </div>
                   ))}
                 </div>
-              )}            </CardContent>
+              )}
+            </CardContent>
           </Card>
         </TabsContent>
 

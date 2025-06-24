@@ -4,10 +4,10 @@ import { supabaseClient } from '@/lib/db';
 // GET /api/companies/[companyId]/users/[userId]/location-access - Get user's location access
 export async function GET(
   request: NextRequest,
-  { params }: { params: { companyId: string; userId: string } }
+  { params }: { params: Promise<{ companyId: string; userId: string }> }
 ) {
   try {
-    const { companyId, userId } = params;
+    const { companyId, userId } = await params;
 
     // Get user's location access
     const userAccess = await supabaseClient.userLocationAccess.findMany({
@@ -70,10 +70,10 @@ export async function GET(
 // POST /api/companies/[companyId]/users/[userId]/location-access - Grant location access
 export async function POST(
   request: NextRequest,
-  { params }: { params: { companyId: string; userId: string } }
+  { params }: { params: Promise<{ companyId: string; userId: string }> }
 ) {
   try {
-    const { companyId, userId } = params;
+    const { companyId, userId } = await params;
     const body = await request.json();
     
     const {
@@ -154,10 +154,10 @@ export async function POST(
 // DELETE /api/companies/[companyId]/users/[userId]/location-access/[locationId] - Revoke location access
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { companyId: string; userId: string } }
+  { params }: { params: Promise<{ companyId: string; userId: string }> }
 ) {
   try {
-    const { companyId, userId } = params;
+    const { companyId, userId } = await params;
     const url = new URL(request.url);
     const locationId = url.searchParams.get('locationId');
 

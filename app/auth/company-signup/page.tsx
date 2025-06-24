@@ -263,15 +263,14 @@ export default function CompanySignUpPage() {
                 setLoading(false)
                 return
             }            setMessage('Company registration successful! Redirecting to dashboard...')
-            
-            // Wait a moment for database consistency, then refresh user access check
+              // Wait a moment for database consistency, then refresh user access check
             await new Promise(resolve => setTimeout(resolve, 1000));
-            await checkUserAccess(0);
+            await checkUserAccess();
             
             // Additional delay to ensure access check completes
             setTimeout(() => {
                 router.push('/dashboard')
-            }, 1500)        } catch (err: unknown) {
+            }, 1500)} catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error'
             setError('An unexpected error occurred: ' + errorMessage)
         } finally {

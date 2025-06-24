@@ -32,7 +32,7 @@ export default function DashboardGuard({ children }: DashboardGuardProps) {
         }
         
         // Use a non-zero retry count to ensure thorough checking
-        checkUserAccess(1);
+        checkUserAccess();
       }
     }
   }, [user, hasCompanyAccess, checkUserAccess]);
@@ -62,9 +62,8 @@ export default function DashboardGuard({ children }: DashboardGuardProps) {
               if (user?.id) {
                 localStorage.setItem(`invista_has_access_${user.id}`, 'true');
               }
-              
-              // Force an access check to update auth context
-              await checkUserAccess(0);
+                // Force an access check to update auth context
+              await checkUserAccess();
               
               // Even if we still don't have access after forced check, don't redirect
               // The user should not be sent back to waiting page once they've had access
