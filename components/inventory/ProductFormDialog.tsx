@@ -569,8 +569,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
-                  <FormField
+                  />                  <FormField
                     control={form.control}
                     name="sku"
                     render={({ field }) => (
@@ -642,21 +641,16 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Barcode</FormLabel>
-                      <div className="flex gap-2">
-                        <FormControl>
-                          <Input placeholder="Product barcode" {...field} />
-                        </FormControl>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.onChange(generateBarcode())}
-                        >
-                          Generate
-                        </Button>
-                      </div>
+                      <FormControl>
+                        <Input
+                          placeholder="Product barcode"
+                          {...field}
+                          readOnly
+                          className="bg-gray-50 font-mono text-lg"
+                        />
+                      </FormControl>
                       {field.value && field.value.trim() !== '' && (
-                        <div className="mt-2 p-2 bg-white border rounded">
+                        <div className="mt-2 p-3 bg-white border rounded">
                           <Barcode
                             value={field.value}
                             format="CODE128"
@@ -709,41 +703,66 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Color</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Product color" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
+                <div className="grid grid-cols-3 gap-4">                  <FormField
+                  control={form.control}
+                  name="color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Color</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Product color"
+                          {...field}
+                          onKeyPress={(e) => {
+                            if (/[0-9]/.test(e.key)) {
+                              e.preventDefault()
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                /><FormField
                     control={form.control}
                     name="size"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Size</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Product size" {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="S">S</SelectItem>
+                            <SelectItem value="M">M</SelectItem>
+                            <SelectItem value="L">L</SelectItem>
+                            <SelectItem value="XL">XL</SelectItem>
+                            <SelectItem value="XXL">XXL</SelectItem>
+                            <SelectItem value="XXXL">XXXL</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
-                  <FormField
+                  />                  <FormField
                     control={form.control}
                     name="material"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Material</FormLabel>
                         <FormControl>
-                          <Input placeholder="Product material" {...field} />
+                          <Input
+                            placeholder="Product material"
+                            {...field}
+                            onKeyPress={(e) => {
+                              if (/[0-9]/.test(e.key)) {
+                                e.preventDefault()
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -751,46 +770,54 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="weight"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Weight (kg)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Product weight"
-                            {...field}
-                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <div className="grid grid-cols-2 gap-4">                  <FormField
+                  control={form.control}
+                  name="weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Weight (kg)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Product weight"
+                          {...field}
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                          style={{
+                            WebkitAppearance: 'none',
+                            MozAppearance: 'textfield'
+                          }}
+                          className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Dimensions</label>
-                    <div className="grid grid-cols-4 gap-2">
-                      <FormField
-                        control={form.control}
-                        name="dimensions.length"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                placeholder="Length"
-                                {...field}
-                                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                    <div className="grid grid-cols-4 gap-2">                      <FormField
+                      control={form.control}
+                      name="dimensions.length"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="Length"
+                              {...field}
+                              onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                              style={{
+                                WebkitAppearance: 'none',
+                                MozAppearance: 'textfield'
+                              }}
+                              className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                       <FormField
                         control={form.control}
                         name="dimensions.width"
@@ -803,6 +830,11 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                                 placeholder="Width"
                                 {...field}
                                 onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                                style={{
+                                  WebkitAppearance: 'none',
+                                  MozAppearance: 'textfield'
+                                }}
+                                className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
                             </FormControl>
                           </FormItem>
@@ -820,6 +852,11 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                                 placeholder="Height"
                                 {...field}
                                 onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                                style={{
+                                  WebkitAppearance: 'none',
+                                  MozAppearance: 'textfield'
+                                }}
+                                className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
                             </FormControl>
                           </FormItem>
@@ -851,26 +888,30 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
               </TabsContent>
 
               <TabsContent value="pricing" className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="costPrice"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cost Price</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            {...field}
-                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <div className="grid grid-cols-3 gap-4">                  <FormField
+                  control={form.control}
+                  name="costPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cost Price</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                          style={{
+                            WebkitAppearance: 'none',
+                            MozAppearance: 'textfield'
+                          }}
+                          className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                   <FormField
                     control={form.control}
                     name="sellingPrice"
@@ -884,6 +925,11 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                             placeholder="0.00"
                             {...field}
                             onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                            style={{
+                              WebkitAppearance: 'none',
+                              MozAppearance: 'textfield'
+                            }}
+                            className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </FormControl>
                         <FormMessage />
@@ -903,6 +949,11 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                             placeholder="0.00"
                             {...field}
                             onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                            style={{
+                              WebkitAppearance: 'none',
+                              MozAppearance: 'textfield'
+                            }}
+                            className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </FormControl>
                         <FormMessage />
@@ -916,24 +967,28 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                     <CardHeader>
                       <CardTitle>Stock Levels</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="minStockLevel"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Minimum Stock Level *</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                {...field}
-                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <CardContent className="space-y-4">                      <FormField
+                      control={form.control}
+                      name="minStockLevel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Minimum Stock Level *</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                              style={{
+                                WebkitAppearance: 'none',
+                                MozAppearance: 'textfield'
+                              }}
+                              className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                       <FormField
                         control={form.control}
                         name="maxStockLevel"
@@ -945,6 +1000,11 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                                 type="number"
                                 {...field}
                                 onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                                style={{
+                                  WebkitAppearance: 'none',
+                                  MozAppearance: 'textfield'
+                                }}
+                                className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
                             </FormControl>
                             <FormMessage />
@@ -962,6 +1022,11 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                                 type="number"
                                 {...field}
                                 onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                                style={{
+                                  WebkitAppearance: 'none',
+                                  MozAppearance: 'textfield'
+                                }}
+                                className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
                             </FormControl>
                             <FormMessage />
@@ -979,6 +1044,11 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                                 type="number"
                                 {...field}
                                 onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                                style={{
+                                  WebkitAppearance: 'none',
+                                  MozAppearance: 'textfield'
+                                }}
+                                className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
                             </FormControl>
                             <FormMessage />
@@ -992,25 +1062,29 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                     <CardHeader>
                       <CardTitle>Supply Chain & Tracking</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="leadTimeSupply"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lead Time (Days)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="Days to restock"
-                                {...field}
-                                onChange={e => field.onChange(parseInt(e.target.value) || 0)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <CardContent className="space-y-4">                      <FormField
+                      control={form.control}
+                      name="leadTimeSupply"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lead Time (Days)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="Days to restock"
+                              {...field}
+                              onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                              style={{
+                                WebkitAppearance: 'none',
+                                MozAppearance: 'textfield'
+                              }}
+                              className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                       <FormField
                         control={form.control}
                         name="shelfLife"
@@ -1023,12 +1097,17 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                                 placeholder="Days before expiry"
                                 {...field}
                                 onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                                style={{
+                                  WebkitAppearance: 'none',
+                                  MozAppearance: 'textfield'
+                                }}
+                                className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
-                      />                      <FormField
+                      /><FormField
                         control={form.control}
                         name="isTrackable"
                         render={({ field }) => (
