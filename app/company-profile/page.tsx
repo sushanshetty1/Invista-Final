@@ -180,9 +180,8 @@ export default function CompanyProfilePage() {
         <div className="container mx-auto py-6">
           <Card>
             <CardHeader>
-              <CardTitle>No Company Found</CardTitle>
-              <CardDescription>
-                You don't seem to be associated with any company yet.
+              <CardTitle>No Company Found</CardTitle>              <CardDescription>
+                You don&apos;t seem to be associated with any company yet.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -385,7 +384,7 @@ export default function CompanyProfilePage() {
                     Company Information
                   </CardTitle>
                   <CardDescription>
-                    Update your company's basic information and details
+                    Update your company&apos;s basic information and details
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">

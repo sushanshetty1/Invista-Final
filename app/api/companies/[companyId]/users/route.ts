@@ -3,10 +3,10 @@ import { supabase } from '@/lib/supabaseClient';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { companyId: string } }
+  { params }: { params: Promise<{ companyId: string }> }
 ) {
   try {
-    const companyId = params.companyId;
+    const { companyId } = await params;
 
     if (!companyId) {
       return NextResponse.json({ error: 'Company ID is required' }, { status: 400 });
@@ -108,10 +108,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { companyId: string } }
+  { params }: { params: Promise<{ companyId: string }> }
 ) {
   try {
-    const companyId = params.companyId;
+    const { companyId } = await params;
     const body = await request.json();
     const { emails, role, invitedBy } = body;
 

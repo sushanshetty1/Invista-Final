@@ -26,7 +26,6 @@ export async function GET(
       success: true,
       data: locations || [],
     });
-
   } catch (error) {
     console.error('Error fetching company locations:', error);
     return NextResponse.json(
@@ -35,19 +34,6 @@ export async function GET(
     );
   }
 }
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: enrichedLocations,
-    });
-  } catch (error) {
-    console.error('Error fetching company locations:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch company locations' },
-      { status: 500 }
-    );
-  }
 }
 
 // POST /api/companies/[companyId]/locations - Create a new location

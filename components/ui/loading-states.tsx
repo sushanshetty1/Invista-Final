@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const CompanyProfileSkeleton = React.memo(() => {
+export const CompanyProfileSkeleton = React.memo(function CompanyProfileSkeleton() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header Skeleton */}
@@ -94,7 +94,7 @@ export const CompanyProfileSkeleton = React.memo(() => {
   );
 });
 
-export const TeamMembersSkeleton = React.memo(() => {
+export const TeamMembersSkeleton = React.memo(function TeamMembersSkeleton() {
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -145,10 +145,10 @@ interface LoadingStateProps {
   description?: string;
 }
 
-export const LoadingState = React.memo(({ 
+export const LoadingState = React.memo(function LoadingState({ 
   message = "Loading...", 
   description = "Please wait while we fetch your data" 
-}: LoadingStateProps) => {
+}: LoadingStateProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -159,7 +159,7 @@ export const LoadingState = React.memo(({
   );
 });
 
-export const ErrorState = React.memo(({ 
+export const ErrorState = React.memo(function ErrorState({ 
   message = "Something went wrong", 
   description = "We encountered an error while loading your data",
   onRetry 
@@ -167,7 +167,7 @@ export const ErrorState = React.memo(({
   message?: string;
   description?: string;
   onRetry?: () => void;
-}) => {
+}) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
       <div className="text-destructive">
