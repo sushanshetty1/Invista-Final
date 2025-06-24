@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseClient } from '@/lib/db';
+import { supabase } from '@/lib/supabaseClient';
 
 // GET /api/companies/[companyId]/users/[userId]/location-access - Get user's location access
 export async function GET(
@@ -9,53 +9,53 @@ export async function GET(
   try {
     const { companyId, userId } = await params;
 
-    // Get user's location access
-    const userAccess = await supabaseClient.userLocationAccess.findMany({
-      where: {
-        userId,
-        companyId,
-        isActive: true,
-      },
-      include: {
-        location: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            address: true,
-            isActive: true,
-          },
-        },
-      },
-      orderBy: {
-        grantedAt: 'desc',
-      },
-    });
+    // Get user's location access using Supabase
+    const { data: userAccess, error: accessError } = await supabase
+      .from('user_location_access')
+      .select(`
+        *,
+        location:company_locations!location_id (
+          id,
+          name,
+          type,
+          address,
+          isActive
+        )
+      `)
+      .eq('userId', userId)
+      .eq('companyId', companyId)
+      .eq('isActive', true)
+      .order('grantedAt', { ascending: false });
 
-    // Get user's primary location
-    const companyUser = await supabaseClient.companyUser.findFirst({
-      where: {
-        companyId,
-        userId,
-      },
-      select: {
-        primaryLocationId: true,
-        primaryLocation: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            address: true,
-          },
-        },
-      },
-    });
+    if (accessError) {
+      throw accessError;
+    }
+
+    // Get user's primary location from company_users
+    const { data: companyUser, error: userError } = await supabase
+      .from('company_users')
+      .select(`
+        primaryLocationId,
+        primaryLocation:company_locations!primaryLocationId (
+          id,
+          name,
+          type,
+          address
+        )
+      `)
+      .eq('companyId', companyId)
+      .eq('userId', userId)
+      .single();
+
+    if (userError && userError.code !== 'PGRST116') {
+      throw userError;
+    }
 
     return NextResponse.json({
       success: true,
       data: {
         primaryLocation: companyUser?.primaryLocation || null,
-        locationAccess: userAccess,
+        locationAccess: userAccess || [],
       },
     });
   } catch (error) {
@@ -80,7 +80,7 @@ export async function POST(
       locationId,
       accessLevel = 'READ_ONLY',
       canManage = false,
-      startDate = new Date(),
+      startDate = new Date().toISOString(),
       endDate,
       grantedBy,
     } = body;
@@ -93,30 +93,32 @@ export async function POST(
     }
 
     // Check if access already exists
-    const existingAccess = await supabaseClient.userLocationAccess.findFirst({
-      where: {
-        userId,
-        companyId,
-        locationId,
-      },
-    });
+    const { data: existingAccess } = await supabase
+      .from('user_location_access')
+      .select('id')
+      .eq('userId', userId)
+      .eq('companyId', companyId)
+      .eq('locationId', locationId)
+      .single();
 
     if (existingAccess) {
       // Update existing access
-      const updatedAccess = await supabaseClient.userLocationAccess.update({
-        where: {
-          id: existingAccess.id,
-        },
-        data: {
+      const { data: updatedAccess, error } = await supabase
+        .from('user_location_access')
+        .update({
           accessLevel,
           canManage,
           startDate,
           endDate,
           isActive: true,
           grantedBy,
-          grantedAt: new Date(),
-        } as any,
-      });
+          grantedAt: new Date().toISOString(),
+        })
+        .eq('id', existingAccess.id)
+        .select()
+        .single();
+
+      if (error) throw error;
 
       return NextResponse.json({
         success: true,
@@ -124,8 +126,9 @@ export async function POST(
       });
     } else {
       // Create new access
-      const newAccess = await supabaseClient.userLocationAccess.create({
-        data: {
+      const { data: newAccess, error } = await supabase
+        .from('user_location_access')
+        .insert({
           userId,
           companyId,
           locationId,
@@ -134,8 +137,12 @@ export async function POST(
           startDate,
           endDate,
           grantedBy,
-        } as any,
-      });
+          grantedAt: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
 
       return NextResponse.json({
         success: true,
@@ -169,20 +176,19 @@ export async function DELETE(
     }
 
     // Deactivate access instead of deleting
-    const updatedAccess = await supabaseClient.userLocationAccess.updateMany({
-      where: {
-        userId,
-        companyId,
-        locationId,
-      },
-      data: {
-        isActive: false,
-      },
-    });
+    const { data, error } = await supabase
+      .from('user_location_access')
+      .update({ isActive: false })
+      .eq('userId', userId)
+      .eq('companyId', companyId)
+      .eq('locationId', locationId)
+      .select();
+
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,
-      data: { count: updatedAccess.count },
+      data: { count: data?.length || 0 },
     });
   } catch (error) {
     console.error('Error revoking location access:', error);

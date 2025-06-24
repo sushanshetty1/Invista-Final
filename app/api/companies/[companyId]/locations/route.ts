@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseClient, neonClient } from '@/lib/db';
+import { supabase } from '@/lib/supabaseClient';
 
 // GET /api/companies/[companyId]/locations - Get all locations for a company
 export async function GET(
@@ -7,57 +7,30 @@ export async function GET(
   { params }: { params: Promise<{ companyId: string }> }
 ) {
   try {
-    const { companyId } = await params;// Get locations from Supabase
-    const locations = await supabaseClient.companyLocation.findMany({
-      where: {
-        companyId,
-        isActive: true,
-      },
-      orderBy: [
-        { isPrimary: 'desc' },
-        { name: 'asc' },
-      ],
-    });
+    const { companyId } = await params;
 
-    // For warehouse/retail locations, get additional data from Neon
-    const warehouseData = await Promise.all(
-      locations
-        .filter(loc => ['WAREHOUSE', 'DISTRIBUTION_CENTER', 'RETAIL_STORE', 'FULFILLMENT_CENTER'].includes(loc.type))
-        .map(async (location) => {
-          try {            const warehouse = await neonClient.warehouse.findFirst({
-              where: {
-                companyId,
-                OR: [
-                  { name: location.name },
-                  { code: (location as any).code || `LOC-${location.id.slice(-8)}` },
-                ],
-              },
-            });
-            return { locationId: location.id, warehouse };
-          } catch (error) {
-            console.warn(`Could not fetch warehouse data for location ${location.id}:`, error);
-            return { locationId: location.id, warehouse: null };
-          }
-        })
-    );
+    // Get locations from Supabase
+    const { data: locations, error } = await supabase
+      .from('company_locations')
+      .select('*')
+      .eq('companyId', companyId)
+      .eq('isActive', true)
+      .order('isPrimary', { ascending: false })
+      .order('name', { ascending: true });
 
-    // Merge location data with warehouse data
-    const enrichedLocations = locations.map(location => {
-      const warehouseInfo = warehouseData.find(w => w.locationId === location.id);
-      return {
-        ...location,
-        warehouse: warehouseInfo?.warehouse || null,
-      };
-    });
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json({
       success: true,
-      data: enrichedLocations,
+      data: locations || [],
     });
+
   } catch (error) {
     console.error('Error fetching company locations:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch company locations' },
+      { success: false, error: 'Failed to fetch locations' },
       { status: 500 }
     );
   }
@@ -94,8 +67,6 @@ export async function POST(
       allowsReturns = true,
       allowsTransfers = true,
       isPrimary = false,
-      // Warehouse specific data
-      warehouseConfig,
     } = body;
 
     // Validate required fields
@@ -104,9 +75,12 @@ export async function POST(
         { success: false, error: 'Name and type are required' },
         { status: 400 }
       );
-    }    // Create location in Supabase
-    const location = await supabaseClient.companyLocation.create({
-      data: {
+    }
+
+    // Create location in Supabase
+    const { data: location, error } = await supabase
+      .from('company_locations')
+      .insert({
         companyId,
         name,
         description,
@@ -129,36 +103,12 @@ export async function POST(
         allowsReturns,
         allowsTransfers,
         isPrimary,
-      } as any, // Type assertion due to generated types not being up to date
-    });
+      })
+      .select()
+      .single();
 
-    // If it's a warehouse/retail location that needs inventory management, create warehouse in Neon
-    if (['WAREHOUSE', 'DISTRIBUTION_CENTER', 'RETAIL_STORE', 'FULFILLMENT_CENTER'].includes(type) && allowsInventory) {
-      try {
-        await neonClient.warehouse.create({
-          data: {
-            companyId,
-            locationId: location.id,
-            name,
-            code: code || `WH-${location.id.slice(-8)}`,
-            description,
-            address,
-            coordinates,
-            timezone,
-            managerName,
-            managerEmail: email,
-            phone,
-            email,
-            type: type === 'RETAIL_STORE' ? 'RETAIL_STORE' : 'STANDARD',
-            capacity,
-            isActive: true,
-            ...warehouseConfig,
-          },
-        });
-      } catch (error) {
-        console.warn('Failed to create warehouse record:', error);
-        // Don't fail the entire operation if warehouse creation fails
-      }
+    if (error) {
+      throw error;
     }
 
     return NextResponse.json({

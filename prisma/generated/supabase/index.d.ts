@@ -35452,7 +35452,6 @@ export namespace Prisma {
 
   export type UserLocationAccessCreateInput = {
     id?: string
-    companyId: string
     accessLevel?: $Enums.LocationAccessLevel
     canManage?: boolean
     startDate?: Date | string
@@ -35480,7 +35479,6 @@ export namespace Prisma {
 
   export type UserLocationAccessUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
     accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
     canManage?: BoolFieldUpdateOperationsInput | boolean
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -35522,7 +35520,6 @@ export namespace Prisma {
 
   export type UserLocationAccessUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
     accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
     canManage?: BoolFieldUpdateOperationsInput | boolean
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40784,7 +40781,6 @@ export namespace Prisma {
 
   export type UserLocationAccessCreateWithoutCompanyUserInput = {
     id?: string
-    companyId: string
     accessLevel?: $Enums.LocationAccessLevel
     canManage?: boolean
     startDate?: Date | string
@@ -40797,7 +40793,6 @@ export namespace Prisma {
 
   export type UserLocationAccessUncheckedCreateWithoutCompanyUserInput = {
     id?: string
-    companyId: string
     locationId: string
     accessLevel?: $Enums.LocationAccessLevel
     canManage?: boolean
@@ -42205,7 +42200,6 @@ export namespace Prisma {
 
   export type UserLocationAccessCreateWithoutLocationInput = {
     id?: string
-    companyId: string
     accessLevel?: $Enums.LocationAccessLevel
     canManage?: boolean
     startDate?: Date | string
@@ -46500,7 +46494,6 @@ export namespace Prisma {
 
   export type UserLocationAccessCreateManyCompanyUserInput = {
     id?: string
-    companyId: string
     locationId: string
     accessLevel?: $Enums.LocationAccessLevel
     canManage?: boolean
@@ -46592,7 +46585,6 @@ export namespace Prisma {
 
   export type UserLocationAccessUpdateWithoutCompanyUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
     accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
     canManage?: BoolFieldUpdateOperationsInput | boolean
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46605,7 +46597,6 @@ export namespace Prisma {
 
   export type UserLocationAccessUncheckedUpdateWithoutCompanyUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
     accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
     canManage?: BoolFieldUpdateOperationsInput | boolean
@@ -46618,7 +46609,6 @@ export namespace Prisma {
 
   export type UserLocationAccessUncheckedUpdateManyWithoutCompanyUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
     accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
     canManage?: BoolFieldUpdateOperationsInput | boolean
@@ -46916,7 +46906,6 @@ export namespace Prisma {
 
   export type UserLocationAccessUpdateWithoutLocationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
     accessLevel?: EnumLocationAccessLevelFieldUpdateOperationsInput | $Enums.LocationAccessLevel
     canManage?: BoolFieldUpdateOperationsInput | boolean
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string

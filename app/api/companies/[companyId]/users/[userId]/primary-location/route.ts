@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseClient } from '@/lib/db';
+import { supabase } from '@/lib/supabaseClient';
 
 // PUT /api/companies/[companyId]/users/[userId]/primary-location - Set user's primary location
 export async function PUT(
@@ -20,15 +20,15 @@ export async function PUT(
     }
 
     // Verify location exists and belongs to the company
-    const location = await supabaseClient.companyLocation.findFirst({
-      where: {
-        id: locationId,
-        companyId,
-        isActive: true,
-      },
-    });
+    const { data: location, error: locationError } = await supabase
+      .from('company_locations')
+      .select('id')
+      .eq('id', locationId)
+      .eq('companyId', companyId)
+      .eq('isActive', true)
+      .single();
 
-    if (!location) {
+    if (locationError || !location) {
       return NextResponse.json(
         { success: false, error: 'Location not found or inactive' },
         { status: 404 }
@@ -36,37 +36,36 @@ export async function PUT(
     }
 
     // Update user's primary location
-    const updatedUser = await supabaseClient.companyUser.update({
-      where: {
-        companyId_userId: {
-          companyId,
-          userId,
-        },
-      },
-      data: {
-        primaryLocationId: locationId,
-      } as any,
-    });
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('company_users')
+      .update({ primaryLocationId: locationId })
+      .eq('companyId', companyId)
+      .eq('userId', userId)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
 
     // Ensure user has access to their primary location
-    const existingAccess = await supabaseClient.userLocationAccess.findFirst({
-      where: {
-        userId,
-        companyId,
-        locationId,
-      },
-    });
+    const { data: existingAccess } = await supabase
+      .from('user_location_access')
+      .select('id')
+      .eq('userId', userId)
+      .eq('companyId', companyId)
+      .eq('locationId', locationId)
+      .single();
 
     if (!existingAccess) {
-      await supabaseClient.userLocationAccess.create({
-        data: {
+      await supabase
+        .from('user_location_access')
+        .insert({
           userId,
           companyId,
           locationId,
           accessLevel: 'STANDARD',
           canManage: false,
-        } as any,
-      });
+          grantedAt: new Date().toISOString(),
+        });
     }
 
     return NextResponse.json({
@@ -90,42 +89,30 @@ export async function GET(
   try {
     const { companyId, userId } = await params;
 
-    const companyUser = await supabaseClient.companyUser.findFirst({
-      where: {
-        companyId,
-        userId,
-      },
-      select: {
-        primaryLocationId: true,
-        primaryLocation: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            address: true,
-            phone: true,
-            email: true,
-            managerName: true,
-            businessHours: true,
-            features: true,
-            isActive: true,
-          },
-        },
-      },
-    });
+    const { data: companyUser, error } = await supabase
+      .from('company_users')
+      .select(`
+        primaryLocationId,
+        primaryLocation:company_locations!primaryLocationId (
+          id,
+          name,
+          type,
+          address,
+          description
+        )
+      `)
+      .eq('companyId', companyId)
+      .eq('userId', userId)
+      .single();
 
-    if (!companyUser) {
-      return NextResponse.json(
-        { success: false, error: 'User not found in company' },
-        { status: 404 }
-      );
+    if (error && error.code !== 'PGRST116') {
+      throw error;
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        primaryLocationId: companyUser.primaryLocationId,
-        primaryLocation: companyUser.primaryLocation,
+        primaryLocation: companyUser?.primaryLocation || null,
       },
     });
   } catch (error) {

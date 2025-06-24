@@ -658,7 +658,7 @@ model UserLocationAccess {
   grantedBy   String? // User ID who granted access
   grantedAt   DateTime            @default(now())
   // Relations
-  companyUser CompanyUser         @relation(fields: [userId], references: [id])
+  companyUser CompanyUser         @relation(fields: [userId, companyId], references: [userId, companyId])
   location    CompanyLocation     @relation(fields: [locationId], references: [id])
 
   @@unique([userId, locationId])

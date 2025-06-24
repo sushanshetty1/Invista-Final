@@ -43,6 +43,7 @@ import {
   UserCheck,
   Settings,
   Search,
+  RefreshCw,
 } from 'lucide-react';
 
 interface CompanyUser {
@@ -94,10 +95,24 @@ const ACCESS_LEVELS = [
   { value: 'ADMIN', label: 'Admin', description: 'Full administrative access' },
 ];
 
-// Simple toast function
+// Simple toast function - you can replace this with your preferred toast library
 const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  console.log(`${type.toUpperCase()}: ${message}`);
-  // You can replace this with your preferred toast library
+  // Create a simple toast notification
+  const toast = document.createElement('div');
+  toast.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-md text-white font-medium ${
+    type === 'success' ? 'bg-green-600' : 'bg-red-600'
+  } transition-all duration-300 transform translate-x-0`;
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.classList.add('translate-x-full', 'opacity-0');
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 3000);
 };
 
 export default function UserLocationAssignment({ companyId }: UserLocationAssignmentProps) {
@@ -108,13 +123,17 @@ export default function UserLocationAssignment({ companyId }: UserLocationAssign
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
-  }, [companyId]);
-
-  const fetchData = async () => {
+    if (companyId) {
+      fetchData();
+    }
+  }, [companyId]);  const fetchData = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       // Fetch users
       const usersResponse = await fetch(`/api/companies/${companyId}/users`);
       const usersResult = await usersResponse.json();
@@ -123,15 +142,39 @@ export default function UserLocationAssignment({ companyId }: UserLocationAssign
       const locationsResponse = await fetch(`/api/companies/${companyId}/locations`);
       const locationsResult = await locationsResponse.json();
       
-      if (usersResult.success) {
-        setUsers(usersResult.data);
+      if (usersResponse.ok && usersResult.teamMembers) {
+        // Transform team members data to match CompanyUser interface
+        const transformedUsers = usersResult.teamMembers
+          .filter((member: any) => member.type === 'user')
+          .map((member: any) => ({
+            id: member.id,
+            userId: member.user?.id || member.id,
+            role: member.role,
+            title: member.title,
+            employeeId: null,
+            primaryLocationId: null,
+            isActive: member.status === 'ACTIVE',
+            user: {
+              id: member.user?.id || member.id,
+              email: member.email,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              displayName: member.displayName,
+            }
+          }));
+        setUsers(transformedUsers);
+      } else {
+        setError('Failed to fetch users');
       }
       
-      if (locationsResult.success) {
-        setLocations(locationsResult.data);
+      if (locationsResponse.ok && locationsResult.success) {
+        setLocations(locationsResult.data || []);
+      } else {
+        setError('Failed to fetch locations');
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+      setError('Failed to fetch data');
       showToast('Failed to fetch data', 'error');
     } finally {
       setLoading(false);
@@ -218,189 +261,230 @@ export default function UserLocationAssignment({ companyId }: UserLocationAssign
       user.employeeId?.toLowerCase().includes(searchLower)
     );
   });
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
+      <Card>
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span className="text-muted-foreground">Loading users and locations...</span>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <div className="text-red-600 mb-4">
+            <p className="font-medium">Error loading data</p>
+            <p className="text-sm">{error}</p>
+          </div>
+          <Button onClick={fetchData} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">User Location Assignments</h2>
-          <p className="text-muted-foreground">
-            Manage where your employees work and what locations they can access
-          </p>
-        </div>
-      </div>
+      {/* Main Content */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Users className="w-5 h-5 mr-2 text-blue-600" />
+            User Location Assignments
+          </CardTitle>
+          <CardDescription>
+            Assign primary work locations and manage access permissions for your team members
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {users.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No team members found</h3>
+              <p className="text-gray-500 mb-4">
+                Add team members to your company before assigning locations.
+              </p>
+              <Button variant="outline" onClick={fetchData}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          ) : locations.length === 0 ? (
+            <div className="text-center py-12">
+              <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No locations found</h3>
+              <p className="text-gray-500 mb-4">
+                Create company locations before assigning them to employees.
+              </p>
+              <Button variant="outline" onClick={fetchData}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          ) : (
+            <Tabs defaultValue="users" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="users">Users & Primary Locations</TabsTrigger>
+                <TabsTrigger value="access">Location Access Management</TabsTrigger>
+              </TabsList>
 
-      <Tabs defaultValue="users" className="w-full">
-        <TabsList>
-          <TabsTrigger value="users">Users & Primary Locations</TabsTrigger>
-          <TabsTrigger value="access">Location Access Management</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="users" className="space-y-4">
-          {/* Search */}
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search users by name, email, or employee ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-
-          {/* Users Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Company Users</CardTitle>
-              <CardDescription>
-                Assign primary work locations to your employees
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Employee ID</TableHead>
-                    <TableHead>Primary Location</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {user.user.displayName || `${user.user.firstName} ${user.user.lastName}`.trim() || 'Unnamed User'}
-                          </div>
-                          <div className="text-sm text-gray-500">{user.user.email}</div>
-                          {user.title && (
-                            <div className="text-sm text-gray-500">{user.title}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{user.role}</Badge>
-                      </TableCell>
-                      <TableCell>{user.employeeId || '-'}</TableCell>
-                      <TableCell>
-                        {user.primaryLocation ? (
-                          <div>
-                            <div className="font-medium">{user.primaryLocation.name}</div>
-                            <div className="text-sm text-gray-500">{user.primaryLocation.type}</div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">Not assigned</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                          {user.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                Assign
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Assign Primary Location</DialogTitle>
-                                <DialogDescription>
-                                  Set the primary work location for {user.user.displayName || user.user.email}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <PrimaryLocationForm
-                                user={user}
-                                locations={locations}
-                                onAssign={(locationId) => handleAssignPrimaryLocation(user.userId, locationId)}
-                              />
-                            </DialogContent>
-                          </Dialog>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              fetchUserLocationAccess(user.userId);
-                              setIsAssignDialogOpen(true);
-                            }}
-                          >
-                            <Settings className="h-4 w-4 mr-1" />
-                            Access
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-
-              {filteredUsers.length === 0 && (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No users found</h3>
-                  <p className="text-gray-600">
-                    {searchTerm ? 'No users match your search criteria' : 'No users in this company yet'}
-                  </p>
+              <TabsContent value="users" className="space-y-4 mt-6">
+                {/* Search */}
+                <div className="flex items-center space-x-2">
+                  <Search className="h-4 w-4 text-gray-500" />
+                  <Input
+                    placeholder="Search users by name, email, or employee ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm"
+                  />
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="access" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Location Access Overview</CardTitle>
-              <CardDescription>
-                View and manage detailed location access permissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {locations.map((location) => (
-                  <Card key={location.id}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">{location.name}</CardTitle>
-                      <CardDescription>{location.type}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="text-sm">
-                          <span className="font-medium">Users with access: </span>
-                          {/* This would need to be calculated from the location access data */}
-                          <span className="text-gray-600">0</span>
-                        </div>
-                        <Button variant="outline" size="sm" className="w-full">
-                          <UserCheck className="h-4 w-4 mr-1" />
-                          Manage Access
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                {/* Users Table */}
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50">
+                        <TableHead>Employee</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Employee ID</TableHead>
+                        <TableHead>Primary Location</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">
+                                {user.user.displayName || `${user.user.firstName} ${user.user.lastName}`.trim() || 'Unnamed User'}
+                              </div>
+                              <div className="text-sm text-gray-500">{user.user.email}</div>
+                              {user.title && (
+                                <div className="text-sm text-gray-500">{user.title}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{user.role}</Badge>
+                          </TableCell>
+                          <TableCell>{user.employeeId || '-'}</TableCell>
+                          <TableCell>
+                            {user.primaryLocation ? (
+                              <div>
+                                <div className="font-medium">{user.primaryLocation.name}</div>
+                                <div className="text-sm text-gray-500">{user.primaryLocation.type}</div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">Not assigned</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.isActive ? 'default' : 'secondary'}>
+                              {user.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <MapPin className="h-4 w-4 mr-1" />
+                                    Assign
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Assign Primary Location</DialogTitle>
+                                    <DialogDescription>
+                                      Set the primary work location for {user.user.displayName || user.user.email}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <PrimaryLocationForm
+                                    user={user}
+                                    locations={locations}
+                                    onAssign={(locationId) => handleAssignPrimaryLocation(user.userId, locationId)}
+                                  />
+                                </DialogContent>
+                              </Dialog>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  fetchUserLocationAccess(user.userId);
+                                  setIsAssignDialogOpen(true);
+                                }}
+                              >
+                                <Settings className="h-4 w-4 mr-1" />
+                                Access
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {filteredUsers.length === 0 && (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No users found</h3>
+                      <p className="text-gray-600">
+                        {searchTerm ? 'No users match your search criteria' : 'No users in this company yet'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="access" className="space-y-4 mt-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Location Access Overview</h3>
+                  <p className="text-gray-600 mb-6">
+                    View and manage detailed location access permissions for each location.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {locations.map((location) => (
+                      <Card key={location.id} className="hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg flex items-center">
+                            <Building2 className="w-5 h-5 mr-2 text-blue-600" />
+                            {location.name}
+                          </CardTitle>
+                          <CardDescription>{location.type}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="text-sm">
+                              <span className="font-medium">Users with access: </span>
+                              <span className="text-gray-600">0</span>
+                            </div>
+                            <Button variant="outline" size="sm" className="w-full">
+                              <UserCheck className="h-4 w-4 mr-1" />
+                              Manage Access
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </CardContent>
+      </Card>
 
       {/* User Location Access Dialog */}
       {selectedUser && (
