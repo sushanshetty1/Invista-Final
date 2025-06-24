@@ -15,10 +15,9 @@ export default function AuthRedirect() {
       
       if (!loading && user) {
         console.log('AuthRedirect - User found, checking access');
-        
-        // Only check user access once if we don't already have access
+          // Only check user access once if we don't already have access
         if (!hasCompanyAccess) {
-          await checkUserAccess(0);
+          await checkUserAccess();
         }
         
         // Wait a moment for the access check to complete

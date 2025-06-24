@@ -74,17 +74,24 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Create new company invites
-export async function POST(request: NextRequest) {  try {
+export async function POST(request: NextRequest) {
+  console.log('POST /api/company-invites - Starting request processing');
+  
+  try {
     const body = await request.json();
+    console.log('Request body:', body);
     const { companyId, emails, role, invitedById, invitedByName, message } = body;
 
     if (!companyId || !emails || !role || !invitedById) {
+      console.log('Missing required fields:', { companyId, emails, role, invitedById });
       return NextResponse.json(
         { error: 'Missing required fields: companyId, emails, role, invitedById' },
         { status: 400 }
       );
     }    // Validate that the user is authorized to invite (company owner or admin)
     // First check if the user is the company owner (creator)
+    console.log('Checking company authorization for user:', invitedById, 'company:', companyId);
+    
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .select('id, createdBy')
@@ -92,15 +99,21 @@ export async function POST(request: NextRequest) {  try {
       .single();
 
     if (companyError) {
+      console.error('Company lookup error:', companyError);
       return NextResponse.json(
         { error: 'Company not found' },
         { status: 404 }
       );
     }
 
-    const isCompanyOwner = company.createdBy === invitedById;    // If not the owner, check company_users table
+    console.log('Company data:', company);    const isCompanyOwner = company.createdBy === invitedById;
+    console.log('Is company owner?', isCompanyOwner, 'Company createdBy:', company.createdBy, 'User ID:', invitedById);
+
+    // If not the owner, check company_users table
     let hasPermission = isCompanyOwner;
-      if (!isCompanyOwner) {
+    
+    if (!isCompanyOwner) {
+      console.log('Not company owner, checking company_users table...');
       const { data: companyUser } = await supabase
         .from('company_users')
         .select('role, isOwner')
@@ -108,17 +121,21 @@ export async function POST(request: NextRequest) {  try {
         .eq('userId', invitedById)
         .single();
       
+      console.log('Company user data:', companyUser);
+      
       if (companyUser && (companyUser.isOwner || companyUser.role === 'ADMIN')) {
         hasPermission = true;
       }
     }
+
+    console.log('Has permission to invite?', hasPermission);
 
     if (!hasPermission) {
       return NextResponse.json(
         { error: 'Unauthorized to send invites. You must be a company owner or admin.' },
         { status: 403 }
       );
-    }    // Parse emails (comma-separated or array)
+    }// Parse emails (comma-separated or array)
     const emailList = Array.isArray(emails) 
       ? emails 
       : emails.split(',').map((email: string) => email.trim()).filter((email: string) => email);
@@ -169,6 +186,8 @@ export async function POST(request: NextRequest) {  try {
         { status: 400 }
       );
     }    // Create invitations
+    console.log('Creating invitations for emails:', newEmails);
+    
     const invitations = newEmails.map((email: string) => ({
       id: uuidv4(),
       companyId,
@@ -184,6 +203,8 @@ export async function POST(request: NextRequest) {  try {
       updatedAt: new Date().toISOString()
     }));
 
+    console.log('Invitation objects to insert:', invitations);
+
     const { data, error } = await supabase
       .from('company_invites')
       .insert(invitations)
@@ -193,6 +214,8 @@ export async function POST(request: NextRequest) {  try {
       console.error('Database insert error:', error);
       throw error;
     }
+
+    console.log('Successfully inserted invitations:', data);
 
     // TODO: Send email notifications here
 

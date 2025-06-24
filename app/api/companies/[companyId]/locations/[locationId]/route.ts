@@ -4,10 +4,10 @@ import { supabaseClient, neonClient } from '@/lib/db';
 // GET /api/companies/[companyId]/locations/[locationId] - Get specific location
 export async function GET(
   request: NextRequest,
-  { params }: { params: { companyId: string; locationId: string } }
+  { params }: { params: Promise<{ companyId: string; locationId: string }> }
 ) {
   try {
-    const { companyId, locationId } = params;    const location = await supabaseClient.companyLocation.findFirst({
+    const { companyId, locationId } = await params;const location = await supabaseClient.companyLocation.findFirst({
       where: {
         id: locationId,
         companyId,
@@ -57,10 +57,10 @@ export async function GET(
 // PUT /api/companies/[companyId]/locations/[locationId] - Update location
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { companyId: string; locationId: string } }
+  { params }: { params: Promise<{ companyId: string; locationId: string }> }
 ) {
   try {
-    const { companyId, locationId } = params;
+    const { companyId, locationId } = await params;
     const body = await request.json();
     
     const { warehouseConfig, ...locationData } = body;
@@ -107,10 +107,10 @@ export async function PUT(
 // DELETE /api/companies/[companyId]/locations/[locationId] - Soft delete location
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { companyId: string; locationId: string } }
+  { params }: { params: Promise<{ companyId: string; locationId: string }> }
 ) {
   try {
-    const { companyId, locationId } = params;
+    const { companyId, locationId } = await params;
 
     // Check if location has active inventory or operations
     let hasActiveInventory = false;

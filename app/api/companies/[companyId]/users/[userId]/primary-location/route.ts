@@ -4,10 +4,10 @@ import { supabaseClient } from '@/lib/db';
 // PUT /api/companies/[companyId]/users/[userId]/primary-location - Set user's primary location
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { companyId: string; userId: string } }
+  { params }: { params: Promise<{ companyId: string; userId: string }> }
 ) {
   try {
-    const { companyId, userId } = params;
+    const { companyId, userId } = await params;
     const body = await request.json();
     
     const { locationId } = body;
@@ -85,10 +85,10 @@ export async function PUT(
 // GET /api/companies/[companyId]/users/[userId]/primary-location - Get user's primary location
 export async function GET(
   request: NextRequest,
-  { params }: { params: { companyId: string; userId: string } }
+  { params }: { params: Promise<{ companyId: string; userId: string }> }
 ) {
   try {
-    const { companyId, userId } = params;
+    const { companyId, userId } = await params;
 
     const companyUser = await supabaseClient.companyUser.findFirst({
       where: {

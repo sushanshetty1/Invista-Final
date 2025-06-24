@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Get current user session from Supabase
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !session?.user?.id) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -45,9 +45,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user's company ID
+    const { data: userData } = await supabase
+      .from('users')
+      .select('companyId')
+      .eq('id', session.user.id)
+      .single();
+
+    if (!userData?.companyId) {
+      return NextResponse.json(
+        { error: 'User not associated with a company' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     // Map the form data to the expected format for createProduct
     const productData = {
+      companyId: userData.companyId,
       name: body.name,
       description: body.description || undefined,
       sku: body.sku,
