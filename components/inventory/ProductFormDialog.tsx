@@ -14,6 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChevronLeft, ChevronRight, Upload, X, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { CategoryCombobox } from './CategoryCombobox'
+import { useIndustryCategories } from '@/hooks/use-industry-categories'
+import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 
 // Constants outside component to prevent recreation
@@ -30,6 +33,14 @@ const generateBarcode = () => {
   return Math.floor(100000000000 + Math.random() * 900000000000).toString()
 }
 
+const generateUniqueId = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = Math.random() * 16 | 0
+    const v = c == 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
+
 interface ProductFormData {
   name: string
   description?: string
@@ -38,6 +49,8 @@ interface ProductFormData {
   barcode?: string
   categoryId?: string
   brandId?: string
+  categoryName?: string
+  brandName?: string
   weight?: number
   dimensions?: {
     length?: number
@@ -76,6 +89,8 @@ interface Product {
   barcode?: string
   categoryId?: string
   brandId?: string
+  categoryName?: string
+  brandName?: string
   weight?: number
   dimensions?: {
     length?: number
@@ -133,6 +148,12 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
   brands = [],
   onSave
 }: ProductFormDialogProps) {
+  // Get authentication context
+  const { user } = useAuth()
+
+  // Get industry-based categories
+  const { categories: industryCategories, loading: categoriesLoading, industry } = useIndustryCategories()
+
   // Ensure arrays are always stable arrays
   const safeCategories = useMemo(() => Array.isArray(categories) ? categories : [], [categories])
   const safeBrands = useMemo(() => Array.isArray(brands) ? brands : [], [brands])
@@ -143,7 +164,6 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
   const [tagInput, setTagInput] = useState('')
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
   // Stable default values - never changes
   const defaultValues = useMemo(() => ({
     name: '',
@@ -153,6 +173,8 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
     barcode: generateBarcode(),
     categoryId: '',
     brandId: '',
+    categoryName: '',
+    brandName: '',
     weight: 0,
     dimensions: {
       length: 0,
@@ -184,8 +206,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
   const form = useForm<ProductFormData>({
     defaultValues
   })
-
-  // Image upload to Supabase
+  // Image upload to API endpoint
   const uploadImage = useCallback(async (file: File): Promise<string | null> => {
     let timeoutId: NodeJS.Timeout | null = null
 
@@ -200,36 +221,48 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
         setError('Image upload timed out. Please try again.')
       }, 30000)
 
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `products/${fileName}`
-
-      console.log('Uploading to path:', filePath)
-      console.log('Using bucket: prodctimg')
-
-      const { data, error } = await supabase.storage
-        .from('prodctimg').upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
-
-      if (error) {
-        console.error('Upload error details:', {
-          message: error.message,
-          error: error
-        })
-        setError(`Failed to upload image: ${error.message}`)
+      // Validate file size (10MB limit)
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      if (file.size > maxSize) {
+        setError('File too large. Please choose a file smaller than 10MB.')
         return null
       }
 
-      console.log('Upload successful:', data)
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+      if (!allowedTypes.includes(file.type)) {
+        setError('Invalid file type. Please choose a JPG, PNG, or GIF image.')
+        return null
+      }      // Create form data
+      const formData = new FormData()
+      formData.append('file', file)
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('prodctimg')
-        .getPublicUrl(filePath)
+      // Get the current session token using Supabase
+      const { data: { session } } = await supabase.auth.getSession()
 
-      console.log('Public URL:', publicUrl)
-      return publicUrl
+      if (!session?.access_token) {
+        setError('Authentication required. Please log in again.')
+        return null
+      }
+
+      console.log('Uploading to API endpoint')
+      const response = await fetch('/api/inventory/images/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: formData
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        setError(`Failed to upload image: ${errorData.error}`)
+        return null
+      }
+
+      const data = await response.json()
+      console.log('Upload successful:', data.url)
+      return data.url
     } catch (error) {
       console.error('Error uploading image:', error)
       setError('Network error during image upload. Please try again.')
@@ -238,27 +271,12 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
       if (timeoutId) clearTimeout(timeoutId)
       setImageUploading(false)
     }
-  }, [])
-  // Handle image upload
+  }, [])  // Handle image upload
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (!files || files.length === 0) return
 
     const file = files[0]
-
-    // Validate file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    if (file.size > maxSize) {
-      setError('File too large. Please choose a file smaller than 10MB.')
-      return
-    }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-    if (!allowedTypes.includes(file.type)) {
-      setError('Invalid file type. Please choose a JPG, PNG, or GIF image.')
-      return
-    }
 
     console.log('Starting image upload for file:', file.name)
     const url = await uploadImage(file)
@@ -329,8 +347,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
   // Reset form when product changes or dialog opens
   useEffect(() => {
     if (open) {
-      if (product) {
-        // Editing existing product
+      if (product) {        // Editing existing product
         form.reset({
           name: product.name || '',
           description: product.description || '',
@@ -339,6 +356,8 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
           barcode: product.barcode || '',
           categoryId: product.categoryId || '',
           brandId: product.brandId || '',
+          categoryName: product.categoryName || '',
+          brandName: product.brandName || '',
           weight: product.weight || 0,
           dimensions: product.dimensions || { length: 0, width: 0, height: 0, unit: 'cm' },
           color: product.color || '',
@@ -395,13 +414,26 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
       }
       if (data.slug && data.slug.trim() !== '') {
         cleanedData.slug = data.slug.trim()
-      }      // Only include categoryId if it's a non-empty string
-      if (data.categoryId && data.categoryId.trim() !== '') {
-        cleanedData.categoryId = data.categoryId.trim()
+      }      // Handle category - include categoryName and auto-generate categoryId if needed
+      if (data.categoryName && data.categoryName.trim() !== '') {
+        cleanedData.categoryName = data.categoryName.trim()
+        // Auto-generate categoryId if not provided or empty
+        if (!data.categoryId || data.categoryId.trim() === '') {
+          cleanedData.categoryId = generateUniqueId()
+        } else {
+          cleanedData.categoryId = data.categoryId.trim()
+        }
       }
-      // Only include brandId if it's a non-empty string
-      if (data.brandId && data.brandId.trim() !== '') {
-        cleanedData.brandId = data.brandId.trim()
+
+      // Handle brand - include brandName and auto-generate brandId if needed
+      if (data.brandName && data.brandName.trim() !== '') {
+        cleanedData.brandName = data.brandName.trim()
+        // Auto-generate brandId if not provided or empty
+        if (!data.brandId || data.brandId.trim() === '') {
+          cleanedData.brandId = generateUniqueId()
+        } else {
+          cleanedData.brandId = data.brandId.trim()
+        }
       }
       if (data.weight && data.weight > 0) {
         cleanedData.weight = data.weight
@@ -452,27 +484,23 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
       }
       if (data.metaDescription && data.metaDescription.trim() !== '') {
         cleanedData.metaDescription = data.metaDescription.trim()
-      }
-      if (data.tags && Array.isArray(data.tags) && data.tags.length > 0) {
+      } if (data.tags && Array.isArray(data.tags) && data.tags.length > 0) {
         cleanedData.tags = data.tags
       }
 
+      console.log('Form data before cleaning:', {
+        categoryName: data.categoryName,
+        brandName: data.brandName,
+        categoryId: data.categoryId,
+        brandId: data.brandId
+      })
       console.log('Saving product with cleaned data:', cleanedData)
 
-      // Get authentication token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      // Get the current session token using Supabase
+      const { data: { session } } = await supabase.auth.getSession()
 
-      if (sessionError) {
-        console.error('Session error:', sessionError)
-        setError('Authentication error. Please try logging in again.')
-        return
-      }
-
-      const token = session?.access_token
-
-      if (!token) {
-        console.error('No authentication token available')
-        setError('Not authenticated. Please log in and try again.')
+      if (!session?.access_token) {
+        setError('Authentication required. Please log in again.')
         return
       }
 
@@ -480,8 +508,9 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }, body: JSON.stringify(cleanedData)
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(cleanedData)
       })
 
       if (response.ok) {
@@ -596,46 +625,65 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
+                />                <div className="grid grid-cols-2 gap-4">                  <FormField
+                  control={form.control}
+                  name="categoryName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <CategoryCombobox
+                        categories={industryCategories}
+                        value={field.value} onValueChange={(categoryName) => {
+                          console.log('Category selected:', categoryName)
+                          field.onChange(categoryName) // Set categoryName
+                          // Auto-generate categoryId when category is selected
+                          if (categoryName && categoryName.trim() !== '') {
+                            const newCategoryId = generateUniqueId()
+                            console.log('Generated categoryId:', newCategoryId)
+                            form.setValue('categoryId', newCategoryId)
+                          } else {
+                            form.setValue('categoryId', '')
+                          }
+                        }}
+                        placeholder={categoriesLoading ? "Loading categories..." : "Select category..."}
+                        emptyMessage={
+                          industry
+                            ? `No categories found for ${industry} industry.`
+                            : "No categories available. Please set your company industry first."
+                        }
+                        disabled={categoriesLoading}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                /><FormField
                     control={form.control}
-                    name="categoryId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {safeCategories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
-                                {category.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />                  <FormField
-                    control={form.control}
-                    name="brandId"
+                    name="brandName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Brand</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter brand name" {...field} />
+                          <Input
+                            placeholder="Enter brand name"
+                            {...field} onChange={(e) => {
+                              console.log('Brand name entered:', e.target.value)
+                              field.onChange(e) // Set brandName
+                              // Auto-generate brandId when brand name is entered
+                              if (e.target.value && e.target.value.trim() !== '') {
+                                const newBrandId = generateUniqueId()
+                                console.log('Generated brandId:', newBrandId)
+                                form.setValue('brandId', newBrandId)
+                              } else {
+                                form.setValue('brandId', '')
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>                <div className="grid grid-cols-3 gap-4">                  <FormField
+                </div><div className="grid grid-cols-3 gap-4">                  <FormField
                   control={form.control}
                   name="barcode"
                   render={({ field }) => (
@@ -1250,18 +1298,24 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    {form.watch('tags') && (form.watch('tags') || []).length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {(form.watch('tags') || []).map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="cursor-pointer">
-                            {tag}
-                            <X
-                              className="h-3 w-3 ml-1"
-                              onClick={() => removeTag(tag)}
-                            />
-                          </Badge>
-                        ))}
-                      </div>
+                    {form.watch('tags') && (form.watch('tags') || []).length > 0 && (<div className="flex flex-wrap gap-2">
+                      {(form.watch('tags') || []).map((tag, index) => (
+                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          <span>{tag}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              removeTag(tag)
+                            }}
+                            className="ml-1 hover:bg-destructive/10 rounded-full p-0.5"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
                     )}
                   </CardContent>
                 </Card>

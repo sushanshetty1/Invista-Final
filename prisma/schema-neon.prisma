@@ -14,8 +14,8 @@ model Product {
   companyId         String
   name              String
   description       String?
-  categoryId        String?              @default(uuid())
-  brandId           String?              @default(uuid())
+  categoryId        String?
+  brandId           String?
   categoryName      String?
   brandName         String?
   sku               String               @unique

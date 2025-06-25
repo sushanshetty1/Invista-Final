@@ -36,15 +36,14 @@ export async function createProduct(input: CreateProductInput): Promise<ActionRe
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
     }    // Prepare the data for Prisma creation
-    const { categoryId, brandId, ...productData } = validatedData
-
-    // Create the base data object
+    const { categoryId, brandId, categoryName, brandName, ...productData } = validatedData// Create the base data object
     const createData: any = {
       name: productData.name,
       description: productData.description,
       sku: productData.sku,
       barcode: productData.barcode,
-      slug: productData.slug,
+      slug: productData.slug, categoryName: validatedData.categoryName,
+      brandName: validatedData.brandName,
       weight: productData.weight,
       dimensions: productData.dimensions || undefined,
       color: productData.color,
