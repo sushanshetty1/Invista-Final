@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
+import { randomUUID } from 'crypto';
 
 // GET /api/companies/[companyId]/locations - Get all locations for a company
 export async function GET(
@@ -67,9 +68,7 @@ export async function POST(
       allowsReturns = true,
       allowsTransfers = true,
       isPrimary = false,
-    } = body;
-
-    // Validate required fields
+    } = body;    // Validate required fields
     if (!name || !type) {
       return NextResponse.json(
         { success: false, error: 'Name and type are required' },
@@ -77,10 +76,35 @@ export async function POST(
       );
     }
 
-    // Create location in Supabase
+    // Validate location type
+    const validTypes = ['OFFICE', 'WAREHOUSE', 'STORE', 'DISTRIBUTION_CENTER', 'MANUFACTURING'];
+    if (!validTypes.includes(type)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid location type. Must be one of: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate code uniqueness if provided
+    if (code) {
+      const { data: existingLocation } = await supabase
+        .from('company_locations')
+        .select('id')
+        .eq('companyId', companyId)
+        .eq('code', code)
+        .single();
+
+      if (existingLocation) {
+        return NextResponse.json(
+          { success: false, error: 'Location code already exists for this company' },
+          { status: 409 }
+        );
+      }
+    }// Create location in Supabase
     const { data: location, error } = await supabase
       .from('company_locations')
       .insert({
+        id: randomUUID(), // Explicitly generate UUID
         companyId,
         name,
         description,
