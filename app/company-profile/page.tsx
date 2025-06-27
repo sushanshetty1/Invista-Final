@@ -39,7 +39,7 @@ import { useRouter } from "next/navigation";
 import LocationManager from "@/components/company/LocationManager";
 import UserLocationAssignment from "@/components/company/UserLocationAssignment";
 import { useCompanyData } from "@/hooks/use-company-data";
-import { CompanyProfileSkeleton, TeamMembersSkeleton, LoadingState, ErrorState } from "@/components/ui/loading-states";
+import { CompanyProfileSkeleton, TeamMembersSkeleton, ErrorState } from "@/components/ui/loading-states";
 
 interface CompanyProfile {
   id: string;
@@ -58,25 +58,6 @@ interface CompanyProfile {
   taxId?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-interface TeamMember {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  displayName?: string;
-  avatar?: string;
-  role: string;
-  title?: string;
-  status: 'PENDING' | 'ACTIVE' | 'INACTIVE';
-  isOwner: boolean;
-  joinedAt?: string;
-  lastActive?: string;
-  departmentId?: string;
-  type: 'user' | 'invite';
-  createdAt?: string;
-  expiresAt?: string;
 }
 
 interface InviteForm {

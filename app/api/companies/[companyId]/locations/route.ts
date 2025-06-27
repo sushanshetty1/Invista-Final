@@ -68,7 +68,22 @@ export async function POST(
       allowsReturns = true,
       allowsTransfers = true,
       isPrimary = false,
-    } = body;    // Validate required fields
+    } = body;    // Validate company exists
+    const { data: company, error: companyError } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('id', companyId)
+      .eq('isActive', true)
+      .single();
+
+    if (companyError || !company) {
+      return NextResponse.json(
+        { success: false, error: 'Company not found or inactive' },
+        { status: 404 }
+      );
+    }
+
+    // Validate required fields
     if (!name || !type) {
       return NextResponse.json(
         { success: false, error: 'Name and type are required' },
@@ -100,7 +115,23 @@ export async function POST(
           { status: 409 }
         );
       }
-    }// Create location in Supabase
+    }    // Validate email format if provided
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate coordinates format if provided
+    if (coordinates && (!coordinates.latitude || !coordinates.longitude)) {
+      return NextResponse.json(
+        { success: false, error: 'Coordinates must include both latitude and longitude' },
+        { status: 400 }
+      );
+    }
+
+    // Create location in Supabase
     const { data: location, error } = await supabase
       .from('company_locations')
       .insert({
@@ -127,6 +158,8 @@ export async function POST(
         allowsReturns,
         allowsTransfers,
         isPrimary,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();
@@ -139,10 +172,37 @@ export async function POST(
       success: true,
       data: location,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating company location:', error);
+    
+    // Handle specific database errors
+    if (error.code) {
+      switch (error.code) {
+        case '23502': // NOT NULL violation
+          return NextResponse.json(
+            { success: false, error: 'Missing required field', details: error.message },
+            { status: 400 }
+          );
+        case '23505': // Unique constraint violation
+          return NextResponse.json(
+            { success: false, error: 'Location code or name already exists', details: error.message },
+            { status: 409 }
+          );
+        case '23503': // Foreign key violation
+          return NextResponse.json(
+            { success: false, error: 'Invalid company ID or reference', details: error.message },
+            { status: 400 }
+          );
+        default:
+          return NextResponse.json(
+            { success: false, error: 'Database error', details: error.message },
+            { status: 500 }
+          );
+      }
+    }
+    
     return NextResponse.json(
-      { success: false, error: 'Failed to create company location' },
+      { success: false, error: 'Failed to create company location', details: error.message },
       { status: 500 }
     );
   }

@@ -35,6 +35,22 @@ export async function PUT(
       );
     }
 
+    // First check if the company user record exists
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from('company_users')
+      .select('id, companyId, userId')
+      .eq('companyId', companyId)
+      .eq('userId', userId)
+      .single();
+
+    if (userCheckError) {
+      console.error('User not found in company:', { companyId, userId, error: userCheckError });
+      return NextResponse.json(
+        { success: false, error: 'User not found in company' },
+        { status: 404 }
+      );
+    }
+
     // Update user's primary location
     const { data: updatedUser, error: updateError } = await supabase
       .from('company_users')
@@ -44,19 +60,28 @@ export async function PUT(
       .select()
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('Error updating primary location:', updateError);
+      throw updateError;
+    }
 
     // Ensure user has access to their primary location
-    const { data: existingAccess } = await supabase
+    const { data: existingAccess, error: accessCheckError } = await supabase
       .from('user_location_access')
       .select('id')
       .eq('userId', userId)
       .eq('companyId', companyId)
       .eq('locationId', locationId)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to handle 0 or 1 results
+
+    // If there's an error other than no results, throw it
+    if (accessCheckError && accessCheckError.code !== 'PGRST116') {
+      console.error('Error checking location access:', accessCheckError);
+      throw accessCheckError;
+    }
 
     if (!existingAccess) {
-      await supabase
+      const { error: insertError } = await supabase
         .from('user_location_access')
         .insert({
           userId,
@@ -66,6 +91,11 @@ export async function PUT(
           canManage: false,
           grantedAt: new Date().toISOString(),
         });
+
+      if (insertError) {
+        console.error('Error granting location access:', insertError);
+        throw insertError;
+      }
     }
 
     return NextResponse.json({
@@ -73,7 +103,12 @@ export async function PUT(
       data: updatedUser,
     });
   } catch (error) {
-    console.error('Error setting primary location:', error);
+    const { companyId, userId } = await params;
+    console.error('Error setting primary location:', {
+      error,
+      companyId,
+      userId,
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to set primary location' },
       { status: 500 }
