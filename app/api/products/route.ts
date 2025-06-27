@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getProducts, createProduct } from "@/lib/actions/products";
 import { supabase } from "@/lib/supabaseClient";
 

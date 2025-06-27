@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 
 // GET /api/companies/[companyId]/locations - Get all locations for a company

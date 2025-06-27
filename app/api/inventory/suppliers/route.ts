@@ -5,7 +5,7 @@
  * authentication, rate limiting, and standardized responses.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import {
 	successResponse,
 	errorResponse,

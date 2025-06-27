@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { supabaseClient, neonClient } from "@/lib/db";
 
 // GET /api/companies/[companyId]/locations/[locationId] - Get specific location

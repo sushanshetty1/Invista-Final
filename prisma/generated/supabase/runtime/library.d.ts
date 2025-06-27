@@ -4644,5 +4644,3 @@ export declare const warnOnce: (
 	message: string,
 	...args: unknown[]
 ) => void;
-
-export {};

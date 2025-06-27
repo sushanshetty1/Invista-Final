@@ -13,7 +13,7 @@ var Fe = (e, t) => () => (t || e((t = { exports: {} }).exports, t), t.exports),
 	},
 	ma = (e, t, r, n) => {
 		if ((t && typeof t == "object") || typeof t == "function")
-			for (let i of ua(t))
+			for (const i of ua(t))
 				!pa.call(e, i) &&
 					i !== r &&
 					tn(e, i, {
@@ -33,7 +33,6 @@ var Qe = (e, t, r) => (
 );
 var y,
 	u = me(() => {
-		"use strict";
 		y = {
 			nextTick: (e, ...t) => {
 				setTimeout(() => {
@@ -50,25 +49,21 @@ var y,
 	});
 var b,
 	c = me(() => {
-		"use strict";
 		b =
 			globalThis.performance ??
 			(() => {
-				let e = Date.now();
+				const e = Date.now();
 				return { now: () => Date.now() - e };
 			})();
 	});
 var E,
 	p = me(() => {
-		"use strict";
 		E = () => {};
 		E.prototype = E;
 	});
 var m = me(() => {
-	"use strict";
 });
 var bi = Fe((Ke) => {
-	"use strict";
 	d();
 	u();
 	c();
@@ -78,7 +73,6 @@ var bi = Fe((Ke) => {
 			t || e((t = { exports: {} }).exports, t), t.exports
 		),
 		da = si((e) => {
-			"use strict";
 			(e.byteLength = l), (e.toByteArray = g), (e.fromByteArray = S);
 			var t = [],
 				r = [],
@@ -170,7 +164,7 @@ var bi = Fe((Ke) => {
 			}
 		}),
 		fa = si((e) => {
-			(e.read = function (t, r, n, i, o) {
+			(e.read = (t, r, n, i, o) => {
 				var s,
 					a,
 					l = o * 8 - i - 1,
@@ -193,18 +187,18 @@ var bi = Fe((Ke) => {
 				if (s === 0) s = 1 - g;
 				else {
 					if (s === f) return a ? NaN : (A ? -1 : 1) * (1 / 0);
-					(a = a + Math.pow(2, i)), (s = s - g);
+					(a = a + 2 ** i), (s = s - g);
 				}
-				return (A ? -1 : 1) * a * Math.pow(2, s - i);
+				return (A ? -1 : 1) * a * 2 ** (s - i);
 			}),
-				(e.write = function (t, r, n, i, o, s) {
+				(e.write = (t, r, n, i, o, s) => {
 					var a,
 						l,
 						f,
 						g = s * 8 - o - 1,
 						h = (1 << g) - 1,
 						v = h >> 1,
-						S = o === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0,
+						S = o === 23 ? 2 ** -24 - 2 ** -77 : 0,
 						A = i ? 0 : s - 1,
 						R = i ? 1 : -1,
 						D = r < 0 || (r === 0 && 1 / r < 0) ? 1 : 0;
@@ -213,14 +207,14 @@ var bi = Fe((Ke) => {
 							isNaN(r) || r === 1 / 0
 								? ((l = isNaN(r) ? 1 : 0), (a = h))
 								: ((a = Math.floor(Math.log(r) / Math.LN2)),
-									r * (f = Math.pow(2, -a)) < 1 && (a--, (f *= 2)),
-									a + v >= 1 ? (r += S / f) : (r += S * Math.pow(2, 1 - v)),
+									r * (f = 2 ** -a) < 1 && (a--, (f *= 2)),
+									a + v >= 1 ? (r += S / f) : (r += S * 2 ** (1 - v)),
 									r * f >= 2 && (a++, (f /= 2)),
 									a + v >= h
 										? ((l = 0), (a = h))
 										: a + v >= 1
-											? ((l = (r * f - 1) * Math.pow(2, o)), (a = a + v))
-											: ((l = r * Math.pow(2, v - 1) * Math.pow(2, o)),
+											? ((l = (r * f - 1) * 2 ** o), (a = a + v))
+											: ((l = r * 2 ** (v - 1) * 2 ** o),
 												(a = 0)));
 						o >= 8;
 						t[n + A] = l & 255, A += R, l /= 256, o -= 8
@@ -253,11 +247,9 @@ var bi = Fe((Ke) => {
 		);
 	function ga() {
 		try {
-			let e = new Uint8Array(1),
+			const e = new Uint8Array(1),
 				t = {
-					foo: function () {
-						return 42;
-					},
+					foo: () => 42,
 				};
 			return (
 				Object.setPrototypeOf(t, Uint8Array.prototype),
@@ -285,7 +277,7 @@ var bi = Fe((Ke) => {
 			throw new RangeError(
 				'The value "' + e + '" is invalid for option "size"',
 			);
-		let t = new Uint8Array(e);
+		const t = new Uint8Array(e);
 		return Object.setPrototypeOf(t, T.prototype), t;
 	}
 	function T(e, t, r) {
@@ -318,9 +310,9 @@ var bi = Fe((Ke) => {
 			throw new TypeError(
 				'The "value" argument must not be of type number. Received type number',
 			);
-		let n = e.valueOf && e.valueOf();
+		const n = e.valueOf && e.valueOf();
 		if (n != null && n !== e) return T.from(n, t, r);
-		let i = Ea(e);
+		const i = Ea(e);
 		if (i) return i;
 		if (
 			typeof Symbol < "u" &&
@@ -333,9 +325,7 @@ var bi = Fe((Ke) => {
 				typeof e,
 		);
 	}
-	T.from = function (e, t, r) {
-		return ai(e, t, r);
-	};
+	T.from = (e, t, r) => ai(e, t, r);
 	Object.setPrototypeOf(T.prototype, Uint8Array.prototype);
 	Object.setPrototypeOf(T, Uint8Array);
 	function li(e) {
@@ -358,18 +348,12 @@ var bi = Fe((Ke) => {
 					: be(e)
 		);
 	}
-	T.alloc = function (e, t, r) {
-		return ha(e, t, r);
-	};
+	T.alloc = (e, t, r) => ha(e, t, r);
 	function sn(e) {
 		return li(e), be(e < 0 ? 0 : an(e) | 0);
 	}
-	T.allocUnsafe = function (e) {
-		return sn(e);
-	};
-	T.allocUnsafeSlow = function (e) {
-		return sn(e);
-	};
+	T.allocUnsafe = (e) => sn(e);
+	T.allocUnsafeSlow = (e) => sn(e);
 	function ya(e, t) {
 		if (((typeof t != "string" || t === "") && (t = "utf8"), !T.isEncoding(t)))
 			throw new TypeError("Unknown encoding: " + t);
@@ -379,14 +363,14 @@ var bi = Fe((Ke) => {
 		return i !== r && (n = n.slice(0, i)), n;
 	}
 	function nn(e) {
-		let t = e.length < 0 ? 0 : an(e.length) | 0,
+		const t = e.length < 0 ? 0 : an(e.length) | 0,
 			r = be(t);
 		for (let n = 0; n < t; n += 1) r[n] = e[n] & 255;
 		return r;
 	}
 	function wa(e) {
 		if (de(e, Uint8Array)) {
-			let t = new Uint8Array(e);
+			const t = new Uint8Array(e);
 			return ui(t.buffer, t.byteOffset, t.byteLength);
 		}
 		return nn(e);
@@ -409,7 +393,7 @@ var bi = Fe((Ke) => {
 	}
 	function Ea(e) {
 		if (T.isBuffer(e)) {
-			let t = an(e.length) | 0,
+			const t = an(e.length) | 0,
 				r = be(t);
 			return r.length === 0 || e.copy(r, 0, 0, t), r;
 		}
@@ -429,10 +413,8 @@ var bi = Fe((Ke) => {
 	function ba(e) {
 		return +e != e && (e = 0), T.alloc(+e);
 	}
-	T.isBuffer = function (e) {
-		return e != null && e._isBuffer === !0 && e !== T.prototype;
-	};
-	T.compare = function (e, t) {
+	T.isBuffer = (e) => e != null && e._isBuffer === !0 && e !== T.prototype;
+	T.compare = (e, t) => {
 		if (
 			(de(e, Uint8Array) && (e = T.from(e, e.offset, e.byteLength)),
 			de(t, Uint8Array) && (t = T.from(t, t.offset, t.byteLength)),
@@ -451,7 +433,7 @@ var bi = Fe((Ke) => {
 			}
 		return r < n ? -1 : n < r ? 1 : 0;
 	};
-	T.isEncoding = function (e) {
+	T.isEncoding = (e) => {
 		switch (String(e).toLowerCase()) {
 			case "hex":
 			case "utf8":
@@ -469,7 +451,7 @@ var bi = Fe((Ke) => {
 				return !1;
 		}
 	};
-	T.concat = function (e, t) {
+	T.concat = (e, t) => {
 		if (!Array.isArray(e))
 			throw new TypeError('"list" argument must be an Array of Buffers');
 		if (e.length === 0) return T.alloc(0);
@@ -497,7 +479,7 @@ var bi = Fe((Ke) => {
 				'The "string" argument must be one of type string, Buffer, or ArrayBuffer. Received type ' +
 					typeof e,
 			);
-		let r = e.length,
+		const r = e.length,
 			n = arguments.length > 2 && arguments[2] === !0;
 		if (!n && r === 0) return 0;
 		let i = !1;
@@ -560,25 +542,25 @@ var bi = Fe((Ke) => {
 	}
 	T.prototype._isBuffer = !0;
 	function Le(e, t, r) {
-		let n = e[t];
+		const n = e[t];
 		(e[t] = e[r]), (e[r] = n);
 	}
 	T.prototype.swap16 = function () {
-		let e = this.length;
+		const e = this.length;
 		if (e % 2 !== 0)
 			throw new RangeError("Buffer size must be a multiple of 16-bits");
 		for (let t = 0; t < e; t += 2) Le(this, t, t + 1);
 		return this;
 	};
 	T.prototype.swap32 = function () {
-		let e = this.length;
+		const e = this.length;
 		if (e % 4 !== 0)
 			throw new RangeError("Buffer size must be a multiple of 32-bits");
 		for (let t = 0; t < e; t += 4) Le(this, t, t + 3), Le(this, t + 1, t + 2);
 		return this;
 	};
 	T.prototype.swap64 = function () {
-		let e = this.length;
+		const e = this.length;
 		if (e % 8 !== 0)
 			throw new RangeError("Buffer size must be a multiple of 64-bits");
 		for (let t = 0; t < e; t += 8)
@@ -589,7 +571,7 @@ var bi = Fe((Ke) => {
 		return this;
 	};
 	T.prototype.toString = function () {
-		let e = this.length;
+		const e = this.length;
 		return e === 0
 			? ""
 			: arguments.length === 0
@@ -722,13 +704,13 @@ var bi = Fe((Ke) => {
 	};
 	function Pa(e, t, r, n) {
 		r = Number(r) || 0;
-		let i = e.length - r;
+		const i = e.length - r;
 		n ? ((n = Number(n)), n > i && (n = i)) : (n = i);
-		let o = t.length;
+		const o = t.length;
 		n > o / 2 && (n = o / 2);
 		let s;
 		for (s = 0; s < n; ++s) {
-			let a = parseInt(t.substr(s * 2, 2), 16);
+			const a = parseInt(t.substr(s * 2, 2), 16);
 			if (un(a)) return s;
 			e[r + s] = a;
 		}
@@ -759,7 +741,7 @@ var bi = Fe((Ke) => {
 			throw new Error(
 				"Buffer.write(string, encoding, offset[, length]) is no longer supported",
 			);
-		let i = this.length - t;
+		const i = this.length - t;
 		if (
 			((r === void 0 || r > i) && (r = i),
 			(e.length > 0 && (r < 0 || t < 0)) || t > this.length)
@@ -856,7 +838,7 @@ var bi = Fe((Ke) => {
 	}
 	var ii = 4096;
 	function Sa(e) {
-		let t = e.length;
+		const t = e.length;
 		if (t <= ii) return String.fromCharCode.apply(String, e);
 		let r = "",
 			n = 0;
@@ -877,7 +859,7 @@ var bi = Fe((Ke) => {
 		return n;
 	}
 	function Oa(e, t, r) {
-		let n = e.length;
+		const n = e.length;
 		(!t || t < 0) && (t = 0), (!r || r < 0 || r > n) && (r = n);
 		let i = "";
 		for (let o = t; o < r; ++o) i += Ba[e[o]];
@@ -891,13 +873,13 @@ var bi = Fe((Ke) => {
 		return i;
 	}
 	T.prototype.slice = function (e, t) {
-		let r = this.length;
+		const r = this.length;
 		(e = ~~e),
 			(t = t === void 0 ? r : ~~t),
 			e < 0 ? ((e += r), e < 0 && (e = 0)) : e > r && (e = r),
 			t < 0 ? ((t += r), t < 0 && (t = 0)) : t > r && (t = r),
 			t < e && (t = e);
-		let n = this.subarray(e, t);
+		const n = this.subarray(e, t);
 		return Object.setPrototypeOf(n, T.prototype), n;
 	};
 	function W(e, t, r) {
@@ -951,19 +933,19 @@ var bi = Fe((Ke) => {
 	};
 	T.prototype.readBigUInt64LE = Ae(function (e) {
 		(e = e >>> 0), He(e, "offset");
-		let t = this[e],
+		const t = this[e],
 			r = this[e + 7];
 		(t === void 0 || r === void 0) && bt(e, this.length - 8);
-		let n = t + this[++e] * 2 ** 8 + this[++e] * 2 ** 16 + this[++e] * 2 ** 24,
+		const n = t + this[++e] * 2 ** 8 + this[++e] * 2 ** 16 + this[++e] * 2 ** 24,
 			i = this[++e] + this[++e] * 2 ** 8 + this[++e] * 2 ** 16 + r * 2 ** 24;
 		return BigInt(n) + (BigInt(i) << BigInt(32));
 	});
 	T.prototype.readBigUInt64BE = Ae(function (e) {
 		(e = e >>> 0), He(e, "offset");
-		let t = this[e],
+		const t = this[e],
 			r = this[e + 7];
 		(t === void 0 || r === void 0) && bt(e, this.length - 8);
-		let n = t * 2 ** 24 + this[++e] * 2 ** 16 + this[++e] * 2 ** 8 + this[++e],
+		const n = t * 2 ** 24 + this[++e] * 2 ** 16 + this[++e] * 2 ** 8 + this[++e],
 			i = this[++e] * 2 ** 24 + this[++e] * 2 ** 16 + this[++e] * 2 ** 8 + r;
 		return (BigInt(n) << BigInt(32)) + BigInt(i);
 	});
@@ -973,7 +955,7 @@ var bi = Fe((Ke) => {
 			i = 1,
 			o = 0;
 		for (; ++o < t && (i *= 256); ) n += this[e + o] * i;
-		return (i *= 128), n >= i && (n -= Math.pow(2, 8 * t)), n;
+		return (i *= 128), n >= i && (n -= 2 ** (8 * t)), n;
 	};
 	T.prototype.readIntBE = function (e, t, r) {
 		(e = e >>> 0), (t = t >>> 0), r || W(e, t, this.length);
@@ -981,7 +963,7 @@ var bi = Fe((Ke) => {
 			i = 1,
 			o = this[e + --n];
 		for (; n > 0 && (i *= 256); ) o += this[e + --n] * i;
-		return (i *= 128), o >= i && (o -= Math.pow(2, 8 * t)), o;
+		return (i *= 128), o >= i && (o -= 2 ** (8 * t)), o;
 	};
 	T.prototype.readInt8 = function (e, t) {
 		return (
@@ -992,12 +974,12 @@ var bi = Fe((Ke) => {
 	};
 	T.prototype.readInt16LE = function (e, t) {
 		(e = e >>> 0), t || W(e, 2, this.length);
-		let r = this[e] | (this[e + 1] << 8);
+		const r = this[e] | (this[e + 1] << 8);
 		return r & 32768 ? r | 4294901760 : r;
 	};
 	T.prototype.readInt16BE = function (e, t) {
 		(e = e >>> 0), t || W(e, 2, this.length);
-		let r = this[e + 1] | (this[e] << 8);
+		const r = this[e + 1] | (this[e] << 8);
 		return r & 32768 ? r | 4294901760 : r;
 	};
 	T.prototype.readInt32LE = function (e, t) {
@@ -1016,10 +998,10 @@ var bi = Fe((Ke) => {
 	};
 	T.prototype.readBigInt64LE = Ae(function (e) {
 		(e = e >>> 0), He(e, "offset");
-		let t = this[e],
+		const t = this[e],
 			r = this[e + 7];
 		(t === void 0 || r === void 0) && bt(e, this.length - 8);
-		let n =
+		const n =
 			this[e + 4] + this[e + 5] * 2 ** 8 + this[e + 6] * 2 ** 16 + (r << 24);
 		return (
 			(BigInt(n) << BigInt(32)) +
@@ -1028,10 +1010,10 @@ var bi = Fe((Ke) => {
 	});
 	T.prototype.readBigInt64BE = Ae(function (e) {
 		(e = e >>> 0), He(e, "offset");
-		let t = this[e],
+		const t = this[e],
 			r = this[e + 7];
 		(t === void 0 || r === void 0) && bt(e, this.length - 8);
-		let n = (t << 24) + this[++e] * 2 ** 16 + this[++e] * 2 ** 8 + this[++e];
+		const n = (t << 24) + this[++e] * 2 ** 16 + this[++e] * 2 ** 8 + this[++e];
 		return (
 			(BigInt(n) << BigInt(32)) +
 			BigInt(this[++e] * 2 ** 24 + this[++e] * 2 ** 16 + this[++e] * 2 ** 8 + r)
@@ -1066,7 +1048,7 @@ var bi = Fe((Ke) => {
 	}
 	T.prototype.writeUintLE = T.prototype.writeUIntLE = function (e, t, r, n) {
 		if (((e = +e), (t = t >>> 0), (r = r >>> 0), !n)) {
-			let s = Math.pow(2, 8 * r) - 1;
+			const s = 2 ** (8 * r) - 1;
 			te(this, e, t, r, s, 0);
 		}
 		let i = 1,
@@ -1077,7 +1059,7 @@ var bi = Fe((Ke) => {
 	};
 	T.prototype.writeUintBE = T.prototype.writeUIntBE = function (e, t, r, n) {
 		if (((e = +e), (t = t >>> 0), (r = r >>> 0), !n)) {
-			let s = Math.pow(2, 8 * r) - 1;
+			const s = 2 ** (8 * r) - 1;
 			te(this, e, t, r, s, 0);
 		}
 		let i = r - 1,
@@ -1191,7 +1173,7 @@ var bi = Fe((Ke) => {
 	});
 	T.prototype.writeIntLE = function (e, t, r, n) {
 		if (((e = +e), (t = t >>> 0), !n)) {
-			let a = Math.pow(2, 8 * r - 1);
+			const a = 2 ** (8 * r - 1);
 			te(this, e, t, r, a - 1, -a);
 		}
 		let i = 0,
@@ -1204,7 +1186,7 @@ var bi = Fe((Ke) => {
 	};
 	T.prototype.writeIntBE = function (e, t, r, n) {
 		if (((e = +e), (t = t >>> 0), !n)) {
-			let a = Math.pow(2, 8 * r - 1);
+			const a = 2 ** (8 * r - 1);
 			te(this, e, t, r, a - 1, -a);
 		}
 		let i = r - 1,
@@ -1338,7 +1320,7 @@ var bi = Fe((Ke) => {
 		if (n < 0) throw new RangeError("sourceEnd out of bounds");
 		n > this.length && (n = this.length),
 			e.length - t < n - r && (n = e.length - t + r);
-		let i = n - r;
+		const i = n - r;
 		return (
 			this === e && typeof Uint8Array.prototype.copyWithin == "function"
 				? this.copyWithin(t, r, n)
@@ -1358,7 +1340,7 @@ var bi = Fe((Ke) => {
 			if (typeof n == "string" && !T.isEncoding(n))
 				throw new TypeError("Unknown encoding: " + n);
 			if (e.length === 1) {
-				let o = e.charCodeAt(0);
+				const o = e.charCodeAt(0);
 				((n === "utf8" && o < 128) || n === "latin1") && (e = o);
 			}
 		} else
@@ -1372,7 +1354,7 @@ var bi = Fe((Ke) => {
 		let i;
 		if (typeof e == "number") for (i = t; i < r; ++i) this[i] = e;
 		else {
-			let o = T.isBuffer(e) ? e : T.from(e, n),
+			const o = T.isBuffer(e) ? e : T.from(e, n),
 				s = o.length;
 			if (s === 0)
 				throw new TypeError(
@@ -1414,23 +1396,19 @@ var bi = Fe((Ke) => {
 	}
 	ln(
 		"ERR_BUFFER_OUT_OF_BOUNDS",
-		function (e) {
-			return e
+		(e) => e
 				? `${e} is outside of buffer bounds`
-				: "Attempt to access memory outside buffer bounds";
-		},
+				: "Attempt to access memory outside buffer bounds",
 		RangeError,
 	);
 	ln(
 		"ERR_INVALID_ARG_TYPE",
-		function (e, t) {
-			return `The "${e}" argument must be of type number. Received type ${typeof t}`;
-		},
+		(e, t) => `The "${e}" argument must be of type number. Received type ${typeof t}`,
 		TypeError,
 	);
 	ln(
 		"ERR_OUT_OF_RANGE",
-		function (e, t, r) {
+		(e, t, r) => {
 			let n = `The value of "${e}" is out of range.`,
 				i = r;
 			return (
@@ -1541,7 +1519,7 @@ var bi = Fe((Ke) => {
 		return o;
 	}
 	function Fa(e) {
-		let t = [];
+		const t = [];
 		for (let r = 0; r < e.length; ++r) t.push(e.charCodeAt(r) & 255);
 		return t;
 	}
@@ -1575,11 +1553,11 @@ var bi = Fe((Ke) => {
 	function un(e) {
 		return e !== e;
 	}
-	var Ba = (function () {
-		let e = "0123456789abcdef",
+	var Ba = (() => {
+		const e = "0123456789abcdef",
 			t = new Array(256);
 		for (let r = 0; r < 16; ++r) {
-			let n = r * 16;
+			const n = r * 16;
 			for (let i = 0; i < 16; ++i) t[n + i] = e[r] + e[i];
 		}
 		return t;
@@ -1593,7 +1571,6 @@ var bi = Fe((Ke) => {
 });
 var w,
 	d = me(() => {
-		"use strict";
 		w = Qe(bi());
 	});
 function Qa() {
@@ -1646,7 +1623,6 @@ var nl,
 	il,
 	qi,
 	$i = me(() => {
-		"use strict";
 		d();
 		u();
 		c();
@@ -1678,13 +1654,13 @@ function sl(...e) {
 	return e.join("/");
 }
 function al(e) {
-	let t = ji(e),
+	const t = ji(e),
 		r = Vi(e),
 		[n, i] = t.split(".");
 	return { root: "/", dir: r, base: t, ext: i, name: n };
 }
 function ji(e) {
-	let t = e.split("/");
+	const t = e.split("/");
 	return t[t.length - 1];
 }
 function Vi(e) {
@@ -1695,7 +1671,6 @@ var Gi,
 	ul,
 	pr,
 	Qi = me(() => {
-		"use strict";
 		d();
 		u();
 		c();
@@ -1818,7 +1793,6 @@ var Ji = Fe((ad, cl) => {
 	};
 });
 var Ki = Fe((Ad, Hi) => {
-	"use strict";
 	d();
 	u();
 	c();
@@ -1840,19 +1814,18 @@ var Ki = Fe((Ad, Hi) => {
 				`Expected \`options.indent\` to be a \`string\`, got \`${typeof r.indent}\``,
 			);
 		if (t === 0) return e;
-		let n = r.includeEmptyLines ? /^/gm : /^(?!\s*$)/gm;
+		const n = r.includeEmptyLines ? /^/gm : /^(?!\s*$)/gm;
 		return e.replace(n, r.indent.repeat(t));
 	};
 });
 var Zi = Fe((Bd, Yi) => {
-	"use strict";
 	d();
 	u();
 	c();
 	p();
 	m();
 	Yi.exports = ({ onlyFirst: e = !1 } = {}) => {
-		let t = [
+		const t = [
 			"[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
 			"(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))",
 		].join("|");
@@ -1860,7 +1833,6 @@ var Zi = Fe((Bd, Yi) => {
 	};
 });
 var eo = Fe((Gd, Xi) => {
-	"use strict";
 	d();
 	u();
 	c();
@@ -1870,17 +1842,16 @@ var eo = Fe((Gd, Xi) => {
 	Xi.exports = (e) => (typeof e == "string" ? e.replace(wl(), "") : e);
 });
 var vn = Fe((My, Eo) => {
-	"use strict";
 	d();
 	u();
 	c();
 	p();
 	m();
-	Eo.exports = (function () {
+	Eo.exports = (() => {
 		function e(t, r, n, i, o) {
 			return t < r || n < r ? (t > n ? n + 1 : t + 1) : i === o ? r : r + 1;
 		}
-		return function (t, r) {
+		return (t, r) => {
 			if (t === r) return 0;
 			if (t.length > r.length) {
 				var n = t;
@@ -1938,7 +1909,6 @@ var vn = Fe((My, Eo) => {
 	})();
 });
 var To = me(() => {
-	"use strict";
 	d();
 	u();
 	c();
@@ -1946,7 +1916,6 @@ var To = me(() => {
 	m();
 });
 var Co = me(() => {
-	"use strict";
 	d();
 	u();
 	c();
@@ -1974,7 +1943,6 @@ var Jo = Fe((t1, lc) => {
 });
 var Ur,
 	Wo = me(() => {
-		"use strict";
 		d();
 		u();
 		c();
@@ -2073,14 +2041,12 @@ var qa = {
 		!Ai && Ri == null && Si !== "dumb" && ((cn != null && cn !== "0") || ki),
 };
 function j(e, t) {
-	let r = new RegExp(`\\x1b\\[${t}m`, "g"),
+	const r = new RegExp(`\\x1b\\[${t}m`, "g"),
 		n = `\x1B[${e}m`,
 		i = `\x1B[${t}m`;
-	return function (o) {
-		return !qa.enabled || o == null
+	return (o) => !qa.enabled || o == null
 			? o
 			: n + (~("" + o).indexOf(i) ? o.replace(r, i + n) : o) + i;
-	};
 }
 var cm = j(0, 0),
 	lr = j(1, 22),
@@ -2126,11 +2092,11 @@ var xt = {
 		typeof e == "string" && (globalThis.DEBUG = e);
 	},
 	disable() {
-		let e = globalThis.DEBUG;
+		const e = globalThis.DEBUG;
 		return (globalThis.DEBUG = ""), e;
 	},
 	enabled(e) {
-		let t = globalThis.DEBUG.split(",").map((i) =>
+		const t = globalThis.DEBUG.split(",").map((i) =>
 				i.replace(/[.+?^${}()|[\]\\]/g, "\\$&"),
 			),
 			r = t.some((i) =>
@@ -2146,13 +2112,13 @@ var xt = {
 		return r && !n;
 	},
 	log: (...e) => {
-		let [t, r, ...n] = e;
+		const [t, r, ...n] = e;
 		(console.warn ?? console.log)(`${t} ${r}`, ...n);
 	},
 	formatters: {},
 };
 function Va(e) {
-	let t = {
+	const t = {
 			color: Fi[ja++ % Fi.length],
 			enabled: xt.enabled(e),
 			namespace: e,
@@ -2160,13 +2126,13 @@ function Va(e) {
 			extend: () => {},
 		},
 		r = (...n) => {
-			let { enabled: i, namespace: o, color: s, log: a } = t;
+			const { enabled: i, namespace: o, color: s, log: a } = t;
 			if (
 				(n.length !== 0 && cr.push([o, ...n]),
 				cr.length > $a && cr.shift(),
 				xt.enabled(o) || i)
 			) {
-				let l = n.map((g) => (typeof g == "string" ? g : Ga(g))),
+				const l = n.map((g) => (typeof g == "string" ? g : Ga(g))),
 					f = `+${Date.now() - Li}ms`;
 				(Li = Date.now()), a(o, ...l, f);
 			}
@@ -2175,7 +2141,7 @@ function Va(e) {
 }
 var Y = new Proxy(Va, { get: (e, t) => xt[t], set: (e, t, r) => (xt[t] = r) });
 function Ga(e, t = 2) {
-	let r = new Set();
+	const r = new Set();
 	return JSON.stringify(
 		e,
 		(n, i) => {
@@ -2209,7 +2175,7 @@ c();
 p();
 m();
 function Ye(e) {
-	let t = ml();
+	const t = ml();
 	return (
 		t ||
 		(e?.config.engineType === "library"
@@ -2222,7 +2188,7 @@ function Ye(e) {
 	);
 }
 function ml() {
-	let e = y.env.PRISMA_CLIENT_ENGINE_TYPE;
+	const e = y.env.PRISMA_CLIENT_ENGINE_TYPE;
 	return e === "library"
 		? "library"
 		: e === "binary"
@@ -2246,7 +2212,7 @@ function dr(e) {
 }
 function dn(e) {
 	if (!dr(e)) return !1;
-	let { host: t } = new URL(e);
+	const { host: t } = new URL(e);
 	return t.includes("localhost") || t.includes("127.0.0.1");
 }
 var vt = {};
@@ -2300,7 +2266,7 @@ c();
 p();
 m();
 function gn(e, t) {
-	return Object.prototype.hasOwnProperty.call(e, t);
+	return  Object.hasOwn(e, t);
 }
 d();
 u();
@@ -2308,8 +2274,8 @@ c();
 p();
 m();
 function Ze(e, t) {
-	let r = {};
-	for (let n of Object.keys(e)) r[n] = t(e[n], n);
+	const r = {};
+	for (const n of Object.keys(e)) r[n] = t(e[n], n);
 	return r;
 }
 d();
@@ -2495,27 +2461,25 @@ C.ceil = function () {
 };
 C.clampedTo = C.clamp = function (e, t) {
 	var r,
-		n = this,
-		i = n.constructor;
+		i = this.constructor;
 	if (((e = new i(e)), (t = new i(t)), !e.s || !t.s)) return new i(NaN);
 	if (e.gt(t)) throw Error(Ie + t);
-	return (r = n.cmp(e)), r < 0 ? e : n.cmp(t) > 0 ? t : new i(n);
+	return (r = this.cmp(e)), r < 0 ? e : this.cmp(t) > 0 ? t : new i(this);
 };
 C.comparedTo = C.cmp = function (e) {
 	var t,
 		r,
 		n,
 		i,
-		o = this,
-		s = o.d,
-		a = (e = new o.constructor(e)).d,
-		l = o.s,
+		s = this.d,
+		a = (e = new this.constructor(e)).d,
+		l = this.s,
 		f = e.s;
 	if (!s || !a)
 		return !l || !f ? NaN : l !== f ? l : s === a ? 0 : !s ^ (l < 0) ? 1 : -1;
 	if (!s[0] || !a[0]) return s[0] ? l : a[0] ? -f : 0;
 	if (l !== f) return l;
-	if (o.e !== e.e) return (o.e > e.e) ^ (l < 0) ? 1 : -1;
+	if (this.e !== e.e) return (this.e > e.e) ^ (l < 0) ? 1 : -1;
 	for (n = s.length, i = a.length, t = 0, r = n < i ? n : i; t < r; ++t)
 		if (s[t] !== a[t]) return (s[t] > a[t]) ^ (l < 0) ? 1 : -1;
 	return n === i ? 0 : (n > i) ^ (l < 0) ? 1 : -1;
@@ -2549,15 +2513,14 @@ C.cubeRoot = C.cbrt = function () {
 		a,
 		l,
 		f,
-		g = this,
-		h = g.constructor;
-	if (!g.isFinite() || g.isZero()) return new h(g);
+		h = this.constructor;
+	if (!this.isFinite() || this.isZero()) return new h(this);
 	for (
 		_ = !1,
-			o = g.s * J(g.s * g, 1 / 3),
+			o = this.s * J(this.s * this, 1 / 3),
 			!o || Math.abs(o) == 1 / 0
-				? ((r = K(g.d)),
-					(e = g.e),
+				? ((r = K(this.d)),
+					(e = this.e),
 					(o = (e - r.length + 1) % 3) && (r += o == 1 || o == -2 ? "0" : "00"),
 					(o = J(r, 1 / 3)),
 					(e = Z((e + 1) / 3) - (e % 3 == (e < 0 ? -1 : 2))),
@@ -2566,7 +2529,7 @@ C.cubeRoot = C.cbrt = function () {
 						: ((r = o.toExponential()),
 							(r = r.slice(0, r.indexOf("e") + 1) + e)),
 					(n = new h(r)),
-					(n.s = g.s))
+					(n.s = this.s))
 				: (n = new h(o.toString())),
 			s = (e = h.precision) + 3;
 		;
@@ -2574,19 +2537,19 @@ C.cubeRoot = C.cbrt = function () {
 		if (
 			((a = n),
 			(l = a.times(a).times(a)),
-			(f = l.plus(g)),
-			(n = q(f.plus(g).times(a), f.plus(l), s + 2, 1)),
+			(f = l.plus(this)),
+			(n = q(f.plus(this).times(a), f.plus(l), s + 2, 1)),
 			K(a.d).slice(0, s) === (r = K(n.d)).slice(0, s))
 		)
 			if (((r = r.slice(s - 3, s + 1)), r == "9999" || (!i && r == "4999"))) {
-				if (!i && (I(a, e + 1, 0), a.times(a).times(a).eq(g))) {
+				if (!i && (I(a, e + 1, 0), a.times(a).times(a).eq(this))) {
 					n = a;
 					break;
 				}
 				(s += 4), (i = 1);
 			} else {
 				(!+r || (!+r.slice(1) && r.charAt(0) == "5")) &&
-					(I(n, e + 1, 1), (t = !n.times(n).times(n).eq(g)));
+					(I(n, e + 1, 1), (t = !n.times(n).times(n).eq(this)));
 				break;
 			}
 	return (_ = !0), I(n, e, h.rounding, t);
@@ -2606,9 +2569,9 @@ C.dividedBy = C.div = function (e) {
 	return q(this, new this.constructor(e));
 };
 C.dividedToIntegerBy = C.divToInt = function (e) {
-	var t = this,
-		r = t.constructor;
-	return I(q(t, new r(e), 0, 1, 1), r.precision, r.rounding);
+	var 
+		r = this.constructor;
+	return I(q(this, new r(e), 0, 1, 1), r.precision, r.rounding);
 };
 C.equals = C.eq = function (e) {
 	return this.cmp(e) === 0;
@@ -2677,17 +2640,16 @@ C.hyperbolicSine = C.sinh = function () {
 C.hyperbolicTangent = C.tanh = function () {
 	var e,
 		t,
-		r = this,
-		n = r.constructor;
-	return r.isFinite()
-		? r.isZero()
-			? new n(r)
+		n = this.constructor;
+	return this.isFinite()
+		? this.isZero()
+			? new n(this)
 			: ((e = n.precision),
 				(t = n.rounding),
 				(n.precision = e + 7),
 				(n.rounding = 1),
-				q(r.sinh(), r.cosh(), (n.precision = e), (n.rounding = t)))
-		: new n(r.s);
+				q(this.sinh(), this.cosh(), (n.precision = e), (n.rounding = t)))
+		: new n(this.s);
 };
 C.inverseCosine = C.acos = function () {
 	var e = this,
@@ -2878,8 +2840,7 @@ C.logarithm = C.log = function (e) {
 		s,
 		a,
 		l,
-		f = this,
-		g = f.constructor,
+		g = this.constructor,
 		h = g.precision,
 		v = g.rounding,
 		S = 5;
@@ -2889,8 +2850,8 @@ C.logarithm = C.log = function (e) {
 			return new g(NaN);
 		t = e.eq(10);
 	}
-	if (((r = f.d), f.s < 0 || !r || !r[0] || f.eq(1)))
-		return new g(r && !r[0] ? -1 / 0 : f.s != 1 ? NaN : r ? 0 : 1 / 0);
+	if (((r = this.d), this.s < 0 || !r || !r[0] || this.eq(1)))
+		return new g(r && !r[0] ? -1 / 0 : this.s != 1 ? NaN : r ? 0 : 1 / 0);
 	if (t)
 		if (r.length > 1) o = !0;
 		else {
@@ -2900,7 +2861,7 @@ C.logarithm = C.log = function (e) {
 	if (
 		((_ = !1),
 		(a = h + S),
-		(s = ke(f, a)),
+		(s = ke(this, a)),
 		(n = t ? Er(g, a + 10) : ke(e, a)),
 		(l = q(s, n, a, 1)),
 		Tt(l.d, (i = h), v))
@@ -2908,7 +2869,7 @@ C.logarithm = C.log = function (e) {
 		do
 			if (
 				((a += 10),
-				(s = ke(f, a)),
+				(s = ke(this, a)),
 				(n = t ? Er(g, a + 10) : ke(e, a)),
 				(l = q(s, n, a, 1)),
 				!o)
@@ -2932,27 +2893,26 @@ C.minus = C.sub = function (e) {
 		g,
 		h,
 		v,
-		S = this,
-		A = S.constructor;
-	if (((e = new A(e)), !S.d || !e.d))
+		A = this.constructor;
+	if (((e = new A(e)), !this.d || !e.d))
 		return (
-			!S.s || !e.s
+			!this.s || !e.s
 				? (e = new A(NaN))
-				: S.d
+				: this.d
 					? (e.s = -e.s)
-					: (e = new A(e.d || S.s !== e.s ? S : NaN)),
+					: (e = new A(e.d || this.s !== e.s ? this : NaN)),
 			e
 		);
-	if (S.s != e.s) return (e.s = -e.s), S.plus(e);
+	if (this.s != e.s) return (e.s = -e.s), this.plus(e);
 	if (
-		((f = S.d), (v = e.d), (a = A.precision), (l = A.rounding), !f[0] || !v[0])
+		((f = this.d), (v = e.d), (a = A.precision), (l = A.rounding), !f[0] || !v[0])
 	) {
 		if (v[0]) e.s = -e.s;
-		else if (f[0]) e = new A(S);
+		else if (f[0]) e = new A(this);
 		else return new A(l === 3 ? -0 : 0);
 		return _ ? I(e, a, l) : e;
 	}
-	if (((r = Z(e.e / O)), (g = Z(S.e / O)), (f = f.slice()), (o = g - r), o)) {
+	if (((r = Z(e.e / O)), (g = Z(this.e / O)), (f = f.slice()), (o = g - r), o)) {
 		for (
 			h = o < 0,
 				h
@@ -2997,21 +2957,20 @@ C.minus = C.sub = function (e) {
 };
 C.modulo = C.mod = function (e) {
 	var t,
-		r = this,
-		n = r.constructor;
+		n = this.constructor;
 	return (
 		(e = new n(e)),
-		!r.d || !e.s || (e.d && !e.d[0])
+		!this.d || !e.s || (e.d && !e.d[0])
 			? new n(NaN)
-			: !e.d || (r.d && !r.d[0])
-				? I(new n(r), n.precision, n.rounding)
+			: !e.d || (this.d && !this.d[0])
+				? I(new n(this), n.precision, n.rounding)
 				: ((_ = !1),
 					n.modulo == 9
-						? ((t = q(r, e.abs(), 0, 3, 1)), (t.s *= e.s))
-						: (t = q(r, e, 0, n.modulo, 1)),
+						? ((t = q(this, e.abs(), 0, 3, 1)), (t.s *= e.s))
+						: (t = q(this, e, 0, n.modulo, 1)),
 					(t = t.times(e)),
 					(_ = !0),
-					r.minus(t))
+					this.minus(t))
 	);
 };
 C.naturalExponential = C.exp = function () {
@@ -3035,21 +2994,20 @@ C.plus = C.add = function (e) {
 		l,
 		f,
 		g,
-		h = this,
-		v = h.constructor;
-	if (((e = new v(e)), !h.d || !e.d))
+		v = this.constructor;
+	if (((e = new v(e)), !this.d || !e.d))
 		return (
-			!h.s || !e.s
+			!this.s || !e.s
 				? (e = new v(NaN))
-				: h.d || (e = new v(e.d || h.s === e.s ? h : NaN)),
+				: this.d || (e = new v(e.d || this.s === e.s ? this : NaN)),
 			e
 		);
-	if (h.s != e.s) return (e.s = -e.s), h.minus(e);
+	if (this.s != e.s) return (e.s = -e.s), this.minus(e);
 	if (
-		((f = h.d), (g = e.d), (a = v.precision), (l = v.rounding), !f[0] || !g[0])
+		((f = this.d), (g = e.d), (a = v.precision), (l = v.rounding), !f[0] || !g[0])
 	)
-		return g[0] || (e = new v(h)), _ ? I(e, a, l) : e;
-	if (((o = Z(h.e / O)), (n = Z(e.e / O)), (f = f.slice()), (i = o - n), i)) {
+		return g[0] || (e = new v(this)), _ ? I(e, a, l) : e;
+	if (((o = Z(this.e / O)), (n = Z(e.e / O)), (f = f.slice()), (i = o - n), i)) {
 		for (
 			i < 0
 				? ((r = f), (i = -i), (s = g.length))
@@ -3075,17 +3033,16 @@ C.plus = C.add = function (e) {
 	return (e.d = f), (e.e = xr(f, n)), _ ? I(e, a, l) : e;
 };
 C.precision = C.sd = function (e) {
-	var t,
-		r = this;
+	var t;
 	if (e !== void 0 && e !== !!e && e !== 1 && e !== 0) throw Error(Ie + e);
 	return (
-		r.d ? ((t = po(r.d)), e && r.e + 1 > t && (t = r.e + 1)) : (t = NaN), t
+		this.d ? ((t = po(this.d)), e && this.e + 1 > t && (t = this.e + 1)) : (t = NaN), t
 	);
 };
 C.round = function () {
-	var e = this,
-		t = e.constructor;
-	return I(new t(e), e.e + 1, t.rounding);
+	var 
+		t = this.constructor;
+	return I(new t(this), this.e + 1, t.rounding);
 };
 C.sine = C.sin = function () {
 	var e,
@@ -3112,16 +3069,15 @@ C.squareRoot = C.sqrt = function () {
 		n,
 		i,
 		o,
-		s = this,
-		a = s.d,
-		l = s.e,
-		f = s.s,
-		g = s.constructor;
+		a = this.d,
+		l = this.e,
+		f = this.s,
+		g = this.constructor;
 	if (f !== 1 || !a || !a[0])
-		return new g(!f || (f < 0 && (!a || a[0])) ? NaN : a ? s : 1 / 0);
+		return new g(!f || (f < 0 && (!a || a[0])) ? NaN : a ? this : 1 / 0);
 	for (
 		_ = !1,
-			f = Math.sqrt(+s),
+			f = Math.sqrt(+this),
 			f == 0 || f == 1 / 0
 				? ((t = K(a)),
 					(t.length + l) % 2 == 0 && (t += "0"),
@@ -3138,18 +3094,18 @@ C.squareRoot = C.sqrt = function () {
 	)
 		if (
 			((o = n),
-			(n = o.plus(q(s, o, r + 2, 1)).times(0.5)),
+			(n = o.plus(q(this, o, r + 2, 1)).times(0.5)),
 			K(o.d).slice(0, r) === (t = K(n.d)).slice(0, r))
 		)
 			if (((t = t.slice(r - 3, r + 1)), t == "9999" || (!i && t == "4999"))) {
-				if (!i && (I(o, l + 1, 0), o.times(o).eq(s))) {
+				if (!i && (I(o, l + 1, 0), o.times(o).eq(this))) {
 					n = o;
 					break;
 				}
 				(r += 4), (i = 1);
 			} else {
 				(!+t || (!+t.slice(1) && t.charAt(0) == "5")) &&
-					(I(n, l + 1, 1), (e = !n.times(n).eq(s)));
+					(I(n, l + 1, 1), (e = !n.times(n).eq(this)));
 				break;
 			}
 	return (_ = !0), I(n, l, g.rounding, e);
@@ -3184,11 +3140,10 @@ C.times = C.mul = function (e) {
 		a,
 		l,
 		f,
-		g = this,
-		h = g.constructor,
-		v = g.d,
+		h = this.constructor,
+		v = this.d,
 		S = (e = new h(e)).d;
-	if (((e.s *= g.s), !v || !v[0] || !S || !S[0]))
+	if (((e.s *= this.s), !v || !v[0] || !S || !S[0]))
 		return new h(
 			!e.s || (v && !v[0] && !S) || (S && !S[0] && !v)
 				? NaN
@@ -3197,7 +3152,7 @@ C.times = C.mul = function (e) {
 					: e.s * 0,
 		);
 	for (
-		r = Z(g.e / O) + Z(e.e / O),
+		r = Z(this.e / O) + Z(e.e / O),
 			l = v.length,
 			f = S.length,
 			l < f && ((o = v), (v = S), (S = o), (s = l), (l = f), (f = s)),
@@ -3254,16 +3209,15 @@ C.toExponential = function (e, t) {
 C.toFixed = function (e, t) {
 	var r,
 		n,
-		i = this,
-		o = i.constructor;
+		o = this.constructor;
 	return (
 		e === void 0
-			? (r = ge(i))
+			? (r = ge(this))
 			: (re(e, 0, Oe),
 				t === void 0 ? (t = o.rounding) : re(t, 0, 8),
-				(n = I(new o(i), e + i.e + 1, t)),
+				(n = I(new o(this), e + this.e + 1, t)),
 				(r = ge(n, !1, e + n.e + 1))),
-		i.isNeg() && !i.isZero() ? "-" + r : r
+		this.isNeg() && !this.isZero() ? "-" + r : r
 	);
 };
 C.toFraction = function (e) {
@@ -3279,15 +3233,14 @@ C.toFraction = function (e) {
 		g,
 		h,
 		v,
-		S = this,
-		A = S.d,
-		R = S.constructor;
-	if (!A) return new R(S);
+		A = this.d,
+		R = this.constructor;
+	if (!A) return new R(this);
 	if (
 		((f = r = new R(1)),
 		(n = l = new R(0)),
 		(t = new R(n)),
-		(o = t.e = po(A) - S.e - 1),
+		(o = t.e = po(A) - this.e - 1),
 		(s = o % O),
 		(t.d[0] = J(10, s < 0 ? O + s : s)),
 		e == null)
@@ -3316,12 +3269,12 @@ C.toFraction = function (e) {
 		(i = q(e.minus(r), n, 0, 1, 1)),
 		(l = l.plus(i.times(f))),
 		(r = r.plus(i.times(n))),
-		(l.s = f.s = S.s),
+		(l.s = f.s = this.s),
 		(v =
 			q(f, n, o, 1)
-				.minus(S)
+				.minus(this)
 				.abs()
-				.cmp(q(l, r, o, 1).minus(S).abs()) < 1
+				.cmp(q(l, r, o, 1).minus(this).abs()) < 1
 				? [f, n]
 				: [l, r]),
 		(R.precision = g),
@@ -3417,29 +3370,29 @@ C.toPrecision = function (e, t) {
 	);
 };
 C.toSignificantDigits = C.toSD = function (e, t) {
-	var r = this,
-		n = r.constructor;
+	var 
+		n = this.constructor;
 	return (
 		e === void 0
 			? ((e = n.precision), (t = n.rounding))
 			: (re(e, 1, Oe), t === void 0 ? (t = n.rounding) : re(t, 0, 8)),
-		I(new n(r), e, t)
+		I(new n(this), e, t)
 	);
 };
 C.toString = function () {
-	var e = this,
-		t = e.constructor,
-		r = ge(e, e.e <= t.toExpNeg || e.e >= t.toExpPos);
-	return e.isNeg() && !e.isZero() ? "-" + r : r;
+	var 
+		t = this.constructor,
+		r = ge(this, this.e <= t.toExpNeg || this.e >= t.toExpPos);
+	return this.isNeg() && !this.isZero() ? "-" + r : r;
 };
 C.truncated = C.trunc = function () {
 	return I(new this.constructor(this), this.e + 1, 1);
 };
 C.valueOf = C.toJSON = function () {
-	var e = this,
-		t = e.constructor,
-		r = ge(e, e.e <= t.toExpNeg || e.e >= t.toExpPos);
-	return e.isNeg() ? "-" + r : r;
+	var 
+		t = this.constructor,
+		r = ge(this, this.e <= t.toExpNeg || this.e >= t.toExpPos);
+	return this.isNeg() ? "-" + r : r;
 };
 function K(e) {
 	var t,
@@ -3517,7 +3470,7 @@ function Tl(e, t) {
 	}
 	return (e.precision -= r), t;
 }
-var q = (function () {
+var q = (() => {
 	function e(n, i, o) {
 		var s,
 			a = 0,
@@ -3542,7 +3495,7 @@ var q = (function () {
 			(n[o] -= a), (a = n[o] < i[o] ? 1 : 0), (n[o] = a * s + n[o] - i[o]);
 		for (; !n[0] && n.length > 1; ) n.shift();
 	}
-	return function (n, i, o, s, a, l) {
+	return (n, i, o, s, a, l) => {
 		var f,
 			g,
 			h,
@@ -4277,51 +4230,50 @@ function yo(e) {
 	function i(o) {
 		var s,
 			a,
-			l,
-			f = this;
-		if (!(f instanceof i)) return new i(o);
-		if (((f.constructor = i), oo(o))) {
-			(f.s = o.s),
+			l;
+		if (!(this instanceof i)) return new i(o);
+		if (((this.constructor = i), oo(o))) {
+			(this.s = o.s),
 				_
 					? !o.d || o.e > i.maxE
-						? ((f.e = NaN), (f.d = null))
+						? ((this.e = NaN), (this.d = null))
 						: o.e < i.minE
-							? ((f.e = 0), (f.d = [0]))
-							: ((f.e = o.e), (f.d = o.d.slice()))
-					: ((f.e = o.e), (f.d = o.d ? o.d.slice() : o.d));
+							? ((this.e = 0), (this.d = [0]))
+							: ((this.e = o.e), (this.d = o.d.slice()))
+					: ((this.e = o.e), (this.d = o.d ? o.d.slice() : o.d));
 			return;
 		}
 		if (((l = typeof o), l === "number")) {
 			if (o === 0) {
-				(f.s = 1 / o < 0 ? -1 : 1), (f.e = 0), (f.d = [0]);
+				(this.s = 1 / o < 0 ? -1 : 1), (this.e = 0), (this.d = [0]);
 				return;
 			}
-			if ((o < 0 ? ((o = -o), (f.s = -1)) : (f.s = 1), o === ~~o && o < 1e7)) {
+			if ((o < 0 ? ((o = -o), (this.s = -1)) : (this.s = 1), o === ~~o && o < 1e7)) {
 				for (s = 0, a = o; a >= 10; a /= 10) s++;
 				_
 					? s > i.maxE
-						? ((f.e = NaN), (f.d = null))
+						? ((this.e = NaN), (this.d = null))
 						: s < i.minE
-							? ((f.e = 0), (f.d = [0]))
-							: ((f.e = s), (f.d = [o]))
-					: ((f.e = s), (f.d = [o]));
+							? ((this.e = 0), (this.d = [0]))
+							: ((this.e = s), (this.d = [o]))
+					: ((this.e = s), (this.d = [o]));
 				return;
 			}
 			if (o * 0 !== 0) {
-				o || (f.s = NaN), (f.e = NaN), (f.d = null);
+				o || (this.s = NaN), (this.e = NaN), (this.d = null);
 				return;
 			}
-			return hr(f, o.toString());
+			return hr(this, o.toString());
 		}
 		if (l === "string")
 			return (
 				(a = o.charCodeAt(0)) === 45
-					? ((o = o.slice(1)), (f.s = -1))
-					: (a === 43 && (o = o.slice(1)), (f.s = 1)),
-				co.test(o) ? hr(f, o) : Cl(f, o)
+					? ((o = o.slice(1)), (this.s = -1))
+					: (a === 43 && (o = o.slice(1)), (this.s = 1)),
+				co.test(o) ? hr(this, o) : Cl(this, o)
 			);
 		if (l === "bigint")
-			return o < 0 ? ((o = -o), (f.s = -1)) : (f.s = 1), hr(f, o.toString());
+			return o < 0 ? ((o = -o), (this.s = -1)) : (this.s = 1), hr(this, o.toString());
 		throw Error(Ie + o);
 	}
 	if (
@@ -4394,7 +4346,7 @@ function yo(e) {
 				t = 0;
 			t < n.length;
 		)
-			e.hasOwnProperty((r = n[t++])) || (e[r] = this[r]);
+			Object.hasOwn(e, (r = n[t++])) || (e[r] = this[r]);
 	return i.config(e), i;
 }
 function jl(e, t) {
@@ -4554,7 +4506,7 @@ function du({ $type: e, value: t }) {
 		case "BigInt":
 			return BigInt(t);
 		case "Bytes": {
-			let {
+			const {
 				buffer: r,
 				byteOffset: n,
 				byteLength: i,
@@ -4595,9 +4547,9 @@ var he = class {
 		this._map.set(t, { value: r });
 	}
 	getOrCreate(t, r) {
-		let n = this._map.get(t);
+		const n = this._map.get(t);
 		if (n) return n.value;
-		let i = r();
+		const i = r();
 		return this.set(t, i), i;
 	}
 };
@@ -4615,9 +4567,9 @@ c();
 p();
 m();
 function wo(e, t) {
-	let r = {};
-	for (let n of e) {
-		let i = n[t];
+	const r = {};
+	for (const n of e) {
+		const i = n[t];
 		r[i] = n;
 	}
 	return r;
@@ -4644,8 +4596,8 @@ function fu(e) {
 	return { models: Pn(e.models), enums: Pn(e.enums), types: Pn(e.types) };
 }
 function Pn(e) {
-	let t = {};
-	for (let { name: r, ...n } of e) t[r] = n;
+	const t = {};
+	for (const { name: r, ...n } of e) t[r] = n;
 	return t;
 }
 d();
@@ -4764,7 +4716,7 @@ function bu(
 	},
 	s,
 ) {
-	let a = [""],
+	const a = [""],
 		l = t ? " in" : ":";
 	if (
 		(n
@@ -4781,7 +4733,7 @@ function bu(
 		i)
 	) {
 		a.push("");
-		let f = [i.toString()];
+		const f = [i.toString()];
 		o && (f.push(o), f.push(s.dim(")"))), a.push(f.join("")), o && a.push("");
 	} else a.push(""), o && a.push(o), a.push("");
 	return (
@@ -4791,7 +4743,7 @@ function bu(
 	);
 }
 function xu(e) {
-	let t = [e.fileName];
+	const t = [e.fileName];
 	return (
 		e.lineNumber && t.push(String(e.lineNumber)),
 		e.columnNumber && t.push(String(e.columnNumber)),
@@ -4820,7 +4772,7 @@ c();
 p();
 m();
 function Po(e, t, r) {
-	let n = vo(e),
+	const n = vo(e),
 		i = Pu(n),
 		o = Tu(i);
 	o ? Ar(o, t, r) : t.addErrorMessage(() => "Unknown error");
@@ -4829,14 +4781,14 @@ function vo(e) {
 	return e.errors.flatMap((t) => (t.kind === "Union" ? vo(t) : [t]));
 }
 function Pu(e) {
-	let t = new Map(),
+	const t = new Map(),
 		r = [];
-	for (let n of e) {
+	for (const n of e) {
 		if (n.kind !== "InvalidArgumentType") {
 			r.push(n);
 			continue;
 		}
-		let i = `${n.selectionPath.join(".")}:${n.argumentPath.join(".")}`,
+		const i = `${n.selectionPath.join(".")}:${n.argumentPath.join(".")}`,
 			o = t.get(i);
 		o
 			? t.set(i, {
@@ -4855,7 +4807,7 @@ function vu(e, t) {
 }
 function Tu(e) {
 	return hn(e, (t, r) => {
-		let n = bo(t),
+		const n = bo(t),
 			i = bo(r);
 		return n !== i ? n - i : xo(t) - xo(r);
 	});
@@ -4896,7 +4848,7 @@ var ae = class {
 		return (this.isRequired = !0), this;
 	}
 	write(t) {
-		let {
+		const {
 			colors: { green: r },
 		} = t.context;
 		t.addMarginSymbol(r(this.isRequired ? "+" : "?")),
@@ -4938,7 +4890,7 @@ var nt = class {
 		return typeof t == "string" ? (this.currentLine += t) : t.write(this), this;
 	}
 	writeJoined(t, r, n = (i, o) => o.write(i)) {
-		let i = r.length - 1;
+		const i = r.length - 1;
 		for (let o = 0; o < r.length; o++) n(r[o], this), o !== i && this.write(t);
 		return this;
 	}
@@ -4949,7 +4901,7 @@ var nt = class {
 		this.lines.push(this.indentedCurrentLine()),
 			(this.currentLine = ""),
 			(this.marginSymbol = void 0);
-		let t = this.afterNextNewLineCallback;
+		const t = this.afterNextNewLineCallback;
 		return (this.afterNextNewLineCallback = void 0), t?.(), this;
 	}
 	withIndent(t) {
@@ -4975,7 +4927,7 @@ var nt = class {
 		return this.currentLine.length;
 	}
 	indentedCurrentLine() {
-		let t = this.currentLine.padStart(
+		const t = this.currentLine.padStart(
 			this.currentLine.length + 2 * this.currentIndent,
 		);
 		return this.marginSymbol ? this.marginSymbol + t.slice(1) : t;
@@ -5034,7 +4986,7 @@ var ye = class {
 		return (this.color = t), this;
 	}
 	write(t) {
-		let r = t.getCurrentLineLength();
+		const r = t.getCurrentLineLength();
 		t.write(this.color(this.contents)),
 			this.isUnderlined &&
 				t.afterNextNewline(() => {
@@ -5076,11 +5028,11 @@ var ot = class extends Me {
 		this.writeWithItems(t);
 	}
 	writeEmpty(t) {
-		let r = new ye("[]");
+		const r = new ye("[]");
 		this.hasError && r.setColor(t.context.colors.red).underline(), t.write(r);
 	}
 	writeWithItems(t) {
-		let { colors: r } = t.context;
+		const { colors: r } = t.context;
 		t
 			.writeLine("[")
 			.withIndent(() => t.writeJoined(it, this.items).newLine())
@@ -5105,11 +5057,11 @@ var st = class e extends Me {
 		return this.fields[t];
 	}
 	getDeepField(t) {
-		let [r, ...n] = t,
+		const [r, ...n] = t,
 			i = this.getField(r);
 		if (!i) return;
 		let o = i;
-		for (let s of n) {
+		for (const s of n) {
 			let a;
 			if (
 				(o.value instanceof e
@@ -5145,42 +5097,42 @@ var st = class e extends Me {
 	}
 	getDeepSubSelectionValue(t) {
 		let r = this;
-		for (let n of t) {
+		for (const n of t) {
 			if (!(r instanceof e)) return;
-			let i = r.getSubSelectionValue(n);
+			const i = r.getSubSelectionValue(n);
 			if (!i) return;
 			r = i;
 		}
 		return r;
 	}
 	getDeepSelectionParent(t) {
-		let r = this.getSelectionParent();
+		const r = this.getSelectionParent();
 		if (!r) return;
 		let n = r;
-		for (let i of t) {
-			let o = n.value.getFieldValue(i);
+		for (const i of t) {
+			const o = n.value.getFieldValue(i);
 			if (!o || !(o instanceof e)) return;
-			let s = o.getSelectionParent();
+			const s = o.getSelectionParent();
 			if (!s) return;
 			n = s;
 		}
 		return n;
 	}
 	getSelectionParent() {
-		let t = this.getField("select")?.value.asObject();
+		const t = this.getField("select")?.value.asObject();
 		if (t) return { kind: "select", value: t };
-		let r = this.getField("include")?.value.asObject();
+		const r = this.getField("include")?.value.asObject();
 		if (r) return { kind: "include", value: r };
 	}
 	getSubSelectionValue(t) {
 		return this.getSelectionParent()?.value.fields[t].value;
 	}
 	getPrintWidth() {
-		let t = Object.values(this.fields);
+		const t = Object.values(this.fields);
 		return t.length == 0 ? 2 : Math.max(...t.map((n) => n.getPrintWidth())) + 2;
 	}
 	write(t) {
-		let r = Object.values(this.fields);
+		const r = Object.values(this.fields);
 		if (r.length === 0 && this.suggestions.length === 0) {
 			this.writeEmpty(t);
 			return;
@@ -5191,7 +5143,7 @@ var st = class e extends Me {
 		return this;
 	}
 	writeEmpty(t) {
-		let r = new ye("{}");
+		const r = new ye("{}");
 		this.hasError && r.setColor(t.context.colors.red).underline(), t.write(r);
 	}
 	writeWithContents(t, r) {
@@ -5219,7 +5171,7 @@ var H = class extends Me {
 		return this.text.length;
 	}
 	write(r) {
-		let n = new ye(this.text);
+		const n = new ye(this.text);
 		this.hasError && n.underline().setColor(r.context.colors.red), r.write(n);
 	}
 	asObject() {}
@@ -5235,7 +5187,7 @@ var St = class {
 		return (
 			this.fields.push({
 				write(n) {
-					let { green: i, dim: o } = n.context.colors;
+					const { green: i, dim: o } = n.context.colors;
 					n.write(i(o(`${t}: ${r}`))).addMarginSymbol(i(o("+")));
 				},
 			}),
@@ -5243,7 +5195,7 @@ var St = class {
 		);
 	}
 	write(t) {
-		let {
+		const {
 			colors: { green: r },
 		} = t.context;
 		t.writeLine(r("{"))
@@ -5303,7 +5255,7 @@ function Ar(e, t, r) {
 	}
 }
 function Cu(e, t) {
-	let r = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
+	const r = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
 	r &&
 		(r.getField(e.firstField)?.markAsError(),
 		r.getField(e.secondField)?.markAsError()),
@@ -5313,11 +5265,11 @@ function Cu(e, t) {
 		);
 }
 function Au(e, t) {
-	let [r, n] = kt(e.selectionPath),
+	const [r, n] = kt(e.selectionPath),
 		i = e.outputType,
 		o = t.arguments.getDeepSelectionParent(r)?.value;
 	if (o && (o.getField(n)?.markAsError(), i))
-		for (let s of i.fields)
+		for (const s of i.fields)
 			s.isRelation && o.addSuggestion(new ae(s.name, "true"));
 	t.addErrorMessage((s) => {
 		let a = `Invalid scalar field ${s.red(`\`${n}\``)} for ${s.bold("include")} statement`;
@@ -5330,9 +5282,9 @@ Note that ${s.bold("include")} statements only accept relation fields.`),
 	});
 }
 function Ru(e, t, r) {
-	let n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
+	const n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
 	if (n) {
-		let i = n.getField("omit")?.value.asObject();
+		const i = n.getField("omit")?.value.asObject();
 		if (i) {
 			Su(e, t, i);
 			return;
@@ -5352,14 +5304,14 @@ function Ru(e, t, r) {
 }
 function Su(e, t, r) {
 	r.removeAllFields();
-	for (let n of e.outputType.fields) r.addSuggestion(new ae(n.name, "false"));
+	for (const n of e.outputType.fields) r.addSuggestion(new ae(n.name, "false"));
 	t.addErrorMessage(
 		(n) =>
 			`The ${n.red("omit")} statement includes every field of the model ${n.bold(e.outputType.name)}. At least one field must be included in the result`,
 	);
 }
 function ku(e, t) {
-	let r = e.outputType,
+	const r = e.outputType,
 		n = t.arguments.getDeepSelectionParent(e.selectionPath)?.value,
 		i = n?.isEmpty() ?? !1;
 	n && (n.removeAllFields(), Io(n, r)),
@@ -5370,16 +5322,16 @@ function ku(e, t) {
 		);
 }
 function Iu(e, t) {
-	let r = new St();
-	for (let i of e.outputType.fields)
+	const r = new St();
+	for (const i of e.outputType.fields)
 		i.isRelation || r.addField(i.name, "false");
-	let n = new ae("omit", r).makeRequired();
+	const n = new ae("omit", r).makeRequired();
 	if (e.selectionPath.length === 0) t.arguments.addSuggestion(n);
 	else {
-		let [i, o] = kt(e.selectionPath),
+		const [i, o] = kt(e.selectionPath),
 			a = t.arguments.getDeepSelectionParent(i)?.value.asObject()?.getField(o);
 		if (a) {
-			let l = a?.value.asObject() ?? new st();
+			const l = a?.value.asObject() ?? new st();
 			l.addSuggestion(n), (a.value = l);
 		}
 	}
@@ -5389,10 +5341,10 @@ function Iu(e, t) {
 	);
 }
 function Ou(e, t) {
-	let r = Oo(e.selectionPath, t);
+	const r = Oo(e.selectionPath, t);
 	if (r.parentKind !== "unknown") {
 		r.field.markAsError();
-		let n = r.parent;
+		const n = r.parent;
 		switch (r.parentKind) {
 			case "select":
 				Io(n, e.outputType);
@@ -5406,7 +5358,7 @@ function Ou(e, t) {
 		}
 	}
 	t.addErrorMessage((n) => {
-		let i = [`Unknown field ${n.red(`\`${r.fieldName}\``)}`];
+		const i = [`Unknown field ${n.red(`\`${r.fieldName}\``)}`];
 		return (
 			r.parentKind !== "unknown" &&
 				i.push(`for ${n.bold(r.parentKind)} statement`),
@@ -5417,7 +5369,7 @@ function Ou(e, t) {
 	});
 }
 function Du(e, t) {
-	let r = Oo(e.selectionPath, t);
+	const r = Oo(e.selectionPath, t);
 	r.parentKind !== "unknown" && r.field.value.markAsError(),
 		t.addErrorMessage(
 			(n) =>
@@ -5425,7 +5377,7 @@ function Du(e, t) {
 		);
 }
 function Mu(e, t) {
-	let r = e.argumentPath[0],
+	const r = e.argumentPath[0],
 		n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
 	n && (n.getField(r)?.markAsError(), Vu(n, e.arguments)),
 		t.addErrorMessage((i) =>
@@ -5437,11 +5389,11 @@ function Mu(e, t) {
 		);
 }
 function _u(e, t) {
-	let [r, n] = kt(e.argumentPath),
+	const [r, n] = kt(e.argumentPath),
 		i = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
 	if (i) {
 		i.getDeepField(e.argumentPath)?.markAsError();
-		let o = i.getDeepFieldValue(r)?.asObject();
+		const o = i.getDeepFieldValue(r)?.asObject();
 		o && Do(o, e.inputType);
 	}
 	t.addErrorMessage((o) =>
@@ -5453,7 +5405,7 @@ function _u(e, t) {
 	);
 }
 function So(e, t, r) {
-	let n = [`Unknown argument \`${e.red(t)}\`.`],
+	const n = [`Unknown argument \`${e.red(t)}\`.`],
 		i = Qu(t, r);
 	return (
 		i && n.push(`Did you mean \`${e.green(i)}\`?`),
@@ -5468,9 +5420,9 @@ function Nu(e, t) {
 			? `Argument \`${l.green(o)}\` must not be ${l.red("null")}.`
 			: `Argument \`${l.green(o)}\` is missing.`,
 	);
-	let n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
+	const n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
 	if (!n) return;
-	let [i, o] = kt(e.argumentPath),
+	const [i, o] = kt(e.argumentPath),
 		s = new St(),
 		a = n.getDeepFieldValue(i)?.asObject();
 	if (a)
@@ -5479,11 +5431,11 @@ function Nu(e, t) {
 			r && a.removeField(o),
 			e.inputTypes.length === 1 && e.inputTypes[0].kind === "object")
 		) {
-			for (let l of e.inputTypes[0].fields)
+			for (const l of e.inputTypes[0].fields)
 				s.addField(l.name, l.typeNames.join(" | "));
 			a.addSuggestion(new ae(o, s).makeRequired());
 		} else {
-			let l = e.inputTypes.map(ko).join(" | ");
+			const l = e.inputTypes.map(ko).join(" | ");
 			a.addSuggestion(new ae(o, l).makeRequired());
 		}
 }
@@ -5491,11 +5443,11 @@ function ko(e) {
 	return e.kind === "list" ? `${ko(e.elementType)}[]` : e.name;
 }
 function Fu(e, t) {
-	let r = e.argument.name,
+	const r = e.argument.name,
 		n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
 	n && n.getDeepFieldValue(e.argumentPath)?.markAsError(),
 		t.addErrorMessage((i) => {
-			let o = Ir(
+			const o = Ir(
 				"or",
 				e.argument.typeNames.map((s) => i.green(s)),
 			);
@@ -5503,17 +5455,17 @@ function Fu(e, t) {
 		});
 }
 function Lu(e, t) {
-	let r = e.argument.name,
+	const r = e.argument.name,
 		n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
 	n && n.getDeepFieldValue(e.argumentPath)?.markAsError(),
 		t.addErrorMessage((i) => {
-			let o = [`Invalid value for argument \`${i.bold(r)}\``];
+			const o = [`Invalid value for argument \`${i.bold(r)}\``];
 			if (
 				(e.underlyingError && o.push(`: ${e.underlyingError}`),
 				o.push("."),
 				e.argument.typeNames.length > 0)
 			) {
-				let s = Ir(
+				const s = Ir(
 					"or",
 					e.argument.typeNames.map((a) => i.green(a)),
 				);
@@ -5527,11 +5479,11 @@ function Bu(e, t) {
 		n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject(),
 		i;
 	if (n) {
-		let s = n.getDeepField(e.argumentPath)?.value;
+		const s = n.getDeepField(e.argumentPath)?.value;
 		s?.markAsError(), s instanceof H && (i = s.text);
 	}
 	t.addErrorMessage((o) => {
-		let s = ["Unable to fit value"];
+		const s = ["Unable to fit value"];
 		return (
 			i && s.push(o.red(i)),
 			s.push(`into a 64-bit signed integer for field \`${o.bold(r)}\``),
@@ -5540,14 +5492,14 @@ function Bu(e, t) {
 	});
 }
 function Uu(e, t) {
-	let r = e.argumentPath[e.argumentPath.length - 1],
+	const r = e.argumentPath[e.argumentPath.length - 1],
 		n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject();
 	if (n) {
-		let i = n.getDeepFieldValue(e.argumentPath)?.asObject();
+		const i = n.getDeepFieldValue(e.argumentPath)?.asObject();
 		i && Do(i, e.inputType);
 	}
 	t.addErrorMessage((i) => {
-		let o = [
+		const o = [
 			`Argument \`${i.bold(r)}\` of type ${i.bold(e.inputType.name)} needs`,
 		];
 		return (
@@ -5573,11 +5525,11 @@ function qu(e, t) {
 		n = t.arguments.getDeepSubSelectionValue(e.selectionPath)?.asObject(),
 		i = [];
 	if (n) {
-		let o = n.getDeepFieldValue(e.argumentPath)?.asObject();
+		const o = n.getDeepFieldValue(e.argumentPath)?.asObject();
 		o && (o.markAsError(), (i = Object.keys(o.getFields())));
 	}
 	t.addErrorMessage((o) => {
-		let s = [
+		const s = [
 			`Argument \`${o.bold(r)}\` of type ${o.bold(e.inputType.name)} needs`,
 		];
 		return (
@@ -5602,28 +5554,28 @@ function qu(e, t) {
 	});
 }
 function Io(e, t) {
-	for (let r of t.fields)
+	for (const r of t.fields)
 		e.hasField(r.name) || e.addSuggestion(new ae(r.name, "true"));
 }
 function $u(e, t) {
-	for (let r of t.fields)
+	for (const r of t.fields)
 		r.isRelation &&
 			!e.hasField(r.name) &&
 			e.addSuggestion(new ae(r.name, "true"));
 }
 function ju(e, t) {
-	for (let r of t.fields)
+	for (const r of t.fields)
 		!e.hasField(r.name) &&
 			!r.isRelation &&
 			e.addSuggestion(new ae(r.name, "true"));
 }
 function Vu(e, t) {
-	for (let r of t)
+	for (const r of t)
 		e.hasField(r.name) ||
 			e.addSuggestion(new ae(r.name, r.typeNames.join(" | ")));
 }
 function Oo(e, t) {
-	let [r, n] = kt(e),
+	const [r, n] = kt(e),
 		i = t.arguments.getDeepSubSelectionValue(r)?.asObject();
 	if (!i) return { parentKind: "unknown", fieldName: n };
 	let o = i.getFieldValue("select")?.asObject(),
@@ -5642,12 +5594,12 @@ function Oo(e, t) {
 }
 function Do(e, t) {
 	if (t.kind === "object")
-		for (let r of t.fields)
+		for (const r of t.fields)
 			e.hasField(r.name) ||
 				e.addSuggestion(new ae(r.name, r.typeNames.join(" | ")));
 }
 function kt(e) {
-	let t = [...e],
+	const t = [...e],
 		r = t.pop();
 	if (!r) throw new Error("unexpected empty path");
 	return [t, r];
@@ -5661,7 +5613,7 @@ function It({ green: e, enabled: t }) {
 }
 function Ir(e, t) {
 	if (t.length === 1) return t[0];
-	let r = [...t],
+	const r = [...t],
 		n = r.pop();
 	return `${r.join(", ")} ${e} ${n}`;
 }
@@ -5669,8 +5621,8 @@ var Gu = 3;
 function Qu(e, t) {
 	let r = 1 / 0,
 		n;
-	for (let i of t) {
-		let o = (0, Ro.default)(e, i);
+	for (const i of t) {
+		const o = (0, Ro.default)(e, i);
 		o > Gu || (o < r && ((r = o), (n = i)));
 	}
 	return n;
@@ -5699,7 +5651,7 @@ var Ot = class {
 			(this.isEnum = o);
 	}
 	_toGraphQLInputType() {
-		let t = this.isList ? "List" : "",
+		const t = this.isList ? "List" : "",
 			r = this.isEnum ? "Enum" : "";
 		return `${t}${r}${this.typeName}FieldRefInput<${this.modelName}>`;
 	}
@@ -5773,7 +5725,7 @@ var Mo = ": ",
 			return this.name.length + this.value.getPrintWidth() + Mo.length;
 		}
 		write(t) {
-			let r = new ye(this.name);
+			const r = new ye(this.name);
 			this.hasError && r.underline().setColor(t.context.colors.red),
 				t.write(r).write(Mo).write(this.value);
 		}
@@ -5801,9 +5753,9 @@ function lt(e) {
 	return new Sn(_o(e));
 }
 function _o(e) {
-	let t = new st();
-	for (let [r, n] of Object.entries(e)) {
-		let i = new Dr(r, No(n));
+	const t = new st();
+	for (const [r, n] of Object.entries(e)) {
+		const i = new Dr(r, No(n));
 		t.addField(i);
 	}
 	return t;
@@ -5820,7 +5772,7 @@ function No(e) {
 			? new H(`Buffer.alloc(${e.byteLength})`)
 			: new H(`new Uint8Array(${e.byteLength})`);
 	if (e instanceof Date) {
-		let t = vr(e) ? e.toISOString() : "Invalid Date";
+		const t = vr(e) ? e.toISOString() : "Invalid Date";
 		return new H(`new Date("${t}")`);
 	}
 	return e instanceof Te
@@ -5834,12 +5786,12 @@ function No(e) {
 					: new H(Object.prototype.toString.call(e));
 }
 function Ju(e) {
-	let t = new ot();
-	for (let r of e) t.addItem(No(r));
+	const t = new ot();
+	for (const r of e) t.addItem(No(r));
 	return t;
 }
 function Mr(e, t) {
-	let r = t === "pretty" ? Ao : kr,
+	const r = t === "pretty" ? Ao : kr,
 		n = e.renderAllMessages(r),
 		i = new nt(0, { colors: r }).write(e).toString();
 	return { message: n, args: i };
@@ -5853,9 +5805,9 @@ function _r({
 	clientVersion: o,
 	globalOmit: s,
 }) {
-	let a = lt(e);
-	for (let h of t) Ar(h, a, s);
-	let { message: l, args: f } = Mr(a, r),
+	const a = lt(e);
+	for (const h of t) Ar(h, a, s);
+	const { message: l, args: f } = Mr(a, r),
 		g = Cr({
 			message: l,
 			callsite: n,
@@ -5884,7 +5836,7 @@ c();
 p();
 m();
 function Lo(e, t, r) {
-	let n = we(r);
+	const n = we(r);
 	return !t.result || !(t.result.$allModels || t.result[n])
 		? e
 		: Wu({
@@ -5894,7 +5846,7 @@ function Lo(e, t, r) {
 			});
 }
 function Wu(e) {
-	let t = new he(),
+	const t = new he(),
 		r = (n, i) =>
 			t.getOrCreate(n, () =>
 				i.has(n)
@@ -5913,21 +5865,21 @@ function Fo(e, t, r) {
 		: {};
 }
 function Hu(e, t, r) {
-	let n = e?.[t]?.compute;
+	const n = e?.[t]?.compute;
 	return n ? (i) => r({ ...i, [t]: n(i) }) : r;
 }
 function Bo(e, t) {
 	if (!t) return e;
-	let r = { ...e };
-	for (let n of Object.values(t))
-		if (e[n.name]) for (let i of n.needs) r[i] = !0;
+	const r = { ...e };
+	for (const n of Object.values(t))
+		if (e[n.name]) for (const i of n.needs) r[i] = !0;
 	return r;
 }
 function Uo(e, t) {
 	if (!t) return e;
-	let r = { ...e };
-	for (let n of Object.values(t))
-		if (!e[n.name]) for (let i of n.needs) delete r[i];
+	const r = { ...e };
+	for (const n of Object.values(t))
+		if (!e[n.name]) for (const i of n.needs) delete r[i];
 	return r;
 }
 var Nr = class {
@@ -5947,7 +5899,7 @@ var Nr = class {
 				: this.previous?.getAllClientExtensions(),
 		);
 		batchCallbacks = At(() => {
-			let t = this.previous?.getAllBatchQueryCallbacks() ?? [],
+			const t = this.previous?.getAllBatchQueryCallbacks() ?? [],
 				r = this.extension.query?.$__internalBatch;
 			return r ? t.concat(r) : t;
 		});
@@ -5961,7 +5913,7 @@ var Nr = class {
 		}
 		getAllModelExtensions(t) {
 			return this.modelExtensionsCache.getOrCreate(t, () => {
-				let r = we(t);
+				const r = we(t);
 				return !this.extension.model ||
 					!(this.extension.model[r] || this.extension.model.$allModels)
 					? this.previous?.getAllModelExtensions(t)
@@ -5974,7 +5926,7 @@ var Nr = class {
 		}
 		getAllQueryCallbacks(t, r) {
 			return this.queryCallbacksCache.getOrCreate(`${t}:${r}`, () => {
-				let n = this.previous?.getAllQueryCallbacks(t, r) ?? [],
+				const n = this.previous?.getAllQueryCallbacks(t, r) ?? [],
 					i = [],
 					o = this.extension.query;
 				return !o || !(o[t] || o.$allModels || o[r] || o.$allOperations)
@@ -6106,7 +6058,7 @@ function On({
 	previewFeatures: f,
 	globalOmit: g,
 }) {
-	let h = new In({
+	const h = new In({
 		runtimeDataModel: n,
 		modelName: e,
 		action: t,
@@ -6124,7 +6076,7 @@ function On({
 	return { modelName: e, action: zu[t], query: Lt(r, h) };
 }
 function Lt({ select: e, include: t, ...r } = {}, n) {
-	let i = r.omit;
+	const i = r.omit;
 	return delete r.omit, { arguments: Go(r, n), selection: Yu(e, t, i, n) };
 }
 function Yu(e, t, r, n) {
@@ -6147,7 +6099,7 @@ function Yu(e, t, r, n) {
 		: Zu(n, t, r);
 }
 function Zu(e, t, r) {
-	let n = {};
+	const n = {};
 	return (
 		e.modelOrType &&
 			!e.isRawAction() &&
@@ -6158,14 +6110,14 @@ function Zu(e, t, r) {
 	);
 }
 function Xu(e, t, r) {
-	for (let [n, i] of Object.entries(t)) {
+	for (const [n, i] of Object.entries(t)) {
 		if (Ee(i)) continue;
-		let o = r.nestSelection(n);
+		const o = r.nestSelection(n);
 		if ((Dn(i, o), i === !1 || i === void 0)) {
 			e[n] = !1;
 			continue;
 		}
-		let s = r.findField(n);
+		const s = r.findField(n);
 		if (
 			(s &&
 				s.kind !== "object" &&
@@ -6187,25 +6139,25 @@ function Xu(e, t, r) {
 	}
 }
 function ec(e, t, r) {
-	let n = r.getComputedFields(),
+	const n = r.getComputedFields(),
 		i = { ...r.getGlobalOmit(), ...t },
 		o = Uo(i, n);
-	for (let [s, a] of Object.entries(o)) {
+	for (const [s, a] of Object.entries(o)) {
 		if (Ee(a)) continue;
 		Dn(a, r.nestSelection(s));
-		let l = r.findField(s);
+		const l = r.findField(s);
 		(n?.[s] && !l) || (e[s] = !a);
 	}
 }
 function tc(e, t) {
-	let r = {},
+	const r = {},
 		n = t.getComputedFields(),
 		i = Bo(e, n);
-	for (let [o, s] of Object.entries(i)) {
+	for (const [o, s] of Object.entries(i)) {
 		if (Ee(s)) continue;
-		let a = t.nestSelection(o);
+		const a = t.nestSelection(o);
 		Dn(s, a);
-		let l = t.findField(o);
+		const l = t.findField(o);
 		if (!(n?.[o] && !l)) {
 			if (s === !1 || s === void 0 || Ee(s)) {
 				r[o] = !1;
@@ -6243,7 +6195,7 @@ function Vo(e, t) {
 		};
 	if (Array.isArray(e)) return rc(e, t);
 	if (ArrayBuffer.isView(e)) {
-		let { buffer: r, byteOffset: n, byteLength: i } = e;
+		const { buffer: r, byteOffset: n, byteLength: i } = e;
 		return { $type: "Bytes", value: w.Buffer.from(r, n, i).toString("base64") };
 	}
 	if (nc(e)) return e.values;
@@ -6265,9 +6217,9 @@ function Vo(e, t) {
 }
 function Go(e, t) {
 	if (e.$type) return { $type: "Raw", value: e };
-	let r = {};
-	for (let n in e) {
-		let i = e[n],
+	const r = {};
+	for (const n in e) {
+		const i = e[n],
 			o = t.nestArgument(n);
 		Ee(i) ||
 			(i !== void 0
@@ -6284,12 +6236,12 @@ function Go(e, t) {
 	return r;
 }
 function rc(e, t) {
-	let r = [];
+	const r = [];
 	for (let n = 0; n < e.length; n++) {
-		let i = t.nestArgument(String(n)),
+		const i = t.nestArgument(String(n)),
 			o = e[n];
 		if (o === void 0 || Ee(o)) {
-			let s = o === void 0 ? "undefined" : "Prisma.skip";
+			const s = o === void 0 ? "undefined" : "Prisma.skip";
 			t.throwValidationError({
 				kind: "InvalidArgumentValue",
 				selectionPath: i.getSelectionPath(),
@@ -6377,7 +6329,7 @@ var In = class e {
 		return this.modelOrType?.fields.find((r) => r.name === t);
 	}
 	nestSelection(t) {
-		let r = this.findField(t),
+		const r = this.findField(t),
 			n = r?.kind === "object" ? r.type : void 0;
 		return new e({
 			...this.params,
@@ -6462,7 +6414,7 @@ c();
 p();
 m();
 function oc(e, t) {
-	let r = At(() => sc(t));
+	const r = At(() => sc(t));
 	Object.defineProperty(e, "dmmf", { get: () => r.get() });
 }
 function sc(e) {
@@ -6525,14 +6477,14 @@ var le = class e {
 				: new TypeError(
 						`Expected ${t.length} strings to have ${t.length - 1} values`,
 					);
-		let n = r.reduce((s, a) => s + (a instanceof e ? a.values.length : 1), 0);
+		const n = r.reduce((s, a) => s + (a instanceof e ? a.values.length : 1), 0);
 		(this.values = new Array(n)),
 			(this.strings = new Array(n + 1)),
 			(this.strings[0] = t[0]);
 		let i = 0,
 			o = 0;
 		for (; i < r.length; ) {
-			let s = r[i++],
+			const s = r[i++],
 				a = t[i];
 			if (s instanceof e) {
 				this.strings[o] += s.strings[0];
@@ -6628,7 +6580,7 @@ c();
 p();
 m();
 function Ue(e) {
-	let t = new he();
+	const t = new he();
 	return {
 		getKeys() {
 			return e.getKeys();
@@ -6653,7 +6605,7 @@ p();
 m();
 var qr = { enumerable: !0, configurable: !0, writable: !0 };
 function $r(e) {
-	let t = new Set(e);
+	const t = new Set(e);
 	return {
 		getPrototypeOf: () => Object.prototype,
 		getOwnPropertyDescriptor: () => qr,
@@ -6664,21 +6616,21 @@ function $r(e) {
 }
 var zo = Symbol.for("nodejs.util.inspect.custom");
 function pe(e, t) {
-	let r = pc(t),
+	const r = pc(t),
 		n = new Set(),
 		i = new Proxy(e, {
 			get(o, s) {
 				if (n.has(s)) return o[s];
-				let a = r.get(s);
+				const a = r.get(s);
 				return a ? a.getPropertyValue(s) : o[s];
 			},
 			has(o, s) {
 				if (n.has(s)) return !0;
-				let a = r.get(s);
+				const a = r.get(s);
 				return a ? (a.has?.(s) ?? !0) : Reflect.has(o, s);
 			},
 			ownKeys(o) {
-				let s = Yo(Reflect.ownKeys(o), r),
+				const s = Yo(Reflect.ownKeys(o), r),
 					a = Yo(Array.from(r.keys()), r);
 				return [...new Set([...s, ...a, ...n])];
 			},
@@ -6688,9 +6640,9 @@ function pe(e, t) {
 					: (n.add(s), Reflect.set(o, s, a));
 			},
 			getOwnPropertyDescriptor(o, s) {
-				let a = Reflect.getOwnPropertyDescriptor(o, s);
+				const a = Reflect.getOwnPropertyDescriptor(o, s);
 				if (a && !a.configurable) return a;
-				let l = r.get(s);
+				const l = r.get(s);
 				return l
 					? l.getPropertyDescriptor
 						? { ...qr, ...l?.getPropertyDescriptor(s) }
@@ -6704,17 +6656,17 @@ function pe(e, t) {
 		});
 	return (
 		(i[zo] = function () {
-			let o = { ...this };
+			const o = { ...this };
 			return delete o[zo], o;
 		}),
 		i
 	);
 }
 function pc(e) {
-	let t = new Map();
-	for (let r of e) {
-		let n = r.getKeys();
-		for (let i of n) t.set(i, r);
+	const t = new Map();
+	for (const r of e) {
+		const n = r.getKeys();
+		for (const i of n) t.set(i, r);
 	}
 	return t;
 }
@@ -6758,7 +6710,7 @@ p();
 m();
 function Zo(e) {
 	if (e === void 0) return "";
-	let t = lt(e);
+	const t = lt(e);
 	return new nt(0, { colors: kr }).write(t).toString();
 }
 d();
@@ -6839,7 +6791,7 @@ p();
 m();
 var Xo = { _avg: !0, _count: !0, _sum: !0, _min: !0, _max: !0 };
 function pt(e = {}) {
-	let t = gc(e);
+	const t = gc(e);
 	return Object.entries(t).reduce(
 		(n, [i, o]) => (
 			Xo[i] !== void 0 ? (n.select[i] = { select: o }) : (n[i] = o), n
@@ -6856,7 +6808,7 @@ function Gr(e = {}) {
 	return (t) => (typeof e._count == "boolean" && (t._count = t._count._all), t);
 }
 function es(e, t) {
-	let r = Gr(e);
+	const r = Gr(e);
 	return t({ action: "aggregate", unpacker: r, argsMapper: pt })(e);
 }
 d();
@@ -6865,7 +6817,7 @@ c();
 p();
 m();
 function hc(e = {}) {
-	let { select: t, ...r } = e;
+	const { select: t, ...r } = e;
 	return typeof t == "object"
 		? pt({ ...r, _count: t })
 		: pt({ ...r, _count: { _all: !0 } });
@@ -6884,9 +6836,9 @@ c();
 p();
 m();
 function wc(e = {}) {
-	let t = pt(e);
+	const t = pt(e);
 	if (Array.isArray(t.by))
-		for (let r of t.by) typeof r == "string" && (t.select[r] = !0);
+		for (const r of t.by) typeof r == "string" && (t.select[r] = !0);
 	else typeof t.by == "string" && (t.select[t.by] = !0);
 	return t;
 }
@@ -6913,14 +6865,14 @@ c();
 p();
 m();
 function is(e, t) {
-	let r = t.fields.filter((i) => !i.relationName),
+	const r = t.fields.filter((i) => !i.relationName),
 		n = wo(r, "name");
 	return new Proxy(
 		{},
 		{
 			get(i, o) {
 				if (o in i || typeof o == "symbol") return i[o];
-				let s = n[o];
+				const s = n[o];
 				if (s) return new Ot(e, o, s.type, s.isList, s.kind === "enum");
 			},
 			...$r(Object.keys(n)),
@@ -6951,12 +6903,12 @@ function xc(e, t, r) {
 	return t === void 0 ? (e ?? {}) : ss(t, r, e || !0);
 }
 function Ln(e, t, r, n, i, o) {
-	let a = e._runtimeDataModel.models[t].fields.reduce(
+	const a = e._runtimeDataModel.models[t].fields.reduce(
 		(l, f) => ({ ...l, [f.name]: f }),
 		{},
 	);
 	return (l) => {
-		let f = _e(e._errorFormat),
+		const f = _e(e._errorFormat),
 			g = bc(n, i),
 			h = xc(l, o, g),
 			v = r({ dataPath: g, callsite: f })(h),
@@ -6964,7 +6916,7 @@ function Ln(e, t, r, n, i, o) {
 		return new Proxy(v, {
 			get(A, R) {
 				if (!S.includes(R)) return A[R];
-				let M = [a[R].type, r, R],
+				const M = [a[R].type, r, R],
 					B = [g, h];
 				return Ln(e, ...M, ...B);
 			},
@@ -6989,7 +6941,7 @@ var vc = [
 	],
 	Tc = ["aggregate", "count", "groupBy"];
 function Bn(e, t) {
-	let r = e._extensions.getAllModelExtensions(t) ?? {},
+	const r = e._extensions.getAllModelExtensions(t) ?? {},
 		n = [
 			Cc(e, t),
 			Rc(e, t),
@@ -7001,19 +6953,19 @@ function Bn(e, t) {
 	return pe({}, n);
 }
 function Cc(e, t) {
-	let r = we(t),
+	const r = we(t),
 		n = Object.keys(Rt).concat("count");
 	return {
 		getKeys() {
 			return n;
 		},
 		getPropertyValue(i) {
-			let o = i,
+			const o = i,
 				s = (a) => (l) => {
-					let f = _e(e._errorFormat);
+					const f = _e(e._errorFormat);
 					return e._createPrismaPromise(
 						(g) => {
-							let h = {
+							const h = {
 								args: l,
 								dataPath: [],
 								action: o,
@@ -7038,7 +6990,7 @@ function Ac(e) {
 function Rc(e, t) {
 	return Ue(
 		ee("fields", () => {
-			let r = e._runtimeDataModel.models[t];
+			const r = e._runtimeDataModel.models[t];
 			return is(t, r);
 		}),
 	);
@@ -7053,7 +7005,7 @@ function as(e) {
 }
 var Un = Symbol();
 function $t(e) {
-	let t = [
+	const t = [
 			Sc(e),
 			kc(e),
 			ee(Un, () => e),
@@ -7063,7 +7015,7 @@ function $t(e) {
 	return r && t.push(qt(r)), pe(e, t);
 }
 function Sc(e) {
-	let t = Object.getPrototypeOf(e._originalClient),
+	const t = Object.getPrototypeOf(e._originalClient),
 		r = [...new Set(Object.getOwnPropertyNames(t))];
 	return {
 		getKeys() {
@@ -7075,7 +7027,7 @@ function Sc(e) {
 	};
 }
 function kc(e) {
-	let t = Object.keys(e._runtimeDataModel.models),
+	const t = Object.keys(e._runtimeDataModel.models),
 		r = t.map(we),
 		n = [...new Set(t.concat(r))];
 	return Ue({
@@ -7083,7 +7035,7 @@ function kc(e) {
 			return n;
 		},
 		getPropertyValue(i) {
-			let o = as(i);
+			const o = as(i);
 			if (e._runtimeDataModel.models[o] !== void 0) return Bn(e, o);
 			if (e._runtimeDataModel.models[i] !== void 0) return Bn(e, i);
 		},
@@ -7098,12 +7050,12 @@ function ls(e) {
 function us(e) {
 	if (typeof e == "function") return e(this);
 	if (e.client?.__AccelerateEngine) {
-		let r = e.client.__AccelerateEngine;
+		const r = e.client.__AccelerateEngine;
 		this._originalClient._engine = new r(
 			this._originalClient._accelerateEngineConfig,
 		);
 	}
-	let t = Object.create(this._originalClient, {
+	const t = Object.create(this._originalClient, {
 		_extensions: { value: this._extensions.append(e) },
 		_appliedParent: { value: this, configurable: !0 },
 		$use: { value: void 0 },
@@ -7122,18 +7074,18 @@ c();
 p();
 m();
 function cs({ result: e, modelName: t, select: r, omit: n, extensions: i }) {
-	let o = i.getAllComputedFields(t);
+	const o = i.getAllComputedFields(t);
 	if (!o) return e;
-	let s = [],
+	const s = [],
 		a = [];
-	for (let l of Object.values(o)) {
+	for (const l of Object.values(o)) {
 		if (n) {
 			if (n[l.name]) continue;
-			let f = l.needs.filter((g) => n[g]);
+			const f = l.needs.filter((g) => n[g]);
 			f.length > 0 && a.push(ct(f));
 		} else if (r) {
 			if (!r[l.name]) continue;
-			let f = l.needs.filter((g) => !r[g]);
+			const f = l.needs.filter((g) => !r[g]);
 			f.length > 0 && a.push(ct(f));
 		}
 		Ic(e, l.needs) && s.push(Oc(l, pe(e, s)));
@@ -7169,7 +7121,7 @@ function Qr({
 			});
 		return t;
 	}
-	let o = e(t, i, r) ?? t;
+	const o = e(t, i, r) ?? t;
 	return (
 		r.include &&
 			ps({
@@ -7197,11 +7149,11 @@ function ps({
 	runtimeDataModel: n,
 	visitor: i,
 }) {
-	for (let [o, s] of Object.entries(e)) {
+	for (const [o, s] of Object.entries(e)) {
 		if (!s || t[o] == null || Ee(s)) continue;
-		let l = n.models[r].fields.find((g) => g.name === o);
+		const l = n.models[r].fields.find((g) => g.name === o);
 		if (!l || l.kind !== "object" || !l.relationName) continue;
-		let f = typeof s == "object" ? s : {};
+		const f = typeof s == "object" ? s : {};
 		t[o] = Qr({
 			visitor: i,
 			result: t[o],
@@ -7227,7 +7179,7 @@ function ms({
 				modelName: t,
 				runtimeDataModel: i,
 				visitor: (a, l, f) => {
-					let g = we(l);
+					const g = we(l);
 					return cs({
 						result: a,
 						modelName: g,
@@ -7259,12 +7211,12 @@ function fs(e) {
 	if (e instanceof le) return Mc(e);
 	if (Br(e)) return _c(e);
 	if (Array.isArray(e)) {
-		let r = [e[0]];
+		const r = [e[0]];
 		for (let n = 1; n < e.length; n++) r[n] = jt(e[n]);
 		return r;
 	}
-	let t = {};
-	for (let r in e) t[r] = jt(e[r]);
+	const t = {};
+	for (const r in e) t[r] = jt(e[r]);
 	return t;
 }
 function Mc(e) {
@@ -7285,8 +7237,8 @@ function jt(e) {
 		return r;
 	}
 	if (typeof e == "object") {
-		let t = {};
-		for (let r in e)
+		const t = {};
+		for (const r in e)
 			r === "__proto__"
 				? Object.defineProperty(t, r, {
 						value: jt(e[r]),
@@ -7301,7 +7253,7 @@ function jt(e) {
 }
 function hs(e, t, r, n = 0) {
 	return e._createPrismaPromise((i) => {
-		let o = t.customDataProxyFetch;
+		const o = t.customDataProxyFetch;
 		return (
 			"transaction" in t &&
 				i !== void 0 &&
@@ -7315,7 +7267,7 @@ function hs(e, t, r, n = 0) {
 						args: fs(t.args ?? {}),
 						__internalParams: t,
 						query: (s, a = t) => {
-							let l = a.customDataProxyFetch;
+							const l = a.customDataProxyFetch;
 							return (
 								(a.customDataProxyFetch = bs(o, l)),
 								(a.args = s),
@@ -7327,22 +7279,22 @@ function hs(e, t, r, n = 0) {
 	});
 }
 function ys(e, t) {
-	let { jsModelName: r, action: n, clientMethod: i } = t,
+	const { jsModelName: r, action: n, clientMethod: i } = t,
 		o = r ? n : i;
 	if (e._extensions.isEmpty()) return e._executeRequest(t);
-	let s = e._extensions.getAllQueryCallbacks(r ?? "$none", o);
+	const s = e._extensions.getAllQueryCallbacks(r ?? "$none", o);
 	return hs(e, t, s);
 }
 function ws(e) {
 	return (t) => {
-		let r = { requests: t },
+		const r = { requests: t },
 			n = t[0].extensions.getAllBatchQueryCallbacks();
 		return n.length ? Es(r, n, 0, e) : e(r);
 	};
 }
 function Es(e, t, r, n) {
 	if (r === t.length) return n(e);
-	let i = e.customDataProxyFetch,
+	const i = e.customDataProxyFetch,
 		o = e.requests[0].transaction;
 	return t[r]({
 		args: {
@@ -7357,7 +7309,7 @@ function Es(e, t, r, n) {
 		},
 		__internalParams: e,
 		query(s, a = e) {
-			let l = a.customDataProxyFetch;
+			const l = a.customDataProxyFetch;
 			return (a.customDataProxyFetch = bs(i, l)), Es(a, t, r + 1, n);
 		},
 	});
@@ -7379,7 +7331,7 @@ function vs({ postinstall: e, ciName: t, clientVersion: r }) {
 		xs("checkPlatformCaching:ciName", t),
 		e === !0 && t && t in Ps)
 	) {
-		let n = `Prisma has detected that this project was built on ${t}, which caches dependencies. This leads to an outdated Prisma Client because Prisma's auto-generation isn't triggered. To fix this, make sure to run the \`prisma generate\` command during the build process.
+		const n = `Prisma has detected that this project was built on ${t}, which caches dependencies. This leads to an outdated Prisma Client because Prisma's auto-generation isn't triggered. To fix this, make sure to run the \`prisma generate\` command during the build process.
 
 Learn how: https://pris.ly/d/${Ps[t]}-build`;
 		throw (console.error(n), new Q(n, r));
@@ -7438,7 +7390,7 @@ var jc = {
 		"Edge Runtime (Vercel Edge Functions, Vercel Edge Middleware, Next.js (Pages Router) Edge API Routes, Next.js (App Router) Edge Route Handlers or Next.js Middleware)",
 };
 function qn() {
-	let e = $c();
+	const e = $c();
 	return {
 		id: e,
 		prettyName: jc[e] || e,
@@ -7584,9 +7536,9 @@ var V = class extends ne {
 	response;
 	constructor(t, r) {
 		super(t, r), (this.response = r.response);
-		let n = this.response.headers.get("prisma-request-id");
+		const n = this.response.headers.get("prisma-request-id");
 		if (n) {
-			let i = `(The request id was: ${n})`;
+			const i = `(The request id was: ${n})`;
 			this.message = this.message + " " + i;
 		}
 	}
@@ -7766,7 +7718,7 @@ async function Jc(e) {
 		return { type: "EmptyError" };
 	}
 	try {
-		let r = JSON.parse(t);
+		const r = JSON.parse(t);
 		if (typeof r == "string")
 			switch (r) {
 				case "InternalDataProxyError":
@@ -7782,7 +7734,7 @@ async function Jc(e) {
 				"InteractiveTransactionMisrouted" in r ||
 				"InvalidRequestError" in r
 			) {
-				let n = Object.values(r)[0].reason;
+				const n = Object.values(r)[0].reason;
 				return typeof n == "string" &&
 					!["SchemaMissing", "EngineVersionNotSupported"].includes(n)
 					? { type: "UnknownJsonError", body: r }
@@ -7798,7 +7750,7 @@ async function Jc(e) {
 }
 async function Xt(e, t) {
 	if (e.ok) return;
-	let r = { clientVersion: t, response: e },
+	const r = { clientVersion: t, response: e },
 		n = await Jc(e);
 	if (n.type === "QueryEngineError")
 		throw new oe(n.body.message, { code: n.body.error_code, clientVersion: t });
@@ -7810,22 +7762,22 @@ async function Xt(e, t) {
 			if (n.body.EngineNotStarted.reason === "EngineVersionNotSupported")
 				throw new Jt(r);
 			if ("EngineStartupError" in n.body.EngineNotStarted.reason) {
-				let { msg: i, logs: o } =
+				const { msg: i, logs: o } =
 					n.body.EngineNotStarted.reason.EngineStartupError;
 				throw new Qt(r, i, o);
 			}
 			if ("KnownEngineStartupError" in n.body.EngineNotStarted.reason) {
-				let { msg: i, error_code: o } =
+				const { msg: i, error_code: o } =
 					n.body.EngineNotStarted.reason.KnownEngineStartupError;
 				throw new Q(i, t, o);
 			}
 			if ("HealthcheckTimeout" in n.body.EngineNotStarted.reason) {
-				let { logs: i } = n.body.EngineNotStarted.reason.HealthcheckTimeout;
+				const { logs: i } = n.body.EngineNotStarted.reason.HealthcheckTimeout;
 				throw new Gt(r, i);
 			}
 		}
 		if ("InteractiveTransactionMisrouted" in n.body) {
-			let i = {
+			const i = {
 				IDParseError: "Could not parse interactive transaction ID",
 				NoQueryEngineFoundError:
 					"Could not find Query Engine for the specified host and transaction ID",
@@ -7852,7 +7804,7 @@ c();
 p();
 m();
 function As(e) {
-	let t = Math.pow(2, e) * 50,
+	const t = 2 ** e * 50,
 		r = Math.ceil(Math.random() * t) - Math.ceil(t / 2),
 		n = t + r;
 	return new Promise((i) => setTimeout(() => i(n), n));
@@ -7903,7 +7855,7 @@ p();
 m();
 function Ss(e) {
 	if (
-		!!e.generator?.previewFeatures.some((r) =>
+		e.generator?.previewFeatures.some((r) =>
 			r.toLowerCase().includes("metrics"),
 		)
 	)
@@ -7958,19 +7910,19 @@ ${t}`,
 };
 N(er, "RequestError");
 async function Ve(e, t, r = (n) => n) {
-	let { clientVersion: n, ...i } = t,
+	const { clientVersion: n, ...i } = t,
 		o = r(fetch);
 	try {
 		return await o(e, i);
 	} catch (s) {
-		let a = s.message ?? "Unknown error";
+		const a = s.message ?? "Unknown error";
 		throw new er(a, { clientVersion: n, cause: s });
 	}
 }
 var Kc = /^[1-9][0-9]*\.[0-9]+\.[0-9]+$/,
 	Is = Y("prisma:client:dataproxyEngine");
 async function zc(e, t) {
-	let r = ks["@prisma/engines-version"],
+	const r = ks["@prisma/engines-version"],
 		n = t.clientVersion ?? "unknown";
 	if (
 		y.env.PRISMA_CLIENT_DATA_PROXY_CLIENT_VERSION ||
@@ -7981,10 +7933,10 @@ async function zc(e, t) {
 			globalThis.PRISMA_CLIENT_DATA_PROXY_CLIENT_VERSION
 		);
 	if (e.includes("accelerate") && n !== "0.0.0" && n !== "in-memory") return n;
-	let [i, o] = n?.split("-") ?? [];
+	const [i, o] = n?.split("-") ?? [];
 	if (o === void 0 && Kc.test(i)) return i;
 	if (o !== void 0 || n === "0.0.0" || n === "in-memory") {
-		let [s] = r.split("-") ?? [],
+		const [s] = r.split("-") ?? [],
 			[a, l, f] = s.split("."),
 			g = Yc(`<=${a}.${l}.${f}`),
 			h = await Ve(g, { clientVersion: n });
@@ -7992,7 +7944,7 @@ async function zc(e, t) {
 			throw new Error(
 				`Failed to fetch stable Prisma version, unpkg.com status ${h.status} ${h.statusText}, response body: ${(await h.text()) || "<empty body>"}`,
 			);
-		let v = await h.text();
+		const v = await h.text();
 		Is("length of body fetched from unpkg.com", v.length);
 		let S;
 		try {
@@ -8010,7 +7962,7 @@ async function zc(e, t) {
 	);
 }
 async function Os(e, t) {
-	let r = await zc(e, t);
+	const r = await zc(e, t);
 	return Is("version", r), r;
 }
 function Yc(e) {
@@ -8038,18 +7990,18 @@ var Ds = 3,
 				(this.engineHash = o);
 		}
 		build({ traceparent: t, interactiveTransaction: r } = {}) {
-			let n = {
+			const n = {
 				Authorization: `Bearer ${this.apiKey}`,
 				"Prisma-Engine-Hash": this.engineHash,
 			};
 			this.tracingHelper.isEnabled() &&
 				(n.traceparent = t ?? this.tracingHelper.getTraceParent()),
 				r && (n["X-transaction-id"] = r.id);
-			let i = this.buildCaptureSettings();
+			const i = this.buildCaptureSettings();
 			return i.length > 0 && (n["X-capture-telemetry"] = i.join(", ")), n;
 		}
 		buildCaptureSettings() {
-			let t = [];
+			const t = [];
 			return (
 				this.tracingHelper.isEnabled() && t.push("tracing"),
 				this.logLevel && t.push(this.logLevel),
@@ -8095,7 +8047,7 @@ var Ds = 3,
 		async start() {
 			this.startPromise !== void 0 && (await this.startPromise),
 				(this.startPromise = (async () => {
-					let { apiKey: t, url: r } = this.getURLAndAPIKey();
+					const { apiKey: t, url: r } = this.getURLAndAPIKey();
 					(this.host = r.host),
 						(this.headerBuilder = new Hn({
 							apiKey: t,
@@ -8158,16 +8110,16 @@ var Ds = 3,
 			);
 		}
 		async uploadSchema() {
-			let t = { name: "schemaUpload", internal: !0 };
+			const t = { name: "schemaUpload", internal: !0 };
 			return this.tracingHelper.runInChildSpan(t, async () => {
-				let r = await Ve(await this.url("schema"), {
+				const r = await Ve(await this.url("schema"), {
 					method: "PUT",
 					headers: this.headerBuilder.build(),
 					body: this.inlineSchema,
 					clientVersion: this.clientVersion,
 				});
 				r.ok || tr("schema response status", r.status);
-				let n = await Xt(r, this.clientVersion);
+				const n = await Xt(r, this.clientVersion);
 				if (n)
 					throw (
 						(this.logEmitter.emit("warn", {
@@ -8199,7 +8151,7 @@ var Ds = 3,
 			t,
 			{ traceparent: r, transaction: n, customDataProxyFetch: i },
 		) {
-			let o = n?.kind === "itx" ? n.options : void 0,
+			const o = n?.kind === "itx" ? n.options : void 0,
 				s = jr(t, n);
 			return (
 				await this.requestInternal({
@@ -8224,11 +8176,11 @@ var Ds = 3,
 			return this.withRetry({
 				actionGerund: "querying",
 				callback: async ({ logHttpCall: o }) => {
-					let s = i
+					const s = i
 						? `${i.payload.endpoint}/graphql`
 						: await this.url("graphql");
 					o(s);
-					let a = await Ve(
+					const a = await Ve(
 						s,
 						{
 							method: "POST",
@@ -8243,7 +8195,7 @@ var Ds = 3,
 					);
 					a.ok || tr("graphql response status", a.status),
 						await this.handleError(await Xt(a, this.clientVersion));
-					let l = await a.json();
+					const l = await a.json();
 					if (
 						(l.extensions && this.propagateResponseExtensions(l.extensions),
 						"errors" in l)
@@ -8254,7 +8206,7 @@ var Ds = 3,
 			});
 		}
 		async transaction(t, r, n) {
-			let i = {
+			const i = {
 				start: "starting",
 				commit: "committing",
 				rollback: "rolling back",
@@ -8263,36 +8215,36 @@ var Ds = 3,
 				actionGerund: `${i[t]} transaction`,
 				callback: async ({ logHttpCall: o }) => {
 					if (t === "start") {
-						let s = JSON.stringify({
+						const s = JSON.stringify({
 								max_wait: n.maxWait,
 								timeout: n.timeout,
 								isolation_level: n.isolationLevel,
 							}),
 							a = await this.url("transaction/start");
 						o(a);
-						let l = await Ve(a, {
+						const l = await Ve(a, {
 							method: "POST",
 							headers: this.headerBuilder.build({ traceparent: r.traceparent }),
 							body: s,
 							clientVersion: this.clientVersion,
 						});
 						await this.handleError(await Xt(l, this.clientVersion));
-						let f = await l.json(),
+						const f = await l.json(),
 							{ extensions: g } = f;
 						g && this.propagateResponseExtensions(g);
-						let h = f.id,
+						const h = f.id,
 							v = f["data-proxy"].endpoint;
 						return { id: h, payload: { endpoint: v } };
 					} else {
-						let s = `${n.payload.endpoint}/${t}`;
+						const s = `${n.payload.endpoint}/${t}`;
 						o(s);
-						let a = await Ve(s, {
+						const a = await Ve(s, {
 							method: "POST",
 							headers: this.headerBuilder.build({ traceparent: r.traceparent }),
 							clientVersion: this.clientVersion,
 						});
 						await this.handleError(await Xt(a, this.clientVersion));
-						let l = await a.json(),
+						const l = await a.json(),
 							{ extensions: f } = l;
 						f && this.propagateResponseExtensions(f);
 						return;
@@ -8318,13 +8270,13 @@ var Ds = 3,
 					t,
 				);
 			}
-			let { protocol: o, searchParams: s } = i;
+			const { protocol: o, searchParams: s } = i;
 			if (o !== "prisma:" && o !== mr)
 				throw new qe(
 					`Error validating datasource \`${r}\`: the URL must start with the protocol \`prisma://\` or \`prisma+postgres://\``,
 					t,
 				);
-			let a = s.get("api_key");
+			const a = s.get("api_key");
 			if (a === null || a.length < 1)
 				throw new qe(
 					`Error validating datasource \`${r}\`: the URL must contain a valid API key`,
@@ -8339,7 +8291,7 @@ var Ds = 3,
 		}
 		async withRetry(t) {
 			for (let r = 0; ; r++) {
-				let n = (i) => {
+				const n = (i) => {
 					this.logEmitter.emit("info", {
 						message: `Calling ${i} (n=${r})`,
 						timestamp: new Date(),
@@ -8356,7 +8308,7 @@ var Ds = 3,
 						timestamp: new Date(),
 						target: "",
 					});
-					let o = await As(r);
+					const o = await As(r);
 					this.logEmitter.emit("warn", {
 						message: `Retrying after ${o}ms`,
 						timestamp: new Date(),
@@ -8394,14 +8346,14 @@ function Ms({ copyEngine: e = !0 }, t) {
 			clientVersion: t.clientVersion,
 		});
 	} catch {}
-	let n = !!(r?.startsWith("prisma://") || dr(r));
+	const n = !!(r?.startsWith("prisma://") || dr(r));
 	e &&
 		n &&
 		fr(
 			"recommend--no-engine",
 			"In production, we recommend using `prisma generate --no-engine` (See: `prisma generate --help`)",
 		);
-	let i = Ye(t.generator),
+	const i = Ye(t.generator),
 		o = n || !e,
 		s = !!t.adapter,
 		a = i === "library",
@@ -8478,7 +8430,7 @@ function Bs(e, t) {
 			prisma__value: w.Buffer.from(e).toString("base64"),
 		};
 	if (ArrayBuffer.isView(e)) {
-		let { buffer: r, byteOffset: n, byteLength: i } = e;
+		const { buffer: r, byteOffset: n, byteLength: i } = e;
 		return {
 			prisma__type: "bytes",
 			prisma__value: w.Buffer.from(r, n, i).toString("base64"),
@@ -8498,8 +8450,8 @@ function Us(e) {
 	if (typeof e != "object" || e === null) return e;
 	if (typeof e.toJSON == "function") return e.toJSON();
 	if (Array.isArray(e)) return e.map(Ls);
-	let t = {};
-	for (let r of Object.keys(e)) t[r] = Ls(e[r]);
+	const t = {};
+	for (const r of Object.keys(e)) t[r] = Ls(e[r]);
 	return t;
 }
 function Ls(e) {
@@ -8531,7 +8483,7 @@ var zn =
 				(n = r.sql),
 					(i = { values: yt(r.values), __prismaRawParameters__: !0 });
 			else if (Array.isArray(r)) {
-				let [o, ...s] = r;
+				const [o, ...s] = r;
 				(n = o), (i = { values: yt(s || []), __prismaRawParameters__: !0 });
 			} else
 				switch (t) {
@@ -8568,7 +8520,7 @@ var zn =
 			return [e.strings, ...e.values];
 		},
 		middlewareArgsToRequestArgs(e) {
-			let [t, ...r] = e;
+			const [t, ...r] = e;
 			return new le(t, r);
 		},
 	},
@@ -8586,7 +8538,7 @@ c();
 p();
 m();
 function Yn(e) {
-	return function (r, n) {
+	return (r, n) => {
 		let i,
 			o = (s = e) => {
 				try {
@@ -8611,7 +8563,7 @@ function Yn(e) {
 				return o().finally(s);
 			},
 			requestTransaction(s) {
-				let a = o(s);
+				const a = o(s);
 				return a.requestTransaction ? a.requestTransaction(s) : a;
 			},
 			[Symbol.toStringTag]: "PrismaPromise",
@@ -8657,7 +8609,7 @@ var ep = mn.split(".")[0],
 			return this.getGlobalTracingHelper().runInChildSpan(t, r);
 		}
 		getGlobalTracingHelper() {
-			let t = globalThis[`V${ep}_PRISMA_INSTRUMENTATION`],
+			const t = globalThis[`V${ep}_PRISMA_INSTRUMENTATION`],
 				r = globalThis.PRISMA_INSTRUMENTATION;
 			return t?.helper ?? r?.helper ?? tp;
 		}
@@ -8689,7 +8641,7 @@ function Js(e) {
 		? e
 		: e.reduce(
 				(t, r) => {
-					let n = typeof r == "string" ? r : r.level;
+					const n = typeof r == "string" ? r : r.level;
 					return n === "query"
 						? t
 						: t && (r === "info" || t === "info")
@@ -8740,7 +8692,7 @@ p();
 m();
 function Ws(e) {
 	if (e.action !== "findUnique" && e.action !== "findUniqueOrThrow") return;
-	let t = [];
+	const t = [];
 	return (
 		e.modelName && t.push(e.modelName),
 		e.query.arguments && t.push(Xn(e.query.arguments)),
@@ -8752,7 +8704,7 @@ function Xn(e) {
 	return `(${Object.keys(e)
 		.sort()
 		.map((r) => {
-			let n = e[r];
+			const n = e[r];
 			return typeof n == "object" && n !== null ? `(${r} ${Xn(n)})` : r;
 		})
 		.join(" ")})`;
@@ -8801,7 +8753,7 @@ var zr = class {
 	batches;
 	tickActive = !1;
 	request(t) {
-		let r = this.options.batchBy(t);
+		const r = this.options.batchBy(t);
 		return r
 			? (this.batches[r] ||
 					((this.batches[r] = []),
@@ -8816,8 +8768,8 @@ var zr = class {
 			: this.options.singleLoader(t);
 	}
 	dispatchBatches() {
-		for (let t in this.batches) {
-			let r = this.batches[t];
+		for (const t in this.batches) {
+			const r = this.batches[t];
 			delete this.batches[t],
 				r.length === 1
 					? this.options
@@ -8836,7 +8788,7 @@ var zr = class {
 									for (let i = 0; i < r.length; i++) r[i].reject(n);
 								else
 									for (let i = 0; i < r.length; i++) {
-										let o = n[i];
+										const o = n[i];
 										o instanceof Error ? r[i].reject(o) : r[i].resolve(o);
 									}
 							})
@@ -8860,7 +8812,7 @@ function Ge(e, t) {
 		case "bigint":
 			return BigInt(t);
 		case "bytes": {
-			let {
+			const {
 				buffer: r,
 				byteOffset: n,
 				byteLength: i,
@@ -8891,10 +8843,10 @@ function Ge(e, t) {
 	}
 }
 function ti(e) {
-	let t = [],
+	const t = [],
 		r = np(e);
 	for (let n = 0; n < e.rows.length; n++) {
-		let i = e.rows[n],
+		const i = e.rows[n],
 			o = { ...r };
 		for (let s = 0; s < i.length; s++) o[e.columns[s]] = Ge(e.types[s], i[s]);
 		t.push(o);
@@ -8902,7 +8854,7 @@ function ti(e) {
 	return t;
 }
 function np(e) {
-	let t = {};
+	const t = {};
 	for (let r = 0; r < e.columns.length; r++) t[e.columns[r]] = null;
 	return t;
 }
@@ -8916,7 +8868,7 @@ var ip = Y("prisma:client:request_handler"),
 				(this.client = t),
 				(this.dataloader = new zr({
 					batchLoader: ws(async ({ requests: n, customDataProxyFetch: i }) => {
-						let { transaction: o, otelParentCtx: s } = n[0],
+						const { transaction: o, otelParentCtx: s } = n[0],
 							a = n.map((h) => h.protocolQuery),
 							l = this.client._tracingHelper.getTraceParent(s),
 							f = n.some((h) => ei(h.protocolQuery.action));
@@ -8937,7 +8889,7 @@ var ip = Y("prisma:client:request_handler"),
 						});
 					}),
 					singleLoader: async (n) => {
-						let i = n.transaction?.kind === "itx" ? Ks(n.transaction) : void 0,
+						const i = n.transaction?.kind === "itx" ? Ks(n.transaction) : void 0,
 							o = await this.client._engine.request(n.protocolQuery, {
 								traceparent: this.client._tracingHelper.getTraceParent(),
 								interactiveTransaction: i,
@@ -8962,7 +8914,7 @@ var ip = Y("prisma:client:request_handler"),
 			try {
 				return await this.dataloader.request(t);
 			} catch (r) {
-				let {
+				const {
 					clientMethod: n,
 					callsite: i,
 					transaction: o,
@@ -8981,7 +8933,7 @@ var ip = Y("prisma:client:request_handler"),
 			}
 		}
 		mapQueryEngineResult({ dataPath: t, unpacker: r }, n) {
-			let i = n?.data,
+			const i = n?.data,
 				o = this.unpack(i, t, r);
 			return y.env.PRISMA_CLIENT_GET_TIME ? { data: o } : o;
 		}
@@ -9011,7 +8963,7 @@ var ip = Y("prisma:client:request_handler"),
 		}) {
 			if ((ip(t), sp(t, i))) throw t;
 			if (t instanceof oe && ap(t)) {
-				let f = zs(t.meta);
+				const f = zs(t.meta);
 				_r({
 					args: o,
 					errors: [f],
@@ -9035,7 +8987,7 @@ var ip = Y("prisma:client:request_handler"),
 				(l = this.sanitizeMessage(l)),
 				t.code)
 			) {
-				let f = s ? { modelName: s, ...t.meta } : t.meta;
+				const f = s ? { modelName: s, ...t.meta } : t.meta;
 				throw new oe(l, {
 					code: t.code,
 					clientVersion: this.client._clientVersion,
@@ -9061,7 +9013,7 @@ var ip = Y("prisma:client:request_handler"),
 		}
 		unpack(t, r, n) {
 			if (!t || (t.data && (t = t.data), !t)) return t;
-			let i = Object.keys(t)[0],
+			const i = Object.keys(t)[0],
 				o = Object.values(t)[0],
 				s = r.filter((f) => f !== "select" && f !== "include"),
 				a = Fn(o, s),
@@ -9092,7 +9044,7 @@ function ap(e) {
 function zs(e) {
 	if (e.kind === "Union") return { kind: "Union", errors: e.errors.map(zs) };
 	if (Array.isArray(e.selectionPath)) {
-		let [, ...t] = e.selectionPath;
+		const [, ...t] = e.selectionPath;
 		return { ...e, selectionPath: t };
 	}
 	return e;
@@ -9147,9 +9099,9 @@ var Zs = [
 					throw new U(
 						`Invalid value ${JSON.stringify(e)} for "datasources" provided to PrismaClient constructor`,
 					);
-				for (let [r, n] of Object.entries(e)) {
+				for (const [r, n] of Object.entries(e)) {
 					if (!t.includes(r)) {
-						let i = wt(r, t) || ` Available datasources: ${t.join(", ")}`;
+						const i = wt(r, t) || ` Available datasources: ${t.join(", ")}`;
 						throw new U(
 							`Unknown datasource ${r} provided to PrismaClient constructor.${i}`,
 						);
@@ -9158,7 +9110,7 @@ var Zs = [
 						throw new U(`Invalid value ${JSON.stringify(e)} for datasource "${r}" provided to PrismaClient constructor.
 It should have this form: { url: "CONNECTION_STRING" }`);
 					if (n && typeof n == "object")
-						for (let [i, o] of Object.entries(n)) {
+						for (const [i, o] of Object.entries(n)) {
 							if (i !== "url")
 								throw new U(`Invalid value ${JSON.stringify(e)} for datasource "${r}" provided to PrismaClient constructor.
 It should have this form: { url: "CONNECTION_STRING" }`);
@@ -9200,7 +9152,7 @@ Expected string or undefined.`);
 						`Invalid value ${JSON.stringify(e)} for "errorFormat" provided to PrismaClient constructor.`,
 					);
 				if (!Xs.includes(e)) {
-					let t = wt(e, Xs);
+					const t = wt(e, Xs);
 					throw new U(
 						`Invalid errorFormat ${e} provided to PrismaClient constructor.${t}`,
 					);
@@ -9215,20 +9167,20 @@ Expected string or undefined.`);
 				);
 			function t(r) {
 				if (typeof r == "string" && !ea.includes(r)) {
-					let n = wt(r, ea);
+					const n = wt(r, ea);
 					throw new U(
 						`Invalid log level "${r}" provided to PrismaClient constructor.${n}`,
 					);
 				}
 			}
-			for (let r of e) {
+			for (const r of e) {
 				t(r);
-				let n = {
+				const n = {
 					level: t,
 					emit: (i) => {
-						let o = ["stdout", "event"];
+						const o = ["stdout", "event"];
 						if (!o.includes(i)) {
-							let s = wt(i, o);
+							const s = wt(i, o);
 							throw new U(
 								`Invalid value ${JSON.stringify(i)} for "emit" in logLevel provided to PrismaClient constructor.${s}`,
 							);
@@ -9236,7 +9188,7 @@ Expected string or undefined.`);
 					},
 				};
 				if (r && typeof r == "object")
-					for (let [i, o] of Object.entries(r))
+					for (const [i, o] of Object.entries(r))
 						if (n[i]) n[i](o);
 						else
 							throw new U(
@@ -9246,12 +9198,12 @@ Expected string or undefined.`);
 		},
 		transactionOptions: (e) => {
 			if (!e) return;
-			let t = e.maxWait;
+			const t = e.maxWait;
 			if (t != null && t <= 0)
 				throw new U(
 					`Invalid value ${t} for maxWait in "transactionOptions" provided to PrismaClient constructor. maxWait needs to be greater than 0`,
 				);
-			let r = e.timeout;
+			const r = e.timeout;
 			if (r != null && r <= 0)
 				throw new U(
 					`Invalid value ${r} for timeout in "transactionOptions" provided to PrismaClient constructor. timeout needs to be greater than 0`,
@@ -9261,15 +9213,15 @@ Expected string or undefined.`);
 			if (typeof e != "object")
 				throw new U('"omit" option is expected to be an object.');
 			if (e === null) throw new U('"omit" option can not be `null`');
-			let r = [];
-			for (let [n, i] of Object.entries(e)) {
-				let o = cp(n, t.runtimeDataModel);
+			const r = [];
+			for (const [n, i] of Object.entries(e)) {
+				const o = cp(n, t.runtimeDataModel);
 				if (!o) {
 					r.push({ kind: "UnknownModel", modelKey: n });
 					continue;
 				}
-				for (let [s, a] of Object.entries(i)) {
-					let l = o.fields.find((f) => f.name === s);
+				for (const [s, a] of Object.entries(i)) {
+					const l = o.fields.find((f) => f.name === s);
 					if (!l) {
 						r.push({ kind: "UnknownField", modelKey: n, fieldName: s });
 						continue;
@@ -9286,14 +9238,14 @@ Expected string or undefined.`);
 		},
 		__internal: (e) => {
 			if (!e) return;
-			let t = ["debug", "engine", "configOverride"];
+			const t = ["debug", "engine", "configOverride"];
 			if (typeof e != "object")
 				throw new U(
 					`Invalid value ${JSON.stringify(e)} for "__internal" to PrismaClient constructor`,
 				);
-			for (let [r] of Object.entries(e))
+			for (const [r] of Object.entries(e))
 				if (!t.includes(r)) {
-					let n = wt(r, t);
+					const n = wt(r, t);
 					throw new U(
 						`Invalid property ${JSON.stringify(r)} for "__internal" provided to PrismaClient constructor.${n}`,
 					);
@@ -9301,9 +9253,9 @@ Expected string or undefined.`);
 		},
 	};
 function na(e, t) {
-	for (let [r, n] of Object.entries(e)) {
+	for (const [r, n] of Object.entries(e)) {
 		if (!Zs.includes(r)) {
-			let i = wt(r, Zs);
+			const i = wt(r, Zs);
 			throw new U(
 				`Unknown property ${r} provided to PrismaClient constructor.${i}`,
 			);
@@ -9317,26 +9269,26 @@ function na(e, t) {
 }
 function wt(e, t) {
 	if (t.length === 0 || typeof e != "string") return "";
-	let r = up(e, t);
+	const r = up(e, t);
 	return r ? ` Did you mean "${r}"?` : "";
 }
 function up(e, t) {
 	if (t.length === 0) return null;
-	let r = t.map((i) => ({ value: i, distance: (0, ra.default)(e, i) }));
+	const r = t.map((i) => ({ value: i, distance: (0, ra.default)(e, i) }));
 	r.sort((i, o) => (i.distance < o.distance ? -1 : 1));
-	let n = r[0];
+	const n = r[0];
 	return n.distance < 3 ? n.value : null;
 }
 function cp(e, t) {
 	return ta(t.models, e) ?? ta(t.types, e);
 }
 function ta(e, t) {
-	let r = Object.keys(e).find((n) => De(n) === t);
+	const r = Object.keys(e).find((n) => De(n) === t);
 	if (r) return e[r];
 }
 function pp(e, t) {
-	let r = lt(e);
-	for (let o of t)
+	const r = lt(e);
+	for (const o of t)
 		switch (o.kind) {
 			case "UnknownModel":
 				r.arguments.getField(o.modelKey)?.markAsError(),
@@ -9361,7 +9313,7 @@ function pp(e, t) {
 					r.addErrorMessage(() => "Omit field option value must be a boolean.");
 				break;
 		}
-	let { message: n, args: i } = Mr(r, "colorless");
+	const { message: n, args: i } = Mr(r, "colorless");
 	return `Error validating "omit" option:
 
 ${i}
@@ -9437,7 +9389,7 @@ function gp(e) {
 		_createPrismaPromise = Yn();
 		constructor(n) {
 			(e = n?.__internal?.configOverride?.(e) ?? e), vs(e), n && na(n, e);
-			let i = new Ur().on("error", () => {});
+			const i = new Ur().on("error", () => {});
 			(this._extensions = ut.empty()),
 				(this._previewFeatures = Wr(e)),
 				(this._clientVersion = e.clientVersion ?? Ys),
@@ -9455,7 +9407,7 @@ function gp(e) {
 				s;
 			if (n?.adapter) {
 				s = n.adapter;
-				let l =
+				const l =
 					e.activeProvider === "postgresql" ? "postgres" : e.activeProvider;
 				if (s.provider !== l)
 					throw new Q(
@@ -9468,9 +9420,9 @@ function gp(e) {
 						this._clientVersion,
 					);
 			}
-			let a = e.injectableEdgeEnv?.();
+			const a = e.injectableEdgeEnv?.();
 			try {
-				let l = n ?? {},
+				const l = n ?? {},
 					f = l.__internal ?? {},
 					g = f.debug === !0;
 				g && Y.enable("prisma:client");
@@ -9479,7 +9431,7 @@ function gp(e) {
 					Ne("dirname", e.dirname),
 					Ne("relativePath", e.relativePath),
 					Ne("cwd", h);
-				let v = f.engine || {};
+				const v = f.engine || {};
 				if (
 					(l.errorFormat
 						? (this._errorFormat = l.errorFormat)
@@ -9547,8 +9499,8 @@ function gp(e) {
 					(this._requestHandler = new Yr(this, i)),
 					l.log)
 				)
-					for (let S of l.log) {
-						let A =
+					for (const S of l.log) {
+						const A =
 							typeof S == "string" ? S : S.emit === "stdout" ? S.level : null;
 						A &&
 							this.$on(A, (R) => {
@@ -9591,7 +9543,7 @@ function gp(e) {
 			}
 		}
 		$executeRawInternal(n, i, o, s) {
-			let a = this._activeProvider;
+			const a = this._activeProvider;
 			return this._request({
 				action: "executeRaw",
 				args: o,
@@ -9606,7 +9558,7 @@ function gp(e) {
 		$executeRaw(n, ...i) {
 			return this._createPrismaPromise((o) => {
 				if (n.raw !== void 0 || n.sql !== void 0) {
-					let [s, a] = oa(n, i);
+					const [s, a] = oa(n, i);
 					return (
 						Kn(
 							this._activeProvider,
@@ -9657,7 +9609,7 @@ function gp(e) {
 			);
 		}
 		async $queryRawInternal(n, i, o, s) {
-			let a = this._activeProvider;
+			const a = this._activeProvider;
 			return this._request({
 				action: "queryRaw",
 				args: o,
@@ -9695,14 +9647,14 @@ function gp(e) {
 			);
 		}
 		_transactionWithArray({ promises: n, options: i }) {
-			let o = fp.nextId(),
+			const o = fp.nextId(),
 				s = Qs(n.length),
 				a = n.map((l, f) => {
 					if (l?.[Symbol.toStringTag] !== "PrismaPromise")
 						throw new Error(
 							"All elements of the array need to be Prisma Client promises. Hint: Please make sure you are not awaiting the Prisma client calls you intended to pass in the $transaction function.",
 						);
-					let g =
+					const g =
 							i?.isolationLevel ??
 							this._engineConfig.transactionOptions.isolationLevel,
 						h = { kind: "batch", id: o, index: f, isolationLevel: g, lock: s };
@@ -9722,7 +9674,7 @@ function gp(e) {
 				a = await this._engine.transaction("start", o, s),
 				l;
 			try {
-				let f = { kind: "itx", ...a };
+				const f = { kind: "itx", ...a };
 				(l = await n(this._createItxClient(f))),
 					await this._engine.transaction("commit", o, a);
 			} catch (f) {
@@ -9756,7 +9708,7 @@ function gp(e) {
 					: (o = () =>
 							this._transactionWithCallback({ callback: n, options: i }))
 				: (o = () => this._transactionWithArray({ promises: n, options: i }));
-			let s = { name: "transaction", attributes: { method: "$transaction" } };
+			const s = { name: "transaction", attributes: { method: "$transaction" } };
 			return this._tracingHelper.runInChildSpan(s, o);
 		}
 		_request(n) {
@@ -9787,16 +9739,16 @@ function gp(e) {
 				},
 				a = -1,
 				l = async (f) => {
-					let g = this._middlewares.get(++a);
+					const g = this._middlewares.get(++a);
 					if (g)
 						return this._tracingHelper.runInChildSpan(s.middleware, (D) =>
 							g(f, (M) => (D?.end(), l(M))),
 						);
-					let { runInTransaction: h, args: v, ...S } = f,
+					const { runInTransaction: h, args: v, ...S } = f,
 						A = { ...n, ...S };
 					v && (A.args = i.middlewareArgsToRequestArgs(v)),
 						n.transaction !== void 0 && h === !1 && delete A.transaction;
-					let R = await ys(this, A);
+					const R = await ys(this, A);
 					return A.model
 						? ms({
 								result: R,
@@ -9825,7 +9777,7 @@ function gp(e) {
 		}) {
 			try {
 				n = f ? f(n) : n;
-				let A = { name: "serialize" },
+				const A = { name: "serialize" },
 					R = this._tracingHelper.runInChildSpan(A, () =>
 						On({
 							modelName: l,

@@ -5,7 +5,7 @@
  * overstock, and expiry alerts.
  */
 
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { neonClient } from "@/lib/db";
 import { authenticate } from "@/lib/auth";
 import { errorResponse, successResponse } from "@/lib/api-utils";

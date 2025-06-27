@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import {
 	successResponse,
 	errorResponse,
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 		let result;
 
 		switch (operation) {
-			case "adjust":
+			case "adjust": {
 				const adjustInput: StockAdjustmentInput = {
 					productId: body.productId,
 					variantId: body.variantId,
@@ -138,8 +138,9 @@ export async function POST(request: NextRequest) {
 				const validatedAdjustInput = stockAdjustmentSchema.parse(adjustInput);
 				result = await adjustStock(validatedAdjustInput);
 				break;
+			}
 
-			case "transfer":
+			case "transfer": {
 				const transferInput: StockTransferInput = {
 					fromWarehouseId: body.fromWarehouseId,
 					toWarehouseId: body.toWarehouseId,
@@ -154,6 +155,7 @@ export async function POST(request: NextRequest) {
 				const validatedTransferInput = stockTransferSchema.parse(transferInput);
 				result = await transferStock(validatedTransferInput);
 				break;
+			}
 
 			default:
 				return errorResponse("Invalid operation type", 400);

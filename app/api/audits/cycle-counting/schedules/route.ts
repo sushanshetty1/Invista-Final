@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { neonClient } from "@/lib/db";
 
 // This API manages cycle counting schedules by creating recurring audits

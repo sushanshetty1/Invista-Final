@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { neonClient } from "@/lib/db";
 
 // GET /api/audits - List all audits with optional filtering

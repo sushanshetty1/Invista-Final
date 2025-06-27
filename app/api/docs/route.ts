@@ -5,7 +5,7 @@
  * Provides both JSON spec and interactive Swagger UI.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { generateOpenAPISpec, generateSwaggerHTML } from "@/lib/openapi";
 
 /**

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updatePurchaseOrderStatus } from "@/lib/actions/purchase-orders";
 
 export async function PATCH(

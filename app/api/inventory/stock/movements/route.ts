@@ -1,5 +1,5 @@
 import { neonClient } from "@/lib/db";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 // GET /api/inventory/stock/movements - List stock movements
 export async function GET(request: NextRequest) {

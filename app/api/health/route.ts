@@ -4,7 +4,7 @@
  * Provides health check endpoint and general API information.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { neonClient } from "@/lib/db";
 
 /**

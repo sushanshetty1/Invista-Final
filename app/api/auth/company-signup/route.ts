@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@/prisma/generated/supabase";
 
 const prisma = new PrismaClient();

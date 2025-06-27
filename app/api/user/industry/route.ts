@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { supabaseClient } from "@/lib/db";
 import { getIndustryCategories } from "@/lib/industry-categories";

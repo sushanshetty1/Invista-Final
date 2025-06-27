@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getOrders, createOrder } from "@/lib/actions/orders";
 
 // GET /api/orders
