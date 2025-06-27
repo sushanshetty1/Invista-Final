@@ -1,120 +1,129 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { neonClient } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server";
+import { neonClient } from "@/lib/db";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {  try {
-    const { id } = await params
-    
-    // Start the cycle count by updating audit status and generating audit items
-    const audit = await neonClient.inventoryAudit.findUnique({
-      where: { 
-        id,
-        type: 'CYCLE_COUNT'
-      },
-      include: {
-        warehouse: true,
-        product: true
-      }
-    })
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
+) {
+	try {
+		const { id } = await params;
 
-    if (!audit) {
-      return NextResponse.json(
-        { error: 'Cycle count schedule not found' },
-        { status: 404 }
-      )
-    }
+		// Start the cycle count by updating audit status and generating audit items
+		const audit = await neonClient.inventoryAudit.findUnique({
+			where: {
+				id,
+				type: "CYCLE_COUNT",
+			},
+			include: {
+				warehouse: true,
+				product: true,
+			},
+		});
 
-    if (audit.status !== 'PLANNED') {
-      return NextResponse.json(
-        { error: 'Cycle count can only be started from PLANNED status' },
-        { status: 400 }
-      )
-    }    // Update audit status
-    await neonClient.inventoryAudit.update({
-      where: { id },
-      data: {
-        status: 'IN_PROGRESS',
-        startedDate: new Date()
-      }
-    })    // Generate audit items based on warehouse and/or product selection
-    let inventoryItems: Record<string, unknown>[] = []
+		if (!audit) {
+			return NextResponse.json(
+				{ error: "Cycle count schedule not found" },
+				{ status: 404 },
+			);
+		}
 
-    if (audit.productId) {
-      // Product-specific audit
-      inventoryItems = await neonClient.inventoryItem.findMany({
-        where: {
-          productId: audit.productId,
-          ...(audit.warehouseId && { warehouseId: audit.warehouseId })
-        },
-        include: {
-          product: true,
-          variant: true,
-          warehouse: true
-        }
-      })
-    } else if (audit.warehouseId) {      // Warehouse-specific audit (limit to ABC items for cycle counting)
-      inventoryItems = await neonClient.inventoryItem.findMany({
-        where: {
-          warehouseId: audit.warehouseId,
-          quantity: { gt: 0 }
-        },
-        include: {
-          product: true,
-          variant: true,
-          warehouse: true
-        },
-        take: 100 // Limit for cycle counting
-      })
-    } else {      // Full inventory audit (should be rare for cycle counts)
-      inventoryItems = await neonClient.inventoryItem.findMany({
-        where: {
-          quantity: { gt: 0 }
-        },
-        include: {
-          product: true,
-          variant: true,
-          warehouse: true
-        },        take: 50 // Very limited for cycle counts
-      })
-    }    // Create audit items
-    const auditItemsData = inventoryItems.map(item => ({
-      auditId: id,
-      productId: item.productId as string,
-      variantId: item.variantId as string | null,
-      warehouseId: item.warehouseId as string,
-      systemQty: item.quantity as number,
-      location: (item.locationCode as string | null) || `${(item.zone as string) || ''}-${(item.aisle as string) || ''}-${(item.shelf as string) || ''}`.replace(/^-+|-+$/g, '') || null,
-      status: 'PENDING' as const
-    }))
+		if (audit.status !== "PLANNED") {
+			return NextResponse.json(
+				{ error: "Cycle count can only be started from PLANNED status" },
+				{ status: 400 },
+			);
+		} // Update audit status
+		await neonClient.inventoryAudit.update({
+			where: { id },
+			data: {
+				status: "IN_PROGRESS",
+				startedDate: new Date(),
+			},
+		}); // Generate audit items based on warehouse and/or product selection
+		let inventoryItems: Record<string, unknown>[] = [];
 
-    if (auditItemsData.length > 0) {
-      await neonClient.inventoryAuditItem.createMany({
-        data: auditItemsData
-      })
-    }
+		if (audit.productId) {
+			// Product-specific audit
+			inventoryItems = await neonClient.inventoryItem.findMany({
+				where: {
+					productId: audit.productId,
+					...(audit.warehouseId && { warehouseId: audit.warehouseId }),
+				},
+				include: {
+					product: true,
+					variant: true,
+					warehouse: true,
+				},
+			});
+		} else if (audit.warehouseId) {
+			// Warehouse-specific audit (limit to ABC items for cycle counting)
+			inventoryItems = await neonClient.inventoryItem.findMany({
+				where: {
+					warehouseId: audit.warehouseId,
+					quantity: { gt: 0 },
+				},
+				include: {
+					product: true,
+					variant: true,
+					warehouse: true,
+				},
+				take: 100, // Limit for cycle counting
+			});
+		} else {
+			// Full inventory audit (should be rare for cycle counts)
+			inventoryItems = await neonClient.inventoryItem.findMany({
+				where: {
+					quantity: { gt: 0 },
+				},
+				include: {
+					product: true,
+					variant: true,
+					warehouse: true,
+				},
+				take: 50, // Very limited for cycle counts
+			});
+		} // Create audit items
+		const auditItemsData = inventoryItems.map((item) => ({
+			auditId: id,
+			productId: item.productId as string,
+			variantId: item.variantId as string | null,
+			warehouseId: item.warehouseId as string,
+			systemQty: item.quantity as number,
+			location:
+				(item.locationCode as string | null) ||
+				`${(item.zone as string) || ""}-${(item.aisle as string) || ""}-${(item.shelf as string) || ""}`.replace(
+					/^-+|-+$/g,
+					"",
+				) ||
+				null,
+			status: "PENDING" as const,
+		}));
 
-    // Update audit with totals
-    await neonClient.inventoryAudit.update({
-      where: { id },
-      data: {
-        totalItems: auditItemsData.length,
-        itemsCounted: 0
-      }
-    })
+		if (auditItemsData.length > 0) {
+			await neonClient.inventoryAuditItem.createMany({
+				data: auditItemsData,
+			});
+		}
 
-    return NextResponse.json({
-      success: true,
-      message: 'Cycle count started successfully',
-      itemsGenerated: auditItemsData.length
-    })
+		// Update audit with totals
+		await neonClient.inventoryAudit.update({
+			where: { id },
+			data: {
+				totalItems: auditItemsData.length,
+				itemsCounted: 0,
+			},
+		});
 
-  } catch (error) {
-    console.error('Error starting cycle count:', error)
-    return NextResponse.json(
-      { error: 'Failed to start cycle count' },
-      { status: 500 }
-    )
-  }
+		return NextResponse.json({
+			success: true,
+			message: "Cycle count started successfully",
+			itemsGenerated: auditItemsData.length,
+		});
+	} catch (error) {
+		console.error("Error starting cycle count:", error);
+		return NextResponse.json(
+			{ error: "Failed to start cycle count" },
+			{ status: 500 },
+		);
+	}
 }

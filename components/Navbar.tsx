@@ -4,44 +4,44 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Menu,
-  X,
-  User,
-  Settings,
-  LogOut,
-  Bell,
-  Search,
-  ChevronDown,
-  Package,
-  BarChart3,
-  Truck,
-  Home,
-  FileText,
-  Building2,
-  Zap
+	Menu,
+	X,
+	User,
+	Settings,
+	LogOut,
+	Bell,
+	Search,
+	ChevronDown,
+	Package,
+	BarChart3,
+	Truck,
+	Home,
+	FileText,
+	Building2,
+	Zap,
 } from "lucide-react";
 
 // Type definitions
 interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  items: SubNavItem[];
+	title: string;
+	href: string;
+	icon: React.ComponentType<{ className?: string }>;
+	items: SubNavItem[];
 }
 
 interface SubNavItem {
-  title: string;
-  href: string;
+	title: string;
+	href: string;
 }
 
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -49,816 +49,945 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/use-user-role";
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const pathname = usePathname();
-  const router = useRouter();  const { user, logout, loading, userType, hasCompanyAccess, refreshAccess } = useAuth();
-  const { userRole, canAccessCompanyProfile } = useUserRole();
-  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+	const [isOpen, setIsOpen] = useState(false);
+	const [isScrolled, setIsScrolled] = useState(false);
+	const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+	const pathname = usePathname();
+	const router = useRouter();
+	const { user, logout, loading, userType, hasCompanyAccess, refreshAccess } =
+		useAuth();
+	const { userRole, canAccessCompanyProfile } = useUserRole();
+	const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Refresh access status when user or location changes
-  useEffect(() => {
-    if (user && refreshAccess) {
-      refreshAccess();
-    }
-  }, [user, pathname, refreshAccess]);  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+	// Refresh access status when user or location changes
+	useEffect(() => {
+		if (user && refreshAccess) {
+			refreshAccess();
+		}
+	}, [user, pathname, refreshAccess]); // Handle scroll effect
+	useEffect(() => {
+		const handleScroll = () => {
+			setIsScrolled(window.scrollY > 20);
+		};
+		window.addEventListener("scroll", handleScroll);
+		return () => window.removeEventListener("scroll", handleScroll);
+	}, []);
 
-  // Close mobile menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const nav = document.querySelector('nav');
-      if (isOpen && nav && !nav.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
+	// Close mobile menu when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			const nav = document.querySelector("nav");
+			if (isOpen && nav && !nav.contains(event.target as Node)) {
+				setIsOpen(false);
+			}
+		};
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+		if (isOpen) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [isOpen]);
 
-  // Handle dropdown clicks outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (openDropdown && dropdownRefs.current[openDropdown]) {
-        const dropdownElement = dropdownRefs.current[openDropdown];
-        if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
-          setOpenDropdown(null);
-        }
-      }
-    };
+	// Handle dropdown clicks outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (openDropdown && dropdownRefs.current[openDropdown]) {
+				const dropdownElement = dropdownRefs.current[openDropdown];
+				if (
+					dropdownElement &&
+					!dropdownElement.contains(event.target as Node)
+				) {
+					setOpenDropdown(null);
+				}
+			}
+		};
 
-    if (openDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+		if (openDropdown) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openDropdown]);  // We'll render the navbar normally but handle loading state with a flag
-  // This prevents remounting and helps maintain session
-  // Only show loading state during initial page load, not during subsequent auth checks
-  const showLoadingState = loading && !user;
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [openDropdown]); // We'll render the navbar normally but handle loading state with a flag
+	// This prevents remounting and helps maintain session
+	// Only show loading state during initial page load, not during subsequent auth checks
+	const showLoadingState = loading && !user;
 
-  const dashboardNavItems = [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: Home,
-      items: [
-        { title: "Overview", href: "/dashboard" },
-        { title: "Analytics", href: "/dashboard/analytics" },
-        { title: "Notifications", href: "/dashboard/notifications" },
-        { title: "Settings", href: "/dashboard/settings" },
-      ]
-    },
-    {
-      title: "Inventory",
-      href: "/inventory",
-      icon: Package,
-      items: [
-        { title: "Products", href: "/inventory/products" },
-        { title: "Stock Management", href: "/inventory/stock" },
-        { title: "Suppliers", href: "/inventory/suppliers" },
-        { title: "Categories", href: "/inventory/categories" },
-        { title: "Low Stock Alerts", href: "/inventory/alerts" },
-        { title: "Stock Adjustments", href: "/inventory/adjustments" },
-        { title: "Reports", href: "/inventory/reports" },
-      ]
-    },
-    {
-      title: "Orders",
-      href: "/orders",
-      icon: FileText,
-      items: [
-        { title: "Customer Orders", href: "/orders" },
-        { title: "Create Order", href: "/orders/create" },
-        { title: "Pending Orders", href: "/orders?status=PENDING" },
-        { title: "Processing", href: "/orders?status=PROCESSING" },
-        { title: "Shipped Orders", href: "/orders?status=SHIPPED" },
-        { title: "Order Analytics", href: "/orders/analytics" },
-      ]
-    },
-    {
-      title: "Purchase Orders",
-      href: "/purchase-orders",
-      icon: Truck,
-      items: [
-        { title: "All Purchase Orders", href: "/purchase-orders" },
-        { title: "Create PO", href: "/purchase-orders/create" },
-        { title: "Pending Approval", href: "/purchase-orders?status=PENDING_APPROVAL" },
-        { title: "Awaiting Delivery", href: "/purchase-orders?status=APPROVED" },
-        { title: "Reorder Suggestions", href: "/purchase-orders?tab=reorder" },
-        { title: "Goods Receipt", href: "/purchase-orders/goods-receipt" },
-      ]
-    },
-    {
-      title: "Suppliers",
-      href: "/suppliers",
-      icon: Building2,
-      items: [
-        { title: "All Suppliers", href: "/suppliers" },
-        { title: "Add Supplier", href: "/suppliers/add" },
-        { title: "Performance", href: "/suppliers/performance" },
-      ]
-    },
-    {
-      title: "Logistics",
-      href: "/shipments",
-      icon: Truck,
-      items: [
-        { title: "Shipments", href: "/shipments" },
-        { title: "Purchase Orders", href: "/purchase-orders" },
-        { title: "Tracking", href: "/shipments/tracking" },
-      ]
-    },
-    {
-      title: "Reports",
-      href: "/reports",
-      icon: BarChart3,
-      items: [
-        { title: "Inventory Reports", href: "/reports/inventory" },
-        { title: "Sales Reports", href: "/reports/sales" },
-        { title: "Financial Reports", href: "/reports/financial" },
-        { title: "Custom Reports", href: "/reports/custom" },
-      ]
-    }
-  ];  // Check if we're in dashboard routes - include ALL authenticated pages
-  // Show dashboard navbar if user has company access OR has permanent access flag
-  const isDashboard = user && hasCompanyAccess && (pathname?.startsWith("/dashboard") ||
-    pathname?.startsWith("/inventory") ||
-    pathname?.startsWith("/orders") ||
-    pathname?.startsWith("/profile") ||
-    pathname?.startsWith("/settings") ||
-    pathname?.startsWith("/suppliers") ||
-    pathname?.startsWith("/shipments") ||
-    pathname?.startsWith("/reports") ||
-    pathname?.startsWith("/products") ||
-    pathname?.startsWith("/customers") ||
-    pathname?.startsWith("/employees") ||
-    pathname?.startsWith("/warehouses") ||
-    pathname?.startsWith("/invoices") ||
-    pathname?.startsWith("/purchase-orders") ||
-    pathname?.startsWith("/audit") ||
-    pathname?.startsWith("/audits") ||
-    pathname?.startsWith("/user-profile") ||
-    pathname?.startsWith("/company-profile"));
+	const dashboardNavItems = [
+		{
+			title: "Dashboard",
+			href: "/dashboard",
+			icon: Home,
+			items: [
+				{ title: "Overview", href: "/dashboard" },
+				{ title: "Analytics", href: "/dashboard/analytics" },
+				{ title: "Notifications", href: "/dashboard/notifications" },
+				{ title: "Settings", href: "/dashboard/settings" },
+			],
+		},
+		{
+			title: "Inventory",
+			href: "/inventory",
+			icon: Package,
+			items: [
+				{ title: "Products", href: "/inventory/products" },
+				{ title: "Stock Management", href: "/inventory/stock" },
+				{ title: "Suppliers", href: "/inventory/suppliers" },
+				{ title: "Categories", href: "/inventory/categories" },
+				{ title: "Low Stock Alerts", href: "/inventory/alerts" },
+				{ title: "Stock Adjustments", href: "/inventory/adjustments" },
+				{ title: "Reports", href: "/inventory/reports" },
+			],
+		},
+		{
+			title: "Orders",
+			href: "/orders",
+			icon: FileText,
+			items: [
+				{ title: "Customer Orders", href: "/orders" },
+				{ title: "Create Order", href: "/orders/create" },
+				{ title: "Pending Orders", href: "/orders?status=PENDING" },
+				{ title: "Processing", href: "/orders?status=PROCESSING" },
+				{ title: "Shipped Orders", href: "/orders?status=SHIPPED" },
+				{ title: "Order Analytics", href: "/orders/analytics" },
+			],
+		},
+		{
+			title: "Purchase Orders",
+			href: "/purchase-orders",
+			icon: Truck,
+			items: [
+				{ title: "All Purchase Orders", href: "/purchase-orders" },
+				{ title: "Create PO", href: "/purchase-orders/create" },
+				{
+					title: "Pending Approval",
+					href: "/purchase-orders?status=PENDING_APPROVAL",
+				},
+				{
+					title: "Awaiting Delivery",
+					href: "/purchase-orders?status=APPROVED",
+				},
+				{ title: "Reorder Suggestions", href: "/purchase-orders?tab=reorder" },
+				{ title: "Goods Receipt", href: "/purchase-orders/goods-receipt" },
+			],
+		},
+		{
+			title: "Suppliers",
+			href: "/suppliers",
+			icon: Building2,
+			items: [
+				{ title: "All Suppliers", href: "/suppliers" },
+				{ title: "Add Supplier", href: "/suppliers/add" },
+				{ title: "Performance", href: "/suppliers/performance" },
+			],
+		},
+		{
+			title: "Logistics",
+			href: "/shipments",
+			icon: Truck,
+			items: [
+				{ title: "Shipments", href: "/shipments" },
+				{ title: "Purchase Orders", href: "/purchase-orders" },
+				{ title: "Tracking", href: "/shipments/tracking" },
+			],
+		},
+		{
+			title: "Reports",
+			href: "/reports",
+			icon: BarChart3,
+			items: [
+				{ title: "Inventory Reports", href: "/reports/inventory" },
+				{ title: "Sales Reports", href: "/reports/sales" },
+				{ title: "Financial Reports", href: "/reports/financial" },
+				{ title: "Custom Reports", href: "/reports/custom" },
+			],
+		},
+	]; // Check if we're in dashboard routes - include ALL authenticated pages
+	// Show dashboard navbar if user has company access OR has permanent access flag
+	const isDashboard =
+		user &&
+		hasCompanyAccess &&
+		(pathname?.startsWith("/dashboard") ||
+			pathname?.startsWith("/inventory") ||
+			pathname?.startsWith("/orders") ||
+			pathname?.startsWith("/profile") ||
+			pathname?.startsWith("/settings") ||
+			pathname?.startsWith("/suppliers") ||
+			pathname?.startsWith("/shipments") ||
+			pathname?.startsWith("/reports") ||
+			pathname?.startsWith("/products") ||
+			pathname?.startsWith("/customers") ||
+			pathname?.startsWith("/employees") ||
+			pathname?.startsWith("/warehouses") ||
+			pathname?.startsWith("/invoices") ||
+			pathname?.startsWith("/purchase-orders") ||
+			pathname?.startsWith("/audit") ||
+			pathname?.startsWith("/audits") ||
+			pathname?.startsWith("/user-profile") ||
+			pathname?.startsWith("/company-profile"));
 
-  // Handle body padding for navbar layout
-  useEffect(() => {
-    const body = document.body;
-    if (isDashboard) {
-      body.classList.add('dashboard-layout');
-      body.classList.remove('single-deck-layout');
-    } else {
-      body.classList.add('single-deck-layout');
-      body.classList.remove('dashboard-layout');
-    }
-    
-    return () => {
-      body.classList.remove('dashboard-layout', 'single-deck-layout');
-    };
-  }, [isDashboard]);
+	// Handle body padding for navbar layout
+	useEffect(() => {
+		const body = document.body;
+		if (isDashboard) {
+			body.classList.add("dashboard-layout");
+			body.classList.remove("single-deck-layout");
+		} else {
+			body.classList.add("single-deck-layout");
+			body.classList.remove("dashboard-layout");
+		}
 
-  const handleAuthAction = async (action: string) => {
-    if (action === "login") {
-      router.push("/auth/login");
-    } else if (action === "signup") {
-      router.push("/auth/signUp");
-    } else if (action === "logout") {
-      try {
-        await logout();
-      } catch (error) {
-        console.error('Logout error:', error);
-        // Fallback: navigate to logout page
-        router.push("/auth/logout");
-      }
-    }
-  };
+		return () => {
+			body.classList.remove("dashboard-layout", "single-deck-layout");
+		};
+	}, [isDashboard]);
 
-  const handleDropdownToggle = (itemHref: string) => {
-    setOpenDropdown(openDropdown === itemHref ? null : itemHref);
-  };
+	const handleAuthAction = async (action: string) => {
+		if (action === "login") {
+			router.push("/auth/login");
+		} else if (action === "signup") {
+			router.push("/auth/signUp");
+		} else if (action === "logout") {
+			try {
+				await logout();
+			} catch (error) {
+				console.error("Logout error:", error);
+				// Fallback: navigate to logout page
+				router.push("/auth/logout");
+			}
+		}
+	};
 
-  const CustomDropdown = ({ item, isOpen, onToggle }: {
-    item: NavItem;
-    isOpen: boolean;
-    onToggle: (href: string) => void;
-  }) => {
-    return (
-      <div
-        className="relative group"
-        ref={(el) => {
-          if (el) {
-            dropdownRefs.current[item.href] = el;
-          }
-        }}
-      >        {/* Glow effect on hover */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-all duration-300" />        <button
-          onClick={() => onToggle(item.href)}
-          className={`relative flex items-center h-9 lg:h-10 px-3 lg:px-4 text-xs lg:text-sm rounded-lg transition-all duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary/20 border group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/10 font-medium ${isOpen
-            ? 'bg-primary/10 dark:bg-primary/20 border-primary/50 text-primary shadow-lg shadow-primary/20'
-            : 'bg-background/60 dark:bg-background/40 border-border/30 dark:border-border/20 hover:bg-accent/60 dark:hover:bg-accent/40'
-            }`}
-        >
-          <item.icon className="h-4 w-4 lg:h-5 lg:w-5 mr-2 lg:mr-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
-          <span className="hidden sm:inline md:hidden lg:inline font-medium">{item.title}</span>
-          <span className="sm:hidden md:inline lg:hidden font-medium">{item.title.substring(0, 1)}</span>
-          <ChevronDown className={`h-3 w-3 lg:h-4 lg:w-4 ml-2 lg:ml-3 hidden sm:block flex-shrink-0 transition-all duration-300 ${isOpen ? 'rotate-180 text-primary' : 'group-hover:rotate-12'
-            }`} />
+	const handleDropdownToggle = (itemHref: string) => {
+		setOpenDropdown(openDropdown === itemHref ? null : itemHref);
+	};
 
-          {/* Active indicator */}
-          {pathname?.startsWith(item.href) && (
-            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
-          )}
-        </button>        {isOpen && (
-          <div className="absolute top-full left-0 mt-2 p-2 lg:p-3 min-w-[200px] sm:min-w-[220px] lg:min-w-[240px] xl:min-w-[260px] max-w-[300px] lg:max-w-[340px] bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/40 z-50 dropdown-enter">
-            {/* Subtle glow inside dropdown */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 rounded-xl pointer-events-none" />
+	const CustomDropdown = ({
+		item,
+		isOpen,
+		onToggle,
+	}: {
+		item: NavItem;
+		isOpen: boolean;
+		onToggle: (href: string) => void;
+	}) => {
+		return (
+			<div
+				className="relative group"
+				ref={(el) => {
+					if (el) {
+						dropdownRefs.current[item.href] = el;
+					}
+				}}
+			>
+				{" "}
+				{/* Glow effect on hover */}
+				<div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-all duration-300" />{" "}
+				<button
+					onClick={() => onToggle(item.href)}
+					className={`relative flex items-center h-9 lg:h-10 px-3 lg:px-4 text-xs lg:text-sm rounded-lg transition-all duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary/20 border group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/10 font-medium ${
+						isOpen
+							? "bg-primary/10 dark:bg-primary/20 border-primary/50 text-primary shadow-lg shadow-primary/20"
+							: "bg-background/60 dark:bg-background/40 border-border/30 dark:border-border/20 hover:bg-accent/60 dark:hover:bg-accent/40"
+					}`}
+				>
+					<item.icon className="h-4 w-4 lg:h-5 lg:w-5 mr-2 lg:mr-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
+					<span className="hidden sm:inline md:hidden lg:inline font-medium">
+						{item.title}
+					</span>
+					<span className="sm:hidden md:inline lg:hidden font-medium">
+						{item.title.substring(0, 1)}
+					</span>
+					<ChevronDown
+						className={`h-3 w-3 lg:h-4 lg:w-4 ml-2 lg:ml-3 hidden sm:block flex-shrink-0 transition-all duration-300 ${
+							isOpen ? "rotate-180 text-primary" : "group-hover:rotate-12"
+						}`}
+					/>
 
-            <div className="relative grid gap-1 lg:gap-2 w-full">
-              {item.items.map((subItem: SubNavItem, index: number) => (
-                <Link
-                  key={subItem.href}
-                  href={subItem.href}
-                  onClick={() => setOpenDropdown(null)}
-                  className="group/item block px-3 lg:px-4 py-2.5 lg:py-3.5 text-xs lg:text-sm rounded-lg hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 border border-transparent hover:border-primary/20 relative overflow-hidden"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
-                  <span className="relative text-foreground/80 group-hover/item:text-primary transition-colors duration-300 font-medium">
-                    {subItem.title}
-                  </span>
-                  {pathname === subItem.href && (
-                    <div className="absolute right-2 lg:right-3 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 lg:w-2 lg:h-2 bg-primary rounded-full" />
-                  )}
-                </Link>
-              ))}
-            </div>          </div>
-        )}
-      </div>
-    );
-  };
+					{/* Active indicator */}
+					{pathname?.startsWith(item.href) && (
+						<div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
+					)}
+				</button>{" "}
+				{isOpen && (
+					<div className="absolute top-full left-0 mt-2 p-2 lg:p-3 min-w-[200px] sm:min-w-[220px] lg:min-w-[240px] xl:min-w-[260px] max-w-[300px] lg:max-w-[340px] bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/40 z-50 dropdown-enter">
+						{/* Subtle glow inside dropdown */}
+						<div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 rounded-xl pointer-events-none" />
+						<div className="relative grid gap-1 lg:gap-2 w-full">
+							{item.items.map((subItem: SubNavItem, index: number) => (
+								<Link
+									key={subItem.href}
+									href={subItem.href}
+									onClick={() => setOpenDropdown(null)}
+									className="group/item block px-3 lg:px-4 py-2.5 lg:py-3.5 text-xs lg:text-sm rounded-lg hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 border border-transparent hover:border-primary/20 relative overflow-hidden"
+									style={{ animationDelay: `${index * 50}ms` }}
+								>
+									<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
+									<span className="relative text-foreground/80 group-hover/item:text-primary transition-colors duration-300 font-medium">
+										{subItem.title}
+									</span>
+									{pathname === subItem.href && (
+										<div className="absolute right-2 lg:right-3 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 lg:w-2 lg:h-2 bg-primary rounded-full" />
+									)}
+								</Link>
+							))}
+						</div>{" "}
+					</div>
+				)}
+			</div>
+		);
+	};
 
-  return (
-    <>
-      {/* Mobile Menu Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}        {/* Single Line Futuristic Navbar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isDashboard ? 'double-decker-navbar' : 'single-deck-navbar'} ${isScrolled
-        ? "bg-background/95 dark:bg-background/85 backdrop-blur-2xl border-b border-border/80 dark:border-border/40 shadow-2xl shadow-primary/10 dark:shadow-primary/20"
-        : "bg-background/80 dark:bg-background/70 backdrop-blur-xl border-b border-border/40 dark:border-border/20"
-        }`}>
-        {/* Animated aurora background effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-cyan-500/10 opacity-0 hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+	return (
+		<>
+			{/* Mobile Menu Backdrop */}
+			{isOpen && (
+				<div
+					className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
+					onClick={() => setIsOpen(false)}
+				/>
+			)}{" "}
+			{/* Single Line Futuristic Navbar */}
+			<nav
+				className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isDashboard ? "double-decker-navbar" : "single-deck-navbar"} ${
+					isScrolled
+						? "bg-background/95 dark:bg-background/85 backdrop-blur-2xl border-b border-border/80 dark:border-border/40 shadow-2xl shadow-primary/10 dark:shadow-primary/20"
+						: "bg-background/80 dark:bg-background/70 backdrop-blur-xl border-b border-border/40 dark:border-border/20"
+				}`}
+			>
+				{/* Animated aurora background effect */}
+				<div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-cyan-500/10 opacity-0 hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
 
-        {/* Flowing particles effect */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute w-2 h-2 bg-primary/20 rounded-full animate-ping" style={{ top: '20%', left: '10%', animationDelay: '0s' }} />
-          <div className="absolute w-1 h-1 bg-purple-500/20 rounded-full animate-ping" style={{ top: '60%', left: '80%', animationDelay: '2s' }} />
-          <div className="absolute w-1.5 h-1.5 bg-cyan-500/20 rounded-full animate-ping" style={{ top: '40%', left: '60%', animationDelay: '4s' }} />        
-        </div>
-          {/* Show minimal navbar while loading auth state */}
-        {showLoadingState ? (
-          <div className="relative mx-6 md:mx-12 px-4 sm:px-6">
-            <div className="flex items-center justify-between h-16">{/* Logo */}
-              <Link href="/" className="flex items-center space-x-4 group flex-shrink-0 relative">
-                <div className="relative">
-                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 group-hover:scale-150" />
-                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-125" />
-                  <div className="relative w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 border-2 border-white/20 dark:border-white/10 shadow-2xl">
-                    <Package className="h-7 w-7 text-white drop-shadow-lg" />
-                  </div>
-                </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Invista
-                </span>
-              </Link>
-              {/* Right side */}
-              <div className="flex items-center space-x-4 md:space-x-6">
-                <ThemeToggle />
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full animate-pulse" />
-              </div>
-            </div>
-          </div>        ) : isDashboard ? (
-          /* DOUBLE DECKER LAYOUT FOR DASHBOARD */
-          <div className="relative mx-6 md:mx-12 px-4 sm:px-6">
-            {/* TOP DECK - Logo, Search, User Controls */}
-            <div className="flex items-center justify-between h-20 border-b border-border/20 dark:border-border/10">
-              
-              {/* Enhanced Logo */}
-              <Link href="/" className="flex items-center space-x-4 group flex-shrink-0 relative">
-                <div className="relative">
-                  <div className="absolute inset-0 w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 group-hover:scale-150" />
-                  <div className="absolute inset-0 w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-125" />
+				{/* Flowing particles effect */}
+				<div className="absolute inset-0 overflow-hidden pointer-events-none">
+					<div
+						className="absolute w-2 h-2 bg-primary/20 rounded-full animate-ping"
+						style={{ top: "20%", left: "10%", animationDelay: "0s" }}
+					/>
+					<div
+						className="absolute w-1 h-1 bg-purple-500/20 rounded-full animate-ping"
+						style={{ top: "60%", left: "80%", animationDelay: "2s" }}
+					/>
+					<div
+						className="absolute w-1.5 h-1.5 bg-cyan-500/20 rounded-full animate-ping"
+						style={{ top: "40%", left: "60%", animationDelay: "4s" }}
+					/>
+				</div>
+				{/* Show minimal navbar while loading auth state */}
+				{showLoadingState ? (
+					<div className="relative mx-6 md:mx-12 px-4 sm:px-6">
+						<div className="flex items-center justify-between h-16">
+							{/* Logo */}
+							<Link
+								href="/"
+								className="flex items-center space-x-4 group flex-shrink-0 relative"
+							>
+								<div className="relative">
+									<div className="absolute inset-0 w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 group-hover:scale-150" />
+									<div className="absolute inset-0 w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-125" />
+									<div className="relative w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 border-2 border-white/20 dark:border-white/10 shadow-2xl">
+										<Package className="h-7 w-7 text-white drop-shadow-lg" />
+									</div>
+								</div>
+								<span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+									Invista
+								</span>
+							</Link>
+							{/* Right side */}
+							<div className="flex items-center space-x-4 md:space-x-6">
+								<ThemeToggle />
+								<div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full animate-pulse" />
+							</div>
+						</div>
+					</div>
+				) : isDashboard ? (
+					/* DOUBLE DECKER LAYOUT FOR DASHBOARD */
+					<div className="relative mx-6 md:mx-12 px-4 sm:px-6">
+						{/* TOP DECK - Logo, Search, User Controls */}
+						<div className="flex items-center justify-between h-20 border-b border-border/20 dark:border-border/10">
+							{/* Enhanced Logo */}
+							<Link
+								href="/"
+								className="flex items-center space-x-4 group flex-shrink-0 relative"
+							>
+								<div className="relative">
+									<div className="absolute inset-0 w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 group-hover:scale-150" />
+									<div className="absolute inset-0 w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-125" />
+									<div className="relative w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 border-2 border-white/20 dark:border-white/10 shadow-2xl">
+										<Package className="h-8 w-8 text-white drop-shadow-lg" />
+									</div>{" "}
+									<div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-background shadow-lg">
+										<div className="absolute inset-0 w-4 h-4 bg-emerald-400 rounded-full status-pulse" />
+										<div className="absolute inset-1 w-2 h-2 bg-white rounded-full animate-pulse" />
+									</div>
+								</div>{" "}
+								<div className="relative">
+									<span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
+										Invista
+									</span>
+									<div className="text-xs text-muted-foreground font-medium tracking-wider mt-1 hidden md:block">
+										Supply Chain Intelligence
+									</div>
+									<div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-500" />
+								</div>
+							</Link>{" "}
+							{/* Enhanced Search Bar */}
+							<div className="hidden lg:flex relative group flex-1 max-w-2xl mx-12">
+								<div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
+								<div className="relative w-full bg-background/60 dark:bg-background/40 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-2xl overflow-hidden group-hover:border-primary/50 transition-all duration-300 shadow-lg search-enhanced">
+									<Search className="absolute left-7 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />{" "}
+									<Input
+										placeholder="Search products, orders, suppliers..."
+										className="pl-16 pr-28 h-14 lg:h-16 bg-transparent border-0 focus:ring-0 focus:border-0 text-sm lg:text-base placeholder:text-muted-foreground/60 font-medium w-full"
+									/>{" "}
+									<div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex items-center space-x-3">
+										<kbd className="pointer-events-none inline-flex h-6 lg:h-8 select-none items-center gap-1 rounded-lg border bg-muted px-2 lg:px-3 font-mono text-xs lg:text-sm font-medium text-muted-foreground opacity-100">
+											<span className="text-sm lg:text-base">⌘</span>K
+										</kbd>
+									</div>
+								</div>
+							</div>{" "}
+							{/* Right Actions - Notifications, Theme, User Menu, Mobile Menu */}
+							<div className="flex items-center space-x-3 lg:space-x-6 flex-shrink-0">
+								{/* Notifications */}
+								<div className="relative group">
+									<div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
+									<Button
+										variant="ghost"
+										size="sm"
+										className="relative h-12 w-12 lg:h-14 lg:w-14 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 flex-shrink-0 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
+									>
+										<Bell className="h-5 w-5 lg:h-7 lg:w-7 group-hover:scale-110 transition-transform duration-300" />
+										<Badge className="absolute -top-2 -right-2 h-5 w-5 lg:h-7 lg:w-7 rounded-full p-0 flex items-center justify-center text-xs lg:text-sm bg-gradient-to-r from-red-500 to-orange-500 border-2 border-background shadow-lg animate-pulse font-bold">
+											3
+										</Badge>
+									</Button>
+								</div>
+								{/* Theme Toggle */}
+								<div className="scale-110 lg:scale-125">
+									<ThemeToggle />
+								</div>
+								{/* User Menu */}
+								<DropdownMenu>
+									{" "}
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											className="h-12 lg:h-14 px-3 lg:px-5 space-x-2 lg:space-x-3 hover:bg-accent/60 dark:hover:bg-accent/40 flex-shrink-0 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 group rounded-xl"
+										>
+											<div className="relative">
+												<div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-150" />
+												<div className="relative w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-white/20 shadow-lg">
+													<User className="h-4 w-4 lg:h-6 lg:w-6 text-white" />
+												</div>
+											</div>
+											<div className="hidden xl:block text-left min-w-0">
+												<div className="text-xs lg:text-sm font-medium truncate max-w-[120px] lg:max-w-[140px]">
+													{user?.email?.split("@")[0] || "User"}
+												</div>
+												<div className="text-xs text-muted-foreground truncate">
+													{userRole
+														? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()}`
+														: userType === "company"
+															? "Company User"
+															: "Individual User"}
+												</div>
+											</div>
+											<ChevronDown className="h-4 w-4 lg:h-5 lg:w-5 group-hover:rotate-180 transition-transform duration-300" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="end"
+										className="w-72 mt-2 bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 shadow-2xl rounded-xl"
+									>
+										<div className="px-4 py-3 border-b border-border/30">
+											<div className="text-sm font-medium">{user?.email}</div>
+											<div className="text-xs text-muted-foreground mt-1">
+												{userRole
+													? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()} Role`
+													: userType === "company"
+														? "Company Administrator"
+														: "Individual User"}
+											</div>
+										</div>
 
-                  <div className="relative w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 border-2 border-white/20 dark:border-white/10 shadow-2xl">
-                    <Package className="h-8 w-8 text-white drop-shadow-lg" />
-                  </div>                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-background shadow-lg">
-                    <div className="absolute inset-0 w-4 h-4 bg-emerald-400 rounded-full status-pulse" />
-                    <div className="absolute inset-1 w-2 h-2 bg-white rounded-full animate-pulse" />
-                  </div>
-                </div>                <div className="relative">
-                  <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
-                    Invista
-                  </span>
-                  <div className="text-xs text-muted-foreground font-medium tracking-wider mt-1 hidden md:block">
-                    Supply Chain Intelligence
-                  </div>
-                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-500" />
-                </div>
-              </Link>              {/* Enhanced Search Bar */}
-              <div className="hidden lg:flex relative group flex-1 max-w-2xl mx-12">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                <div className="relative w-full bg-background/60 dark:bg-background/40 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-2xl overflow-hidden group-hover:border-primary/50 transition-all duration-300 shadow-lg search-enhanced">
-                  <Search className="absolute left-7 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />                  <Input
-                    placeholder="Search products, orders, suppliers..."
-                    className="pl-16 pr-28 h-14 lg:h-16 bg-transparent border-0 focus:ring-0 focus:border-0 text-sm lg:text-base placeholder:text-muted-foreground/60 font-medium w-full"
-                  />                  <div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex items-center space-x-3">
-                    <kbd className="pointer-events-none inline-flex h-6 lg:h-8 select-none items-center gap-1 rounded-lg border bg-muted px-2 lg:px-3 font-mono text-xs lg:text-sm font-medium text-muted-foreground opacity-100">
-                      <span className="text-sm lg:text-base">⌘</span>K
-                    </kbd>
-                  </div>
-                </div>
-              </div>              {/* Right Actions - Notifications, Theme, User Menu, Mobile Menu */}
-              <div className="flex items-center space-x-3 lg:space-x-6 flex-shrink-0">
-                {/* Notifications */}
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                  <Button variant="ghost" size="sm" className="relative h-12 w-12 lg:h-14 lg:w-14 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 flex-shrink-0 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl">
-                    <Bell className="h-5 w-5 lg:h-7 lg:w-7 group-hover:scale-110 transition-transform duration-300" />
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 lg:h-7 lg:w-7 rounded-full p-0 flex items-center justify-center text-xs lg:text-sm bg-gradient-to-r from-red-500 to-orange-500 border-2 border-background shadow-lg animate-pulse font-bold">
-                      3
-                    </Badge>
-                  </Button>
-                </div>
+										{/* Show both profile options for OWNER, ADMIN, MANAGER */}
+										{canAccessCompanyProfile ? (
+											<>
+												<DropdownMenuItem
+													className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
+													onClick={() => router.push("/company-profile")}
+												>
+													<Building2 className="mr-4 h-5 w-5" />
+													Company Profile
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
+													onClick={() => router.push("/user-profile")}
+												>
+													<User className="mr-4 h-5 w-5" />
+													User Profile
+												</DropdownMenuItem>
+											</>
+										) : (
+											<DropdownMenuItem
+												className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
+												onClick={() => router.push("/user-profile")}
+											>
+												<User className="mr-4 h-5 w-5" />
+												User Profile
+											</DropdownMenuItem>
+										)}
+										<DropdownMenuItem className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3">
+											<Settings className="mr-4 h-5 w-5" />
+											Settings & Preferences
+										</DropdownMenuItem>
+										<DropdownMenuSeparator className="mx-2" />
+										<DropdownMenuItem
+											className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mx-2 my-1 rounded-lg py-3"
+											onClick={async () => {
+												try {
+													await logout();
+												} catch (error) {
+													console.error("Logout error:", error);
+													router.push("/auth/logout");
+												}
+											}}
+										>
+											<LogOut className="mr-4 h-5 w-5" />
+											Sign Out
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>{" "}
+								{/* Mobile Menu Button */}
+								<div className="relative group lg:hidden">
+									<div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
+									<Button
+										variant="ghost"
+										size="sm"
+										className="relative lg:hidden h-12 w-12 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
+										onClick={() => setIsOpen(!isOpen)}
+									>
+										{isOpen ? (
+											<X className="h-5 w-5 rotate-90 group-hover:rotate-180 transition-transform duration-300" />
+										) : (
+											<Menu className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+										)}
+									</Button>
+								</div>
+							</div>
+						</div>{" "}
+						{/* BOTTOM DECK - Main Navigation */}
+						<div className="hidden lg:flex items-center justify-center h-14 xl:h-16">
+							<div className="flex items-center space-x-2 xl:space-x-3 bg-muted/30 dark:bg-muted/20 rounded-2xl px-4 xl:px-6 py-2 xl:py-3 border border-border/40 dark:border-border/20 backdrop-blur-sm">
+								{dashboardNavItems.map((item) => (
+									<CustomDropdown
+										key={item.href}
+										item={item}
+										isOpen={openDropdown === item.href}
+										onToggle={handleDropdownToggle}
+									/>
+								))}
+							</div>
+						</div>
+					</div>
+				) : (
+					/* SINGLE DECK LAYOUT FOR MARKETING PAGES */ <div className="relative mx-6 md:mx-12 px-4 sm:px-6">
+						<div className="flex items-center justify-between h-20 lg:h-24">
+							{/* Logo */}
+							<Link
+								href="/"
+								className="flex items-center space-x-3 lg:space-x-4 group flex-shrink-0 relative"
+							>
+								<div className="relative">
+									<div className="absolute inset-0 w-10 h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-125" />
+									<div className="relative w-10 h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-white/20 dark:border-white/10">
+										<Package className="h-6 w-6 lg:h-7 lg:w-7 text-white drop-shadow-sm" />
+									</div>
+									<div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-background shadow-lg">
+										<div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-75" />
+									</div>
+								</div>
+								<div className="relative">
+									<span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent truncate group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
+										Invista
+									</span>
+									<div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300" />
+								</div>
+							</Link>{" "}
+							{/* Marketing Navigation */}
+							<div className="hidden md:flex items-center gap-6 lg:gap-8 xl:gap-10 flex-1 justify-center">
+								<div className="flex items-center gap-6 lg:gap-8 xl:gap-10 bg-muted/20 dark:bg-muted/10 rounded-full px-8 lg:px-10 xl:px-12 py-4 lg:py-5 border border-border/30 dark:border-border/20 backdrop-blur-sm">
+									<Link
+										href="#features"
+										className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap"
+									>
+										Features
+										<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+									</Link>
+									<Link
+										href="#how-it-works"
+										className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap"
+									>
+										How it Works
+										<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+									</Link>
+									<Link
+										href="/pricing"
+										className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap"
+									>
+										Pricing
+										<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+									</Link>
+									<Link
+										href="/contact"
+										className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap"
+									>
+										Contact
+										<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+									</Link>
+								</div>
+							</div>{" "}
+							{/* Auth Actions */}
+							<div className="flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
+								<ThemeToggle />
+								<div className="hidden sm:flex items-center space-x-2 lg:space-x-3">
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => handleAuthAction("login")}
+										className="h-10 lg:h-11 px-4 lg:px-5 text-sm hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
+									>
+										Sign In
+									</Button>
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<Button
+												size="sm"
+												className="h-10 lg:h-11 px-4 lg:px-5 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 border border-primary/20 shadow-lg hover:shadow-primary/25 transition-all duration-300 group relative overflow-hidden rounded-xl"
+											>
+												<div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+												<span className="relative hidden sm:inline-flex items-center">
+													Get Started
+													<Zap className="ml-2 h-3 w-3 lg:h-4 lg:w-4" />
+												</span>
+												<span className="relative sm:hidden">Start</span>
+												<ChevronDown className="ml-2 h-3 w-3 lg:h-4 lg:w-4 group-hover:rotate-180 transition-transform duration-300" />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent
+											align="end"
+											className="w-56 lg:w-64 bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 shadow-xl rounded-xl"
+										>
+											<DropdownMenuItem
+												onClick={() => router.push("/auth/company-signup")}
+												className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-2 lg:py-3"
+											>
+												<Building2 className="mr-3 lg:mr-4 h-4 w-4 lg:h-5 lg:w-5" />
+												Create Company Account
+											</DropdownMenuItem>
+											<DropdownMenuItem
+												onClick={() => handleAuthAction("signup")}
+												className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-2 lg:py-3"
+											>
+												<User className="mr-3 lg:mr-4 h-4 w-4 lg:h-5 lg:w-5" />
+												Join as Individual
+											</DropdownMenuItem>
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</div>{" "}
+								{/* Mobile Menu Button */}
+								<div className="relative group md:hidden">
+									<div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
+									<Button
+										variant="ghost"
+										size="sm"
+										className="relative md:hidden h-10 w-10 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
+										onClick={() => setIsOpen(!isOpen)}
+									>
+										{isOpen ? (
+											<X className="h-4 w-4 rotate-90 group-hover:rotate-180 transition-transform duration-300" />
+										) : (
+											<Menu className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+										)}
+									</Button>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
 
-                {/* Theme Toggle */}
-                <div className="scale-110 lg:scale-125">
-                  <ThemeToggle />
-                </div>{/* User Menu */}
-                <DropdownMenu>                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-12 lg:h-14 px-3 lg:px-5 space-x-2 lg:space-x-3 hover:bg-accent/60 dark:hover:bg-accent/40 flex-shrink-0 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 group rounded-xl">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-150" />
-                        <div className="relative w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-white/20 shadow-lg">
-                          <User className="h-4 w-4 lg:h-6 lg:w-6 text-white" />
-                        </div>
-                      </div>
-                      <div className="hidden xl:block text-left min-w-0">
-                        <div className="text-xs lg:text-sm font-medium truncate max-w-[120px] lg:max-w-[140px]">
-                          {user?.email?.split('@')[0] || 'User'}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {userRole ? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()}` : (userType === 'company' ? 'Company User' : 'Individual User')}
-                        </div>
-                      </div>
-                      <ChevronDown className="h-4 w-4 lg:h-5 lg:w-5 group-hover:rotate-180 transition-transform duration-300" />
-                    </Button>
-                  </DropdownMenuTrigger><DropdownMenuContent align="end" className="w-72 mt-2 bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 shadow-2xl rounded-xl">
-                    <div className="px-4 py-3 border-b border-border/30">
-                      <div className="text-sm font-medium">{user?.email}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {userRole ? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()} Role` : (userType === 'company' ? 'Company Administrator' : 'Individual User')}
-                      </div>
-                    </div>
-                    
-                    {/* Show both profile options for OWNER, ADMIN, MANAGER */}
-                    {canAccessCompanyProfile ? (                      <>
-                        <DropdownMenuItem
-                          className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
-                          onClick={() => router.push('/company-profile')}
-                        >
-                          <Building2 className="mr-4 h-5 w-5" />
-                          Company Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
-                          onClick={() => router.push('/user-profile')}
-                        >
-                          <User className="mr-4 h-5 w-5" />
-                          User Profile
-                        </DropdownMenuItem>
-                      </>                    ) : (
-                      <DropdownMenuItem
-                        className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
-                        onClick={() => router.push('/user-profile')}
-                      >
-                        <User className="mr-4 h-5 w-5" />
-                        User Profile
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3">
-                      <Settings className="mr-4 h-5 w-5" />
-                      Settings & Preferences
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="mx-2" />
-                    <DropdownMenuItem
-                      className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mx-2 my-1 rounded-lg py-3"
-                      onClick={async () => {
-                        try {
-                          await logout();
-                        } catch (error) {
-                          console.error('Logout error:', error);
-                          router.push("/auth/logout");
-                        }
-                      }}
-                    >
-                      <LogOut className="mr-4 h-5 w-5" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>                {/* Mobile Menu Button */}
-                <div className="relative group lg:hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="relative lg:hidden h-12 w-12 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
-                    onClick={() => setIsOpen(!isOpen)}
-                  >
-                    {isOpen ? (
-                      <X className="h-5 w-5 rotate-90 group-hover:rotate-180 transition-transform duration-300" />
-                    ) : (
-                      <Menu className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />)}
-                  </Button>
-                </div>
-              </div>
-            </div>            {/* BOTTOM DECK - Main Navigation */}
-            <div className="hidden lg:flex items-center justify-center h-14 xl:h-16">
-              <div className="flex items-center space-x-2 xl:space-x-3 bg-muted/30 dark:bg-muted/20 rounded-2xl px-4 xl:px-6 py-2 xl:py-3 border border-border/40 dark:border-border/20 backdrop-blur-sm">
-                {dashboardNavItems.map((item) => (
-                  <CustomDropdown
-                    key={item.href}
-                    item={item}
-                    isOpen={openDropdown === item.href}
-                    onToggle={handleDropdownToggle}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>        ) : (
-          /* SINGLE DECK LAYOUT FOR MARKETING PAGES */          <div className="relative mx-6 md:mx-12 px-4 sm:px-6">
-            <div className="flex items-center justify-between h-20 lg:h-24">
+				{/* Enhanced Mobile Menu */}
+				<div
+					className={`lg:hidden absolute top-full left-0 right-0 border-t border-border/60 dark:border-border/40 bg-background/95 dark:bg-background/90 backdrop-blur-2xl transition-all duration-500 ease-in-out z-40 mobile-menu-scroll ${
+						isOpen
+							? "max-h-[85vh] opacity-100 visible overflow-y-auto"
+							: "max-h-0 opacity-0 invisible overflow-hidden"
+					}`}
+				>
+					<div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-purple-500/5 pointer-events-none" />
 
-              {/* Logo */}
-              <Link href="/" className="flex items-center space-x-3 lg:space-x-4 group flex-shrink-0 relative">
-                <div className="relative">
-                  <div className="absolute inset-0 w-10 h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-125" />
-                  <div className="relative w-10 h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-white/20 dark:border-white/10">
-                    <Package className="h-6 w-6 lg:h-7 lg:w-7 text-white drop-shadow-sm" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-background shadow-lg">
-                    <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-75" />
-                  </div>
-                </div>
-                <div className="relative">
-                  <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent truncate group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
-                    Invista
-                  </span>
-                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300" />
-                </div>
-              </Link>              {/* Marketing Navigation */}
-              <div className="hidden md:flex items-center gap-6 lg:gap-8 xl:gap-10 flex-1 justify-center">
-                <div className="flex items-center gap-6 lg:gap-8 xl:gap-10 bg-muted/20 dark:bg-muted/10 rounded-full px-8 lg:px-10 xl:px-12 py-4 lg:py-5 border border-border/30 dark:border-border/20 backdrop-blur-sm">
-                  <Link href="#features" className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap">
-                    Features
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
-                  </Link>
-                  <Link href="#how-it-works" className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap">
-                    How it Works
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
-                  </Link>
-                  <Link href="/pricing" className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap">
-                    Pricing
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
-                  </Link>
-                  <Link href="/contact" className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 relative group whitespace-nowrap">
-                    Contact
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
-                  </Link>
-                </div>
-              </div>              {/* Auth Actions */}
-              <div className="flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
-                <ThemeToggle />
+					<div className="relative mx-4 md:mx-8 px-2 py-6">
+						<div className="space-y-6">
+							{isDashboard ? (
+								<>
+									{" "}
+									{/* Mobile Search */}
+									<div className="px-2 py-3">
+										<div className="relative group">
+											<div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
+											<div className="relative bg-background/60 dark:bg-background/40 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-2xl overflow-hidden group-hover:border-primary/50 transition-all duration-300">
+												<Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+												<Input
+													placeholder="Search products, orders, suppliers..."
+													className="pl-16 pr-20 bg-transparent border-0 focus:ring-0 focus:border-0 h-16 w-full text-base placeholder:text-muted-foreground/60 font-medium"
+												/>
+												<div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+													<kbd className="pointer-events-none inline-flex h-7 select-none items-center gap-1 rounded-lg border bg-muted px-2 font-mono text-xs font-medium text-muted-foreground opacity-100">
+														⌘K
+													</kbd>
+												</div>
+											</div>
+										</div>
+									</div>
+									{/* Mobile Navigation */}
+									<div className="space-y-3">
+										{" "}
+										{dashboardNavItems.map((item) => (
+											<div key={item.href} className="space-y-2">
+												<Link
+													href={item.href}
+													className="flex items-center px-5 py-4 text-base font-semibold rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+													onClick={() => setIsOpen(false)}
+												>
+													<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+													<div className="relative flex items-center w-full">
+														<div className="relative">
+															<div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
+															<div className="relative w-10 h-10 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-border/30">
+																<item.icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+															</div>
+														</div>
+														<span className="ml-4 group-hover:translate-x-1 transition-transform duration-300">
+															{item.title}
+														</span>
+														{pathname?.startsWith(item.href) && (
+															<div className="ml-auto w-3 h-3 bg-primary rounded-full animate-pulse" />
+														)}
+													</div>
+												</Link>{" "}
+												<div className="ml-8 space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-purple-500/30 pl-6">
+													{item.items.map((subItem) => (
+														<Link
+															key={subItem.href}
+															href={subItem.href}
+															className="block px-4 py-3 text-sm text-muted-foreground rounded-xl hover:bg-accent/40 dark:hover:bg-accent/30 transition-all duration-300 hover:text-primary relative group"
+															onClick={() => setIsOpen(false)}
+														>
+															<div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
+															<span className="relative group-hover:translate-x-2 transition-transform duration-300">
+																{subItem.title}
+															</span>
+															{pathname === subItem.href && (
+																<div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-primary rounded-full" />
+															)}
+														</Link>
+													))}
+												</div>
+											</div>
+										))}
+									</div>
+									{/* Mobile User Profile */}
+									<div className="border-t border-border/40 dark:border-border/20 pt-6">
+										<div className="flex items-center space-x-4 py-4 px-3 rounded-2xl bg-gradient-to-r from-muted/30 to-muted/20 border border-border/30 dark:border-border/20">
+											<div className="relative">
+												<div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur opacity-50" />
+												<div className="relative w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-white/20 shadow-lg">
+													<User className="h-6 w-6 text-white" />
+												</div>
+											</div>
+											<div className="flex-1 min-w-0">
+												{" "}
+												<div className="text-base font-semibold truncate">
+													{user?.email?.split("@")[0] || "User"}
+												</div>
+												<div className="text-sm text-muted-foreground truncate">
+													{user?.email}
+												</div>
+												<div className="text-xs text-primary font-medium">
+													{userRole
+														? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()} Role`
+														: userType === "company"
+															? "Company Admin"
+															: "Individual User"}
+												</div>
+											</div>
+										</div>
 
-                <div className="hidden sm:flex items-center space-x-2 lg:space-x-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleAuthAction("login")}
-                    className="h-10 lg:h-11 px-4 lg:px-5 text-sm hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
-                  >
-                    Sign In
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="sm"
-                        className="h-10 lg:h-11 px-4 lg:px-5 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 border border-primary/20 shadow-lg hover:shadow-primary/25 transition-all duration-300 group relative overflow-hidden rounded-xl"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <span className="relative hidden sm:inline-flex items-center">
-                          Get Started
-                          <Zap className="ml-2 h-3 w-3 lg:h-4 lg:w-4" />
-                        </span>
-                        <span className="relative sm:hidden">Start</span>
-                        <ChevronDown className="ml-2 h-3 w-3 lg:h-4 lg:w-4 group-hover:rotate-180 transition-transform duration-300" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 lg:w-64 bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 dark:border-border/30 shadow-xl rounded-xl">
-                      <DropdownMenuItem
-                        onClick={() => router.push("/auth/company-signup")}
-                        className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-2 lg:py-3"
-                      >
-                        <Building2 className="mr-3 lg:mr-4 h-4 w-4 lg:h-5 lg:w-5" />
-                        Create Company Account
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleAuthAction("signup")}
-                        className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-2 lg:py-3"
-                      >
-                        <User className="mr-3 lg:mr-4 h-4 w-4 lg:h-5 lg:w-5" />
-                        Join as Individual
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>                {/* Mobile Menu Button */}
-                <div className="relative group md:hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="relative md:hidden h-10 w-10 p-0 hover:bg-accent/60 dark:hover:bg-accent/40 border border-border/30 dark:border-border/20 hover:border-primary/50 transition-all duration-300 rounded-xl"
-                    onClick={() => setIsOpen(!isOpen)}
-                  >
-                    {isOpen ? (
-                      <X className="h-4 w-4 rotate-90 group-hover:rotate-180 transition-transform duration-300" />
-                    ) : (
-                      <Menu className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+										<div className="space-y-2 mt-4">
+											{/* Show both profile options for OWNER, ADMIN, MANAGER */}
+											{canAccessCompanyProfile ? (
+												<>
+													<Button
+														variant="ghost"
+														className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+														onClick={() => {
+															router.push("/company-profile");
+															setIsOpen(false);
+														}}
+													>
+														<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+														<Building2 className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+														<span className="group-hover:translate-x-1 transition-transform duration-300">
+															Company Profile
+														</span>
+													</Button>
 
-        {/* Enhanced Mobile Menu */}
-        <div className={`lg:hidden absolute top-full left-0 right-0 border-t border-border/60 dark:border-border/40 bg-background/95 dark:bg-background/90 backdrop-blur-2xl transition-all duration-500 ease-in-out z-40 mobile-menu-scroll ${isOpen ? 'max-h-[85vh] opacity-100 visible overflow-y-auto' : 'max-h-0 opacity-0 invisible overflow-hidden'
-          }`}>
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-purple-500/5 pointer-events-none" />
+													<Button
+														variant="ghost"
+														className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+														onClick={() => {
+															router.push("/user-profile");
+															setIsOpen(false);
+														}}
+													>
+														<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+														<User className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+														<span className="group-hover:translate-x-1 transition-transform duration-300">
+															User Profile
+														</span>
+													</Button>
+												</>
+											) : (
+												<Button
+													variant="ghost"
+													className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+													onClick={() => {
+														router.push("/user-profile");
+														setIsOpen(false);
+													}}
+												>
+													<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+													<User className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+													<span className="group-hover:translate-x-1 transition-transform duration-300">
+														User Profile
+													</span>
+												</Button>
+											)}
+											<Button
+												variant="ghost"
+												className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+												onClick={() => {
+													router.push("/dashboard/settings");
+													setIsOpen(false);
+												}}
+											>
+												<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+												<Settings className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+												<span className="group-hover:translate-x-1 transition-transform duration-300">
+													Settings & Preferences
+												</span>
+											</Button>{" "}
+											<Button
+												variant="ghost"
+												className="w-full justify-start text-base h-14 rounded-2xl text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-transparent hover:border-red-200 dark:hover:border-red-800 group relative overflow-hidden"
+												onClick={async () => {
+													try {
+														await logout();
+														setIsOpen(false);
+													} catch (error) {
+														console.error("Logout error:", error);
+														router.push("/auth/logout");
+														setIsOpen(false);
+													}
+												}}
+											>
+												<div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+												<LogOut className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+												<span className="group-hover:translate-x-1 transition-transform duration-300">
+													Sign Out
+												</span>
+											</Button>
+										</div>
+									</div>
+								</>
+							) : (
+								<>
+									{/* Marketing Mobile Menu */}
+									<div className="space-y-3">
+										{" "}
+										{[
+											{ href: "#features", title: "Features" },
+											{ href: "#how-it-works", title: "How it Works" },
+											{ href: "/pricing", title: "Pricing" },
+											{ href: "/contact", title: "Contact" },
+										].map((link) => (
+											<Link
+												key={link.href}
+												href={link.href}
+												className="flex items-center px-5 py-4 text-base font-semibold rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 border border-transparent hover:border-primary/20 group relative overflow-hidden"
+												onClick={() => setIsOpen(false)}
+											>
+												<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+												<span className="relative group-hover:translate-x-1 transition-transform duration-300">
+													{link.title}
+												</span>
+											</Link>
+										))}
+									</div>
+									{/* Mobile Auth Actions */}
+									<div className="border-t border-border/40 dark:border-border/20 pt-6 space-y-3">
+										<Button
+											variant="ghost"
+											className="w-full justify-start h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden text-base"
+											onClick={() => {
+												handleAuthAction("login");
+												setIsOpen(false);
+											}}
+										>
+											<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+											<span className="relative group-hover:translate-x-1 transition-transform duration-300">
+												Sign In
+											</span>
+										</Button>
 
-          <div className="relative mx-4 md:mx-8 px-2 py-6">
-            <div className="space-y-6">
-              {isDashboard ? (
-                <>                  {/* Mobile Search */}
-                  <div className="px-2 py-3">
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                      <div className="relative bg-background/60 dark:bg-background/40 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-2xl overflow-hidden group-hover:border-primary/50 transition-all duration-300">
-                        <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
-                        <Input
-                          placeholder="Search products, orders, suppliers..."
-                          className="pl-16 pr-20 bg-transparent border-0 focus:ring-0 focus:border-0 h-16 w-full text-base placeholder:text-muted-foreground/60 font-medium"
-                        />
-                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                          <kbd className="pointer-events-none inline-flex h-7 select-none items-center gap-1 rounded-lg border bg-muted px-2 font-mono text-xs font-medium text-muted-foreground opacity-100">
-                            ⌘K
-                          </kbd>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+										<Button
+											className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 h-14 rounded-2xl shadow-lg hover:shadow-primary/25 transition-all duration-300 group relative overflow-hidden text-base"
+											onClick={() => {
+												router.push("/auth/company-signup");
+												setIsOpen(false);
+											}}
+										>
+											<div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+											<Building2 className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+											<span className="relative">Create Company Account</span>
+										</Button>
 
-                  {/* Mobile Navigation */}
-                  <div className="space-y-3">                    {dashboardNavItems.map((item) => (
-                      <div key={item.href} className="space-y-2">
-                        <Link
-                          href={item.href}
-                          className="flex items-center px-5 py-4 text-base font-semibold rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 border border-transparent hover:border-primary/20 group relative overflow-hidden"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="relative flex items-center w-full">
-                            <div className="relative">
-                              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                              <div className="relative w-10 h-10 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-border/30">
-                                <item.icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
-                              </div>
-                            </div>
-                            <span className="ml-4 group-hover:translate-x-1 transition-transform duration-300">{item.title}</span>
-                            {pathname?.startsWith(item.href) && (
-                              <div className="ml-auto w-3 h-3 bg-primary rounded-full animate-pulse" />
-                            )}
-                          </div>
-                        </Link>                        <div className="ml-8 space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-purple-500/30 pl-6">
-                          {item.items.map((subItem) => (
-                            <Link
-                              key={subItem.href}
-                              href={subItem.href}
-                              className="block px-4 py-3 text-sm text-muted-foreground rounded-xl hover:bg-accent/40 dark:hover:bg-accent/30 transition-all duration-300 hover:text-primary relative group"
-                              onClick={() => setIsOpen(false)}
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
-                              <span className="relative group-hover:translate-x-2 transition-transform duration-300">
-                                {subItem.title}
-                              </span>
-                              {pathname === subItem.href && (
-                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-primary rounded-full" />
-                              )}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Mobile User Profile */}
-                  <div className="border-t border-border/40 dark:border-border/20 pt-6">
-                    <div className="flex items-center space-x-4 py-4 px-3 rounded-2xl bg-gradient-to-r from-muted/30 to-muted/20 border border-border/30 dark:border-border/20">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur opacity-50" />
-                        <div className="relative w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-white/20 shadow-lg">
-                          <User className="h-6 w-6 text-white" />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">                        <div className="text-base font-semibold truncate">{user?.email?.split('@')[0] || 'User'}</div>
-                        <div className="text-sm text-muted-foreground truncate">{user?.email}</div>
-                        <div className="text-xs text-primary font-medium">
-                          {userRole ? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()} Role` : (userType === 'company' ? 'Company Admin' : 'Individual User')}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 mt-4">
-                      {/* Show both profile options for OWNER, ADMIN, MANAGER */}
-                      {canAccessCompanyProfile ? (
-                        <>
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
-                            onClick={() => {
-                              router.push('/company-profile');
-                              setIsOpen(false);
-                            }}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <Building2 className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                            <span className="group-hover:translate-x-1 transition-transform duration-300">
-                              Company Profile
-                            </span>
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
-                            onClick={() => {
-                              router.push('/user-profile');
-                              setIsOpen(false);
-                            }}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <User className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                            <span className="group-hover:translate-x-1 transition-transform duration-300">
-                              User Profile
-                            </span>
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
-                          onClick={() => {
-                            router.push('/user-profile');
-                            setIsOpen(false);
-                          }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <User className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                          <span className="group-hover:translate-x-1 transition-transform duration-300">
-                            User Profile
-                          </span>
-                        </Button>
-                      )}
-
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-base h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden"
-                        onClick={() => {
-                          router.push('/dashboard/settings');
-                          setIsOpen(false);
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <Settings className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                        <span className="group-hover:translate-x-1 transition-transform duration-300">Settings & Preferences</span>
-                      </Button>                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-base h-14 rounded-2xl text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-transparent hover:border-red-200 dark:hover:border-red-800 group relative overflow-hidden"
-                        onClick={async () => {
-                          try {
-                            await logout();
-                            setIsOpen(false);
-                          } catch (error) {
-                            console.error('Logout error:', error);
-                            router.push("/auth/logout");
-                            setIsOpen(false);
-                          }
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <LogOut className="mr-4 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                        <span className="group-hover:translate-x-1 transition-transform duration-300">Sign Out</span>
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Marketing Mobile Menu */}
-                  <div className="space-y-3">                    {[
-                      { href: "#features", title: "Features" },
-                      { href: "#how-it-works", title: "How it Works" },
-                      { href: "/pricing", title: "Pricing" },
-                      { href: "/contact", title: "Contact" }
-                    ].map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className="flex items-center px-5 py-4 text-base font-semibold rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 border border-transparent hover:border-primary/20 group relative overflow-hidden"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <span className="relative group-hover:translate-x-1 transition-transform duration-300">
-                          {link.title}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-
-                  {/* Mobile Auth Actions */}
-                  <div className="border-t border-border/40 dark:border-border/20 pt-6 space-y-3">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start h-14 rounded-2xl hover:bg-accent/60 dark:hover:bg-accent/40 border border-transparent hover:border-primary/20 group relative overflow-hidden text-base"
-                      onClick={() => {
-                        handleAuthAction("login");
-                        setIsOpen(false);
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <span className="relative group-hover:translate-x-1 transition-transform duration-300">Sign In</span>
-                    </Button>
-
-                    <Button
-                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 h-14 rounded-2xl shadow-lg hover:shadow-primary/25 transition-all duration-300 group relative overflow-hidden text-base"
-                      onClick={() => {
-                        router.push("/auth/company-signup");
-                        setIsOpen(false);
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <Building2 className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="relative">Create Company Account</span>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      className="w-full h-14 rounded-2xl border-border/50 dark:border-border/30 hover:border-primary/50 hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 group relative overflow-hidden text-base"
-                      onClick={() => {
-                        handleAuthAction("signup");
-                        setIsOpen(false);
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <User className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="relative">Join as Individual</span>
-                    </Button>
-                  </div>                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-    </>
-  );
+										<Button
+											variant="outline"
+											className="w-full h-14 rounded-2xl border-border/50 dark:border-border/30 hover:border-primary/50 hover:bg-accent/60 dark:hover:bg-accent/40 transition-all duration-300 group relative overflow-hidden text-base"
+											onClick={() => {
+												handleAuthAction("signup");
+												setIsOpen(false);
+											}}
+										>
+											<div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+											<User className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+											<span className="relative">Join as Individual</span>
+										</Button>
+									</div>{" "}
+								</>
+							)}
+						</div>
+					</div>
+				</div>
+			</nav>
+		</>
+	);
 };
 
 export default Navbar;

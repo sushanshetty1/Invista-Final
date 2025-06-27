@@ -1,5 +1,5 @@
 "use client";
 
 export function ScrollDetector() {
-  return null;
+	return null;
 }
