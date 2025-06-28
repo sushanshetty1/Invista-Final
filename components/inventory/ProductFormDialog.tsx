@@ -67,6 +67,49 @@ const generateUniqueId = () => {
 	});
 };
 
+// Function to generate unique categoryId by checking existing ones in database
+const generateUniqueCategoryId = async (): Promise<string> => {
+	let attempts = 0;
+	const maxAttempts = 10;
+
+	while (attempts < maxAttempts) {
+		const newId = generateUniqueId();
+
+		try {
+			// Get the current session token using Supabase
+			const { data: { session } } = await supabase.auth.getSession();
+
+			if (!session?.access_token) {
+				console.warn("No session token available, using generated ID");
+				return newId;
+			}
+
+			// Check if this categoryId already exists in the Product table
+			const response = await fetch(`/api/inventory/products?categoryId=${newId}&limit=1`, {
+				headers: {
+					Authorization: `Bearer ${session.access_token}`,
+				},
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				// If no products found with this categoryId, it's unique
+				if (!data.products || data.products.length === 0) {
+					return newId;
+				}
+			}
+		} catch (error) {
+			console.error("Error checking categoryId uniqueness:", error);
+			return newId; // Fallback to generated ID
+		}
+
+		attempts++;
+	}
+
+	// Fallback: return a timestamp-based ID if we can't verify uniqueness
+	return `cat-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+};
+
 interface ProductFormData {
 	name: string;
 	description?: string;
@@ -492,12 +535,12 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 				}
 				if (data.slug && data.slug.trim() !== "") {
 					cleanedData.slug = data.slug.trim();
-				} // Handle category - include categoryName and auto-generate categoryId if needed
+				}				// Handle category - include categoryName and auto-generate categoryId if needed
 				if (data.categoryName && data.categoryName.trim() !== "") {
 					cleanedData.categoryName = data.categoryName.trim();
 					// Auto-generate categoryId if not provided or empty
 					if (!data.categoryId || data.categoryId.trim() === "") {
-						cleanedData.categoryId = generateUniqueId();
+						cleanedData.categoryId = await generateUniqueCategoryId();
 					} else {
 						cleanedData.categoryId = data.categoryId.trim();
 					}
@@ -743,17 +786,24 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 												<CategoryCombobox
 													categories={industryCategories}
 													value={field.value}
-													onValueChange={(categoryName) => {
+													onValueChange={async (categoryName) => {
 														console.log("Category selected:", categoryName);
 														field.onChange(categoryName); // Set categoryName
 														// Auto-generate categoryId when category is selected
 														if (categoryName && categoryName.trim() !== "") {
-															const newCategoryId = generateUniqueId();
-															console.log(
-																"Generated categoryId:",
-																newCategoryId,
-															);
-															form.setValue("categoryId", newCategoryId);
+															try {
+																const newCategoryId = await generateUniqueCategoryId();
+																console.log(
+																	"Generated categoryId:",
+																	newCategoryId,
+																);
+																form.setValue("categoryId", newCategoryId);
+															} catch (error) {
+																console.error("Error generating categoryId:", error);
+																// Fallback to simple UUID if async fails
+																const fallbackId = generateUniqueId();
+																form.setValue("categoryId", fallbackId);
+															}
 														} else {
 															form.setValue("categoryId", "");
 														}
@@ -770,6 +820,24 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 													}
 													disabled={categoriesLoading}
 												/>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name="categoryId"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Category ID</FormLabel>
+												<FormControl>
+													<Input
+														placeholder="Auto-generated category ID"
+														{...field}
+														className="bg-gray-50 font-mono"
+														readOnly
+													/>
+												</FormControl>
 												<FormMessage />
 											</FormItem>
 										)}
@@ -802,6 +870,24 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																form.setValue("brandId", "");
 															}
 														}}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name="brandId"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Brand ID</FormLabel>
+												<FormControl>
+													<Input
+														placeholder="Auto-generated brand ID"
+														{...field}
+														className="bg-gray-50 font-mono"
+														readOnly
 													/>
 												</FormControl>
 												<FormMessage />

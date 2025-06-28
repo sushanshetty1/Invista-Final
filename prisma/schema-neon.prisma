@@ -57,8 +57,6 @@ model Product {
   reviews           ProductReview[]
   suppliers         ProductSupplier[]
   variants          ProductVariant[]
-  brand             Brand?               @relation(fields: [brandId], references: [id])
-  category          Category?            @relation(fields: [categoryId], references: [id])
   purchaseItems     PurchaseOrderItem[]
   transferItems     StockTransferItem[]
 
@@ -107,23 +105,21 @@ model Category {
   updatedAt   DateTime   @updatedAt
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
-  products    Product[]
 
   @@map("categories")
 }
 
 model Brand {
-  id           String    @id @default(uuid())
-  name         String    @unique
+  id           String   @id @default(uuid())
+  name         String   @unique
   description  String?
   logo         String?
   website      String?
   contactEmail String?
   contactPhone String?
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  products     Product[]
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("brands")
 }

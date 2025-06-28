@@ -47,9 +47,11 @@ export async function createProduct(
 				.toLowerCase()
 				.replace(/[^a-z0-9]+/g, "-")
 				.replace(/(^-|-$)/g, "");
-		} // Prepare the data for Prisma creation
+		}		// Prepare the data for Prisma creation
 		const { categoryId, brandId, categoryName, brandName, ...productData } =
-			validatedData; // Create the base data object
+			validatedData;
+
+		// Create the base data object
 		const createData: any = {
 			name: productData.name,
 			description: productData.description,
@@ -58,6 +60,9 @@ export async function createProduct(
 			slug: productData.slug,
 			categoryName: validatedData.categoryName,
 			brandName: validatedData.brandName,
+			// Include categoryId and brandId directly in Product table
+			categoryId: categoryId || null,
+			brandId: brandId || null,
 			weight: productData.weight,
 			dimensions: productData.dimensions || undefined,
 			color: productData.color,
@@ -89,36 +94,9 @@ export async function createProduct(
 			JSON.stringify(createData, null, 2),
 		);
 
-		// Validate foreign keys if they are provided
-		if (categoryId) {
-			const categoryExists = await neonClient.category.findUnique({
-				where: { id: categoryId },
-			});
-			if (!categoryExists) {
-				console.log("Category not found, ignoring categoryId:", categoryId);
-				// Don't include categoryId if it doesn't exist
-			} else {
-				createData.categoryId = categoryId;
-			}
-		}
-
-		if (brandId) {
-			const brandExists = await neonClient.brand.findUnique({
-				where: { id: brandId },
-			});
-			if (!brandExists) {
-				console.log("Brand not found, ignoring brandId:", brandId);
-				// Don't include brandId if it doesn't exist
-			} else {
-				createData.brandId = brandId;
-			}
-		}
-
 		const product = await neonClient.product.create({
 			data: createData,
 			include: {
-				category: true,
-				brand: true,
 				variants: true,
 				inventoryItems: {
 					include: {
@@ -177,8 +155,6 @@ export async function updateProduct(
 				tags: updateData.tags || undefined,
 			},
 			include: {
-				category: true,
-				brand: true,
 				variants: true,
 				inventoryItems: {
 					include: {
@@ -293,12 +269,6 @@ export async function getProducts(
 				skip,
 				take: limit,
 				include: {
-					category: {
-						select: { id: true, name: true, slug: true },
-					},
-					brand: {
-						select: { id: true, name: true, logo: true },
-					},
 					variants: {
 						select: {
 							id: true,
@@ -346,8 +316,6 @@ export async function getProduct(id: string): Promise<ActionResponse> {
 		const product = await neonClient.product.findUnique({
 			where: { id },
 			include: {
-				category: true,
-				brand: true,
 				variants: {
 					include: {
 						inventoryItems: {

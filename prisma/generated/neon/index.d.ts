@@ -4580,12 +4580,10 @@ export namespace Prisma {
 
   export type CategoryCountOutputType = {
     children: number
-    products: number
   }
 
   export type CategoryCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     children?: boolean | CategoryCountOutputTypeCountChildrenArgs
-    products?: boolean | CategoryCountOutputTypeCountProductsArgs
   }
 
   // Custom InputTypes
@@ -4604,44 +4602,6 @@ export namespace Prisma {
    */
   export type CategoryCountOutputTypeCountChildrenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CategoryWhereInput
-  }
-
-  /**
-   * CategoryCountOutputType without action
-   */
-  export type CategoryCountOutputTypeCountProductsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ProductWhereInput
-  }
-
-
-  /**
-   * Count Type BrandCountOutputType
-   */
-
-  export type BrandCountOutputType = {
-    products: number
-  }
-
-  export type BrandCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    products?: boolean | BrandCountOutputTypeCountProductsArgs
-  }
-
-  // Custom InputTypes
-  /**
-   * BrandCountOutputType without action
-   */
-  export type BrandCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BrandCountOutputType
-     */
-    select?: BrandCountOutputTypeSelect<ExtArgs> | null
-  }
-
-  /**
-   * BrandCountOutputType without action
-   */
-  export type BrandCountOutputTypeCountProductsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ProductWhereInput
   }
 
 
@@ -5669,8 +5629,6 @@ export namespace Prisma {
     reviews?: boolean | Product$reviewsArgs<ExtArgs>
     suppliers?: boolean | Product$suppliersArgs<ExtArgs>
     variants?: boolean | Product$variantsArgs<ExtArgs>
-    brand?: boolean | Product$brandArgs<ExtArgs>
-    category?: boolean | Product$categoryArgs<ExtArgs>
     purchaseItems?: boolean | Product$purchaseItemsArgs<ExtArgs>
     transferItems?: boolean | Product$transferItemsArgs<ExtArgs>
     _count?: boolean | ProductCountOutputTypeDefaultArgs<ExtArgs>
@@ -5713,8 +5671,6 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     createdBy?: boolean
-    brand?: boolean | Product$brandArgs<ExtArgs>
-    category?: boolean | Product$categoryArgs<ExtArgs>
   }, ExtArgs["result"]["product"]>
 
   export type ProductSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -5754,8 +5710,6 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     createdBy?: boolean
-    brand?: boolean | Product$brandArgs<ExtArgs>
-    category?: boolean | Product$categoryArgs<ExtArgs>
   }, ExtArgs["result"]["product"]>
 
   export type ProductSelectScalar = {
@@ -5810,20 +5764,12 @@ export namespace Prisma {
     reviews?: boolean | Product$reviewsArgs<ExtArgs>
     suppliers?: boolean | Product$suppliersArgs<ExtArgs>
     variants?: boolean | Product$variantsArgs<ExtArgs>
-    brand?: boolean | Product$brandArgs<ExtArgs>
-    category?: boolean | Product$categoryArgs<ExtArgs>
     purchaseItems?: boolean | Product$purchaseItemsArgs<ExtArgs>
     transferItems?: boolean | Product$transferItemsArgs<ExtArgs>
     _count?: boolean | ProductCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type ProductIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    brand?: boolean | Product$brandArgs<ExtArgs>
-    category?: boolean | Product$categoryArgs<ExtArgs>
-  }
-  export type ProductIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    brand?: boolean | Product$brandArgs<ExtArgs>
-    category?: boolean | Product$categoryArgs<ExtArgs>
-  }
+  export type ProductIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ProductIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $ProductPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Product"
@@ -5839,8 +5785,6 @@ export namespace Prisma {
       reviews: Prisma.$ProductReviewPayload<ExtArgs>[]
       suppliers: Prisma.$ProductSupplierPayload<ExtArgs>[]
       variants: Prisma.$ProductVariantPayload<ExtArgs>[]
-      brand: Prisma.$BrandPayload<ExtArgs> | null
-      category: Prisma.$CategoryPayload<ExtArgs> | null
       purchaseItems: Prisma.$PurchaseOrderItemPayload<ExtArgs>[]
       transferItems: Prisma.$StockTransferItemPayload<ExtArgs>[]
     }
@@ -6286,8 +6230,6 @@ export namespace Prisma {
     reviews<T extends Product$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, Product$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     suppliers<T extends Product$suppliersArgs<ExtArgs> = {}>(args?: Subset<T, Product$suppliersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductSupplierPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     variants<T extends Product$variantsArgs<ExtArgs> = {}>(args?: Subset<T, Product$variantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductVariantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    brand<T extends Product$brandArgs<ExtArgs> = {}>(args?: Subset<T, Product$brandArgs<ExtArgs>>): Prisma__BrandClient<$Result.GetResult<Prisma.$BrandPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    category<T extends Product$categoryArgs<ExtArgs> = {}>(args?: Subset<T, Product$categoryArgs<ExtArgs>>): Prisma__CategoryClient<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     purchaseItems<T extends Product$purchaseItemsArgs<ExtArgs> = {}>(args?: Subset<T, Product$purchaseItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PurchaseOrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     transferItems<T extends Product$transferItemsArgs<ExtArgs> = {}>(args?: Subset<T, Product$transferItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -6604,10 +6546,6 @@ export namespace Prisma {
      */
     data: ProductCreateManyInput | ProductCreateManyInput[]
     skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ProductIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -6678,10 +6616,6 @@ export namespace Prisma {
      * Limit how many Products to update.
      */
     limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ProductIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -7012,44 +6946,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ProductVariantScalarFieldEnum | ProductVariantScalarFieldEnum[]
-  }
-
-  /**
-   * Product.brand
-   */
-  export type Product$brandArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Brand
-     */
-    select?: BrandSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Brand
-     */
-    omit?: BrandOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
-    where?: BrandWhereInput
-  }
-
-  /**
-   * Product.category
-   */
-  export type Product$categoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Category
-     */
-    select?: CategorySelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Category
-     */
-    omit?: CategoryOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: CategoryInclude<ExtArgs> | null
-    where?: CategoryWhereInput
   }
 
   /**
@@ -8785,7 +8681,6 @@ export namespace Prisma {
     updatedAt?: boolean
     parent?: boolean | Category$parentArgs<ExtArgs>
     children?: boolean | Category$childrenArgs<ExtArgs>
-    products?: boolean | Category$productsArgs<ExtArgs>
     _count?: boolean | CategoryCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["category"]>
 
@@ -8843,7 +8738,6 @@ export namespace Prisma {
   export type CategoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     parent?: boolean | Category$parentArgs<ExtArgs>
     children?: boolean | Category$childrenArgs<ExtArgs>
-    products?: boolean | Category$productsArgs<ExtArgs>
     _count?: boolean | CategoryCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CategoryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8858,7 +8752,6 @@ export namespace Prisma {
     objects: {
       parent: Prisma.$CategoryPayload<ExtArgs> | null
       children: Prisma.$CategoryPayload<ExtArgs>[]
-      products: Prisma.$ProductPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -9270,7 +9163,6 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     parent<T extends Category$parentArgs<ExtArgs> = {}>(args?: Subset<T, Category$parentArgs<ExtArgs>>): Prisma__CategoryClient<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     children<T extends Category$childrenArgs<ExtArgs> = {}>(args?: Subset<T, Category$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    products<T extends Category$productsArgs<ExtArgs> = {}>(args?: Subset<T, Category$productsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9752,30 +9644,6 @@ export namespace Prisma {
   }
 
   /**
-   * Category.products
-   */
-  export type Category$productsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Product
-     */
-    select?: ProductSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Product
-     */
-    omit?: ProductOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ProductInclude<ExtArgs> | null
-    where?: ProductWhereInput
-    orderBy?: ProductOrderByWithRelationInput | ProductOrderByWithRelationInput[]
-    cursor?: ProductWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: ProductScalarFieldEnum | ProductScalarFieldEnum[]
-  }
-
-  /**
    * Category without action
    */
   export type CategoryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9998,8 +9866,6 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    products?: boolean | Brand$productsArgs<ExtArgs>
-    _count?: boolean | BrandCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["brand"]>
 
   export type BrandSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10042,18 +9908,10 @@ export namespace Prisma {
   }
 
   export type BrandOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "logo" | "website" | "contactEmail" | "contactPhone" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["brand"]>
-  export type BrandInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    products?: boolean | Brand$productsArgs<ExtArgs>
-    _count?: boolean | BrandCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type BrandIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type BrandIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $BrandPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Brand"
-    objects: {
-      products: Prisma.$ProductPayload<ExtArgs>[]
-    }
+    objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string
@@ -10459,7 +10317,6 @@ export namespace Prisma {
    */
   export interface Prisma__BrandClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    products<T extends Brand$productsArgs<ExtArgs> = {}>(args?: Subset<T, Brand$productsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10516,10 +10373,6 @@ export namespace Prisma {
      */
     omit?: BrandOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
-    /**
      * Filter, which Brand to fetch.
      */
     where: BrandWhereUniqueInput
@@ -10538,10 +10391,6 @@ export namespace Prisma {
      */
     omit?: BrandOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
-    /**
      * Filter, which Brand to fetch.
      */
     where: BrandWhereUniqueInput
@@ -10559,10 +10408,6 @@ export namespace Prisma {
      * Omit specific fields from the Brand
      */
     omit?: BrandOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
     /**
      * Filter, which Brand to fetch.
      */
@@ -10612,10 +10457,6 @@ export namespace Prisma {
      */
     omit?: BrandOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
-    /**
      * Filter, which Brand to fetch.
      */
     where?: BrandWhereInput
@@ -10664,10 +10505,6 @@ export namespace Prisma {
      */
     omit?: BrandOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
-    /**
      * Filter, which Brands to fetch.
      */
     where?: BrandWhereInput
@@ -10710,10 +10547,6 @@ export namespace Prisma {
      * Omit specific fields from the Brand
      */
     omit?: BrandOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
     /**
      * The data needed to create a Brand.
      */
@@ -10762,10 +10595,6 @@ export namespace Prisma {
      * Omit specific fields from the Brand
      */
     omit?: BrandOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
     /**
      * The data needed to update a Brand.
      */
@@ -10833,10 +10662,6 @@ export namespace Prisma {
      */
     omit?: BrandOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
-    /**
      * The filter to search for the Brand to update in case it exists.
      */
     where: BrandWhereUniqueInput
@@ -10863,10 +10688,6 @@ export namespace Prisma {
      */
     omit?: BrandOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
-    /**
      * Filter which Brand to delete.
      */
     where: BrandWhereUniqueInput
@@ -10887,30 +10708,6 @@ export namespace Prisma {
   }
 
   /**
-   * Brand.products
-   */
-  export type Brand$productsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Product
-     */
-    select?: ProductSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Product
-     */
-    omit?: ProductOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ProductInclude<ExtArgs> | null
-    where?: ProductWhereInput
-    orderBy?: ProductOrderByWithRelationInput | ProductOrderByWithRelationInput[]
-    cursor?: ProductWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: ProductScalarFieldEnum | ProductScalarFieldEnum[]
-  }
-
-  /**
    * Brand without action
    */
   export type BrandDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10922,10 +10719,6 @@ export namespace Prisma {
      * Omit specific fields from the Brand
      */
     omit?: BrandOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BrandInclude<ExtArgs> | null
   }
 
 
@@ -50766,8 +50559,6 @@ export namespace Prisma {
     reviews?: ProductReviewListRelationFilter
     suppliers?: ProductSupplierListRelationFilter
     variants?: ProductVariantListRelationFilter
-    brand?: XOR<BrandNullableScalarRelationFilter, BrandWhereInput> | null
-    category?: XOR<CategoryNullableScalarRelationFilter, CategoryWhereInput> | null
     purchaseItems?: PurchaseOrderItemListRelationFilter
     transferItems?: StockTransferItemListRelationFilter
   }
@@ -50820,8 +50611,6 @@ export namespace Prisma {
     reviews?: ProductReviewOrderByRelationAggregateInput
     suppliers?: ProductSupplierOrderByRelationAggregateInput
     variants?: ProductVariantOrderByRelationAggregateInput
-    brand?: BrandOrderByWithRelationInput
-    category?: CategoryOrderByWithRelationInput
     purchaseItems?: PurchaseOrderItemOrderByRelationAggregateInput
     transferItems?: StockTransferItemOrderByRelationAggregateInput
   }
@@ -50877,8 +50666,6 @@ export namespace Prisma {
     reviews?: ProductReviewListRelationFilter
     suppliers?: ProductSupplierListRelationFilter
     variants?: ProductVariantListRelationFilter
-    brand?: XOR<BrandNullableScalarRelationFilter, BrandWhereInput> | null
-    category?: XOR<CategoryNullableScalarRelationFilter, CategoryWhereInput> | null
     purchaseItems?: PurchaseOrderItemListRelationFilter
     transferItems?: StockTransferItemListRelationFilter
   }, "id" | "sku" | "barcode" | "slug">
@@ -51106,7 +50893,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Category"> | Date | string
     parent?: XOR<CategoryNullableScalarRelationFilter, CategoryWhereInput> | null
     children?: CategoryListRelationFilter
-    products?: ProductListRelationFilter
   }
 
   export type CategoryOrderByWithRelationInput = {
@@ -51125,7 +50911,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
     parent?: CategoryOrderByWithRelationInput
     children?: CategoryOrderByRelationAggregateInput
-    products?: ProductOrderByRelationAggregateInput
   }
 
   export type CategoryWhereUniqueInput = Prisma.AtLeast<{
@@ -51147,7 +50932,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Category"> | Date | string
     parent?: XOR<CategoryNullableScalarRelationFilter, CategoryWhereInput> | null
     children?: CategoryListRelationFilter
-    products?: ProductListRelationFilter
   }, "id" | "slug">
 
   export type CategoryOrderByWithAggregationInput = {
@@ -51204,7 +50988,6 @@ export namespace Prisma {
     isActive?: BoolFilter<"Brand"> | boolean
     createdAt?: DateTimeFilter<"Brand"> | Date | string
     updatedAt?: DateTimeFilter<"Brand"> | Date | string
-    products?: ProductListRelationFilter
   }
 
   export type BrandOrderByWithRelationInput = {
@@ -51218,7 +51001,6 @@ export namespace Prisma {
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    products?: ProductOrderByRelationAggregateInput
   }
 
   export type BrandWhereUniqueInput = Prisma.AtLeast<{
@@ -51235,7 +51017,6 @@ export namespace Prisma {
     isActive?: BoolFilter<"Brand"> | boolean
     createdAt?: DateTimeFilter<"Brand"> | Date | string
     updatedAt?: DateTimeFilter<"Brand"> | Date | string
-    products?: ProductListRelationFilter
   }, "id" | "name">
 
   export type BrandOrderByWithAggregationInput = {
@@ -54887,6 +54668,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -54928,8 +54711,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -54991,6 +54772,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -55032,8 +54815,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -55134,6 +54915,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -55359,7 +55142,6 @@ export namespace Prisma {
     updatedAt?: Date | string
     parent?: CategoryCreateNestedOneWithoutChildrenInput
     children?: CategoryCreateNestedManyWithoutParentInput
-    products?: ProductCreateNestedManyWithoutCategoryInput
   }
 
   export type CategoryUncheckedCreateInput = {
@@ -55377,7 +55159,6 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: CategoryUncheckedCreateNestedManyWithoutParentInput
-    products?: ProductUncheckedCreateNestedManyWithoutCategoryInput
   }
 
   export type CategoryUpdateInput = {
@@ -55395,7 +55176,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: CategoryUpdateOneWithoutChildrenNestedInput
     children?: CategoryUpdateManyWithoutParentNestedInput
-    products?: ProductUpdateManyWithoutCategoryNestedInput
   }
 
   export type CategoryUncheckedUpdateInput = {
@@ -55413,7 +55193,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: CategoryUncheckedUpdateManyWithoutParentNestedInput
-    products?: ProductUncheckedUpdateManyWithoutCategoryNestedInput
   }
 
   export type CategoryCreateManyInput = {
@@ -55474,7 +55253,6 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    products?: ProductCreateNestedManyWithoutBrandInput
   }
 
   export type BrandUncheckedCreateInput = {
@@ -55488,7 +55266,6 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    products?: ProductUncheckedCreateNestedManyWithoutBrandInput
   }
 
   export type BrandUpdateInput = {
@@ -55502,7 +55279,6 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    products?: ProductUpdateManyWithoutBrandNestedInput
   }
 
   export type BrandUncheckedUpdateInput = {
@@ -55516,7 +55292,6 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    products?: ProductUncheckedUpdateManyWithoutBrandNestedInput
   }
 
   export type BrandCreateManyInput = {
@@ -59945,16 +59720,6 @@ export namespace Prisma {
     none?: ProductVariantWhereInput
   }
 
-  export type BrandNullableScalarRelationFilter = {
-    is?: BrandWhereInput | null
-    isNot?: BrandWhereInput | null
-  }
-
-  export type CategoryNullableScalarRelationFilter = {
-    is?: CategoryWhereInput | null
-    isNot?: CategoryWhereInput | null
-  }
-
   export type PurchaseOrderItemListRelationFilter = {
     every?: PurchaseOrderItemWhereInput
     some?: PurchaseOrderItemWhereInput
@@ -60417,23 +60182,18 @@ export namespace Prisma {
     _max?: NestedJsonFilter<$PrismaModel>
   }
 
+  export type CategoryNullableScalarRelationFilter = {
+    is?: CategoryWhereInput | null
+    isNot?: CategoryWhereInput | null
+  }
+
   export type CategoryListRelationFilter = {
     every?: CategoryWhereInput
     some?: CategoryWhereInput
     none?: CategoryWhereInput
   }
 
-  export type ProductListRelationFilter = {
-    every?: ProductWhereInput
-    some?: ProductWhereInput
-    none?: ProductWhereInput
-  }
-
   export type CategoryOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type ProductOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -63400,18 +63160,6 @@ export namespace Prisma {
     connect?: ProductVariantWhereUniqueInput | ProductVariantWhereUniqueInput[]
   }
 
-  export type BrandCreateNestedOneWithoutProductsInput = {
-    create?: XOR<BrandCreateWithoutProductsInput, BrandUncheckedCreateWithoutProductsInput>
-    connectOrCreate?: BrandCreateOrConnectWithoutProductsInput
-    connect?: BrandWhereUniqueInput
-  }
-
-  export type CategoryCreateNestedOneWithoutProductsInput = {
-    create?: XOR<CategoryCreateWithoutProductsInput, CategoryUncheckedCreateWithoutProductsInput>
-    connectOrCreate?: CategoryCreateOrConnectWithoutProductsInput
-    connect?: CategoryWhereUniqueInput
-  }
-
   export type PurchaseOrderItemCreateNestedManyWithoutProductInput = {
     create?: XOR<PurchaseOrderItemCreateWithoutProductInput, PurchaseOrderItemUncheckedCreateWithoutProductInput> | PurchaseOrderItemCreateWithoutProductInput[] | PurchaseOrderItemUncheckedCreateWithoutProductInput[]
     connectOrCreate?: PurchaseOrderItemCreateOrConnectWithoutProductInput | PurchaseOrderItemCreateOrConnectWithoutProductInput[]
@@ -63713,26 +63461,6 @@ export namespace Prisma {
     update?: ProductVariantUpdateWithWhereUniqueWithoutProductInput | ProductVariantUpdateWithWhereUniqueWithoutProductInput[]
     updateMany?: ProductVariantUpdateManyWithWhereWithoutProductInput | ProductVariantUpdateManyWithWhereWithoutProductInput[]
     deleteMany?: ProductVariantScalarWhereInput | ProductVariantScalarWhereInput[]
-  }
-
-  export type BrandUpdateOneWithoutProductsNestedInput = {
-    create?: XOR<BrandCreateWithoutProductsInput, BrandUncheckedCreateWithoutProductsInput>
-    connectOrCreate?: BrandCreateOrConnectWithoutProductsInput
-    upsert?: BrandUpsertWithoutProductsInput
-    disconnect?: BrandWhereInput | boolean
-    delete?: BrandWhereInput | boolean
-    connect?: BrandWhereUniqueInput
-    update?: XOR<XOR<BrandUpdateToOneWithWhereWithoutProductsInput, BrandUpdateWithoutProductsInput>, BrandUncheckedUpdateWithoutProductsInput>
-  }
-
-  export type CategoryUpdateOneWithoutProductsNestedInput = {
-    create?: XOR<CategoryCreateWithoutProductsInput, CategoryUncheckedCreateWithoutProductsInput>
-    connectOrCreate?: CategoryCreateOrConnectWithoutProductsInput
-    upsert?: CategoryUpsertWithoutProductsInput
-    disconnect?: CategoryWhereInput | boolean
-    delete?: CategoryWhereInput | boolean
-    connect?: CategoryWhereUniqueInput
-    update?: XOR<XOR<CategoryUpdateToOneWithWhereWithoutProductsInput, CategoryUpdateWithoutProductsInput>, CategoryUncheckedUpdateWithoutProductsInput>
   }
 
   export type PurchaseOrderItemUpdateManyWithoutProductNestedInput = {
@@ -64266,25 +63994,11 @@ export namespace Prisma {
     connect?: CategoryWhereUniqueInput | CategoryWhereUniqueInput[]
   }
 
-  export type ProductCreateNestedManyWithoutCategoryInput = {
-    create?: XOR<ProductCreateWithoutCategoryInput, ProductUncheckedCreateWithoutCategoryInput> | ProductCreateWithoutCategoryInput[] | ProductUncheckedCreateWithoutCategoryInput[]
-    connectOrCreate?: ProductCreateOrConnectWithoutCategoryInput | ProductCreateOrConnectWithoutCategoryInput[]
-    createMany?: ProductCreateManyCategoryInputEnvelope
-    connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-  }
-
   export type CategoryUncheckedCreateNestedManyWithoutParentInput = {
     create?: XOR<CategoryCreateWithoutParentInput, CategoryUncheckedCreateWithoutParentInput> | CategoryCreateWithoutParentInput[] | CategoryUncheckedCreateWithoutParentInput[]
     connectOrCreate?: CategoryCreateOrConnectWithoutParentInput | CategoryCreateOrConnectWithoutParentInput[]
     createMany?: CategoryCreateManyParentInputEnvelope
     connect?: CategoryWhereUniqueInput | CategoryWhereUniqueInput[]
-  }
-
-  export type ProductUncheckedCreateNestedManyWithoutCategoryInput = {
-    create?: XOR<ProductCreateWithoutCategoryInput, ProductUncheckedCreateWithoutCategoryInput> | ProductCreateWithoutCategoryInput[] | ProductUncheckedCreateWithoutCategoryInput[]
-    connectOrCreate?: ProductCreateOrConnectWithoutCategoryInput | ProductCreateOrConnectWithoutCategoryInput[]
-    createMany?: ProductCreateManyCategoryInputEnvelope
-    connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
   }
 
   export type CategoryUpdateOneWithoutChildrenNestedInput = {
@@ -64311,20 +64025,6 @@ export namespace Prisma {
     deleteMany?: CategoryScalarWhereInput | CategoryScalarWhereInput[]
   }
 
-  export type ProductUpdateManyWithoutCategoryNestedInput = {
-    create?: XOR<ProductCreateWithoutCategoryInput, ProductUncheckedCreateWithoutCategoryInput> | ProductCreateWithoutCategoryInput[] | ProductUncheckedCreateWithoutCategoryInput[]
-    connectOrCreate?: ProductCreateOrConnectWithoutCategoryInput | ProductCreateOrConnectWithoutCategoryInput[]
-    upsert?: ProductUpsertWithWhereUniqueWithoutCategoryInput | ProductUpsertWithWhereUniqueWithoutCategoryInput[]
-    createMany?: ProductCreateManyCategoryInputEnvelope
-    set?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    disconnect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    delete?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    update?: ProductUpdateWithWhereUniqueWithoutCategoryInput | ProductUpdateWithWhereUniqueWithoutCategoryInput[]
-    updateMany?: ProductUpdateManyWithWhereWithoutCategoryInput | ProductUpdateManyWithWhereWithoutCategoryInput[]
-    deleteMany?: ProductScalarWhereInput | ProductScalarWhereInput[]
-  }
-
   export type CategoryUncheckedUpdateManyWithoutParentNestedInput = {
     create?: XOR<CategoryCreateWithoutParentInput, CategoryUncheckedCreateWithoutParentInput> | CategoryCreateWithoutParentInput[] | CategoryUncheckedCreateWithoutParentInput[]
     connectOrCreate?: CategoryCreateOrConnectWithoutParentInput | CategoryCreateOrConnectWithoutParentInput[]
@@ -64337,62 +64037,6 @@ export namespace Prisma {
     update?: CategoryUpdateWithWhereUniqueWithoutParentInput | CategoryUpdateWithWhereUniqueWithoutParentInput[]
     updateMany?: CategoryUpdateManyWithWhereWithoutParentInput | CategoryUpdateManyWithWhereWithoutParentInput[]
     deleteMany?: CategoryScalarWhereInput | CategoryScalarWhereInput[]
-  }
-
-  export type ProductUncheckedUpdateManyWithoutCategoryNestedInput = {
-    create?: XOR<ProductCreateWithoutCategoryInput, ProductUncheckedCreateWithoutCategoryInput> | ProductCreateWithoutCategoryInput[] | ProductUncheckedCreateWithoutCategoryInput[]
-    connectOrCreate?: ProductCreateOrConnectWithoutCategoryInput | ProductCreateOrConnectWithoutCategoryInput[]
-    upsert?: ProductUpsertWithWhereUniqueWithoutCategoryInput | ProductUpsertWithWhereUniqueWithoutCategoryInput[]
-    createMany?: ProductCreateManyCategoryInputEnvelope
-    set?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    disconnect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    delete?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    update?: ProductUpdateWithWhereUniqueWithoutCategoryInput | ProductUpdateWithWhereUniqueWithoutCategoryInput[]
-    updateMany?: ProductUpdateManyWithWhereWithoutCategoryInput | ProductUpdateManyWithWhereWithoutCategoryInput[]
-    deleteMany?: ProductScalarWhereInput | ProductScalarWhereInput[]
-  }
-
-  export type ProductCreateNestedManyWithoutBrandInput = {
-    create?: XOR<ProductCreateWithoutBrandInput, ProductUncheckedCreateWithoutBrandInput> | ProductCreateWithoutBrandInput[] | ProductUncheckedCreateWithoutBrandInput[]
-    connectOrCreate?: ProductCreateOrConnectWithoutBrandInput | ProductCreateOrConnectWithoutBrandInput[]
-    createMany?: ProductCreateManyBrandInputEnvelope
-    connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-  }
-
-  export type ProductUncheckedCreateNestedManyWithoutBrandInput = {
-    create?: XOR<ProductCreateWithoutBrandInput, ProductUncheckedCreateWithoutBrandInput> | ProductCreateWithoutBrandInput[] | ProductUncheckedCreateWithoutBrandInput[]
-    connectOrCreate?: ProductCreateOrConnectWithoutBrandInput | ProductCreateOrConnectWithoutBrandInput[]
-    createMany?: ProductCreateManyBrandInputEnvelope
-    connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-  }
-
-  export type ProductUpdateManyWithoutBrandNestedInput = {
-    create?: XOR<ProductCreateWithoutBrandInput, ProductUncheckedCreateWithoutBrandInput> | ProductCreateWithoutBrandInput[] | ProductUncheckedCreateWithoutBrandInput[]
-    connectOrCreate?: ProductCreateOrConnectWithoutBrandInput | ProductCreateOrConnectWithoutBrandInput[]
-    upsert?: ProductUpsertWithWhereUniqueWithoutBrandInput | ProductUpsertWithWhereUniqueWithoutBrandInput[]
-    createMany?: ProductCreateManyBrandInputEnvelope
-    set?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    disconnect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    delete?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    update?: ProductUpdateWithWhereUniqueWithoutBrandInput | ProductUpdateWithWhereUniqueWithoutBrandInput[]
-    updateMany?: ProductUpdateManyWithWhereWithoutBrandInput | ProductUpdateManyWithWhereWithoutBrandInput[]
-    deleteMany?: ProductScalarWhereInput | ProductScalarWhereInput[]
-  }
-
-  export type ProductUncheckedUpdateManyWithoutBrandNestedInput = {
-    create?: XOR<ProductCreateWithoutBrandInput, ProductUncheckedCreateWithoutBrandInput> | ProductCreateWithoutBrandInput[] | ProductUncheckedCreateWithoutBrandInput[]
-    connectOrCreate?: ProductCreateOrConnectWithoutBrandInput | ProductCreateOrConnectWithoutBrandInput[]
-    upsert?: ProductUpsertWithWhereUniqueWithoutBrandInput | ProductUpsertWithWhereUniqueWithoutBrandInput[]
-    createMany?: ProductCreateManyBrandInputEnvelope
-    set?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    disconnect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    delete?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
-    update?: ProductUpdateWithWhereUniqueWithoutBrandInput | ProductUpdateWithWhereUniqueWithoutBrandInput[]
-    updateMany?: ProductUpdateManyWithWhereWithoutBrandInput | ProductUpdateManyWithWhereWithoutBrandInput[]
-    deleteMany?: ProductScalarWhereInput | ProductScalarWhereInput[]
   }
 
   export type BundleItemsCreateNestedManyWithoutProduct_bundlesInput = {
@@ -67986,76 +67630,6 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type BrandCreateWithoutProductsInput = {
-    id?: string
-    name: string
-    description?: string | null
-    logo?: string | null
-    website?: string | null
-    contactEmail?: string | null
-    contactPhone?: string | null
-    isActive?: boolean
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type BrandUncheckedCreateWithoutProductsInput = {
-    id?: string
-    name: string
-    description?: string | null
-    logo?: string | null
-    website?: string | null
-    contactEmail?: string | null
-    contactPhone?: string | null
-    isActive?: boolean
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type BrandCreateOrConnectWithoutProductsInput = {
-    where: BrandWhereUniqueInput
-    create: XOR<BrandCreateWithoutProductsInput, BrandUncheckedCreateWithoutProductsInput>
-  }
-
-  export type CategoryCreateWithoutProductsInput = {
-    id?: string
-    name: string
-    description?: string | null
-    slug: string
-    level?: number
-    path?: string | null
-    icon?: string | null
-    color?: string | null
-    image?: string | null
-    isActive?: boolean
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    parent?: CategoryCreateNestedOneWithoutChildrenInput
-    children?: CategoryCreateNestedManyWithoutParentInput
-  }
-
-  export type CategoryUncheckedCreateWithoutProductsInput = {
-    id?: string
-    name: string
-    description?: string | null
-    slug: string
-    parentId?: string | null
-    level?: number
-    path?: string | null
-    icon?: string | null
-    color?: string | null
-    image?: string | null
-    isActive?: boolean
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    children?: CategoryUncheckedCreateNestedManyWithoutParentInput
-  }
-
-  export type CategoryCreateOrConnectWithoutProductsInput = {
-    where: CategoryWhereUniqueInput
-    create: XOR<CategoryCreateWithoutProductsInput, CategoryUncheckedCreateWithoutProductsInput>
-  }
-
   export type PurchaseOrderItemCreateWithoutProductInput = {
     id?: string
     orderedQty: number
@@ -68558,88 +68132,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ProductVariant"> | Date | string
   }
 
-  export type BrandUpsertWithoutProductsInput = {
-    update: XOR<BrandUpdateWithoutProductsInput, BrandUncheckedUpdateWithoutProductsInput>
-    create: XOR<BrandCreateWithoutProductsInput, BrandUncheckedCreateWithoutProductsInput>
-    where?: BrandWhereInput
-  }
-
-  export type BrandUpdateToOneWithWhereWithoutProductsInput = {
-    where?: BrandWhereInput
-    data: XOR<BrandUpdateWithoutProductsInput, BrandUncheckedUpdateWithoutProductsInput>
-  }
-
-  export type BrandUpdateWithoutProductsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    logo?: NullableStringFieldUpdateOperationsInput | string | null
-    website?: NullableStringFieldUpdateOperationsInput | string | null
-    contactEmail?: NullableStringFieldUpdateOperationsInput | string | null
-    contactPhone?: NullableStringFieldUpdateOperationsInput | string | null
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type BrandUncheckedUpdateWithoutProductsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    logo?: NullableStringFieldUpdateOperationsInput | string | null
-    website?: NullableStringFieldUpdateOperationsInput | string | null
-    contactEmail?: NullableStringFieldUpdateOperationsInput | string | null
-    contactPhone?: NullableStringFieldUpdateOperationsInput | string | null
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type CategoryUpsertWithoutProductsInput = {
-    update: XOR<CategoryUpdateWithoutProductsInput, CategoryUncheckedUpdateWithoutProductsInput>
-    create: XOR<CategoryCreateWithoutProductsInput, CategoryUncheckedCreateWithoutProductsInput>
-    where?: CategoryWhereInput
-  }
-
-  export type CategoryUpdateToOneWithWhereWithoutProductsInput = {
-    where?: CategoryWhereInput
-    data: XOR<CategoryUpdateWithoutProductsInput, CategoryUncheckedUpdateWithoutProductsInput>
-  }
-
-  export type CategoryUpdateWithoutProductsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    slug?: StringFieldUpdateOperationsInput | string
-    level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
-    color?: NullableStringFieldUpdateOperationsInput | string | null
-    image?: NullableStringFieldUpdateOperationsInput | string | null
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    parent?: CategoryUpdateOneWithoutChildrenNestedInput
-    children?: CategoryUpdateManyWithoutParentNestedInput
-  }
-
-  export type CategoryUncheckedUpdateWithoutProductsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    slug?: StringFieldUpdateOperationsInput | string
-    parentId?: NullableStringFieldUpdateOperationsInput | string | null
-    level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
-    color?: NullableStringFieldUpdateOperationsInput | string | null
-    image?: NullableStringFieldUpdateOperationsInput | string | null
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    children?: CategoryUncheckedUpdateManyWithoutParentNestedInput
-  }
-
   export type PurchaseOrderItemUpsertWithWhereUniqueWithoutProductInput = {
     where: PurchaseOrderItemWhereUniqueInput
     update: XOR<PurchaseOrderItemUpdateWithoutProductInput, PurchaseOrderItemUncheckedUpdateWithoutProductInput>
@@ -69009,6 +68501,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -69049,8 +68543,6 @@ export namespace Prisma {
     orderItems?: OrderItemCreateNestedManyWithoutProductInput
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -69299,6 +68791,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -69339,8 +68833,6 @@ export namespace Prisma {
     orderItems?: OrderItemUpdateManyWithoutProductNestedInput
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -69442,7 +68934,6 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     parent?: CategoryCreateNestedOneWithoutChildrenInput
-    products?: ProductCreateNestedManyWithoutCategoryInput
   }
 
   export type CategoryUncheckedCreateWithoutChildrenInput = {
@@ -69459,7 +68950,6 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    products?: ProductUncheckedCreateNestedManyWithoutCategoryInput
   }
 
   export type CategoryCreateOrConnectWithoutChildrenInput = {
@@ -69481,7 +68971,6 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: CategoryCreateNestedManyWithoutParentInput
-    products?: ProductCreateNestedManyWithoutCategoryInput
   }
 
   export type CategoryUncheckedCreateWithoutParentInput = {
@@ -69498,7 +68987,6 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: CategoryUncheckedCreateNestedManyWithoutParentInput
-    products?: ProductUncheckedCreateNestedManyWithoutCategoryInput
   }
 
   export type CategoryCreateOrConnectWithoutParentInput = {
@@ -69508,118 +68996,6 @@ export namespace Prisma {
 
   export type CategoryCreateManyParentInputEnvelope = {
     data: CategoryCreateManyParentInput | CategoryCreateManyParentInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type ProductCreateWithoutCategoryInput = {
-    id?: string
-    companyId: string
-    name: string
-    description?: string | null
-    categoryName?: string | null
-    brandName?: string | null
-    sku: string
-    barcode?: string | null
-    slug?: string | null
-    weight?: Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: string | null
-    size?: string | null
-    material?: string | null
-    costPrice?: Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: number
-    maxStockLevel?: number | null
-    reorderPoint?: number | null
-    reorderQuantity?: number | null
-    status?: $Enums.ProductStatus
-    isTrackable?: boolean
-    isSerialized?: boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: string | null
-    metaTitle?: string | null
-    metaDescription?: string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: number | null
-    shelfLife?: number | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    createdBy: string
-    BundleItems?: BundleItemsCreateNestedManyWithoutProductsInput
-    BundleProducts?: BundleProductsCreateNestedManyWithoutProductsInput
-    goodsReceiptItems?: GoodsReceiptItemCreateNestedManyWithoutProductInput
-    auditItems?: InventoryAuditItemCreateNestedManyWithoutProductInput
-    audits?: InventoryAuditCreateNestedManyWithoutProductInput
-    inventoryItems?: InventoryItemCreateNestedManyWithoutProductInput
-    movements?: InventoryMovementCreateNestedManyWithoutProductInput
-    orderItems?: OrderItemCreateNestedManyWithoutProductInput
-    reviews?: ProductReviewCreateNestedManyWithoutProductInput
-    suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
-    variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
-    transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
-  }
-
-  export type ProductUncheckedCreateWithoutCategoryInput = {
-    id?: string
-    companyId: string
-    name: string
-    description?: string | null
-    brandId?: string | null
-    categoryName?: string | null
-    brandName?: string | null
-    sku: string
-    barcode?: string | null
-    slug?: string | null
-    weight?: Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: string | null
-    size?: string | null
-    material?: string | null
-    costPrice?: Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: number
-    maxStockLevel?: number | null
-    reorderPoint?: number | null
-    reorderQuantity?: number | null
-    status?: $Enums.ProductStatus
-    isTrackable?: boolean
-    isSerialized?: boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: string | null
-    metaTitle?: string | null
-    metaDescription?: string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: number | null
-    shelfLife?: number | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    createdBy: string
-    BundleItems?: BundleItemsUncheckedCreateNestedManyWithoutProductsInput
-    BundleProducts?: BundleProductsUncheckedCreateNestedManyWithoutProductsInput
-    goodsReceiptItems?: GoodsReceiptItemUncheckedCreateNestedManyWithoutProductInput
-    auditItems?: InventoryAuditItemUncheckedCreateNestedManyWithoutProductInput
-    audits?: InventoryAuditUncheckedCreateNestedManyWithoutProductInput
-    inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutProductInput
-    movements?: InventoryMovementUncheckedCreateNestedManyWithoutProductInput
-    orderItems?: OrderItemUncheckedCreateNestedManyWithoutProductInput
-    reviews?: ProductReviewUncheckedCreateNestedManyWithoutProductInput
-    suppliers?: ProductSupplierUncheckedCreateNestedManyWithoutProductInput
-    variants?: ProductVariantUncheckedCreateNestedManyWithoutProductInput
-    purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
-    transferItems?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
-  }
-
-  export type ProductCreateOrConnectWithoutCategoryInput = {
-    where: ProductWhereUniqueInput
-    create: XOR<ProductCreateWithoutCategoryInput, ProductUncheckedCreateWithoutCategoryInput>
-  }
-
-  export type ProductCreateManyCategoryInputEnvelope = {
-    data: ProductCreateManyCategoryInput | ProductCreateManyCategoryInput[]
     skipDuplicates?: boolean
   }
 
@@ -69648,7 +69024,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: CategoryUpdateOneWithoutChildrenNestedInput
-    products?: ProductUpdateManyWithoutCategoryNestedInput
   }
 
   export type CategoryUncheckedUpdateWithoutChildrenInput = {
@@ -69665,7 +69040,6 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    products?: ProductUncheckedUpdateManyWithoutCategoryNestedInput
   }
 
   export type CategoryUpsertWithWhereUniqueWithoutParentInput = {
@@ -69701,192 +69075,6 @@ export namespace Prisma {
     isActive?: BoolFilter<"Category"> | boolean
     createdAt?: DateTimeFilter<"Category"> | Date | string
     updatedAt?: DateTimeFilter<"Category"> | Date | string
-  }
-
-  export type ProductUpsertWithWhereUniqueWithoutCategoryInput = {
-    where: ProductWhereUniqueInput
-    update: XOR<ProductUpdateWithoutCategoryInput, ProductUncheckedUpdateWithoutCategoryInput>
-    create: XOR<ProductCreateWithoutCategoryInput, ProductUncheckedCreateWithoutCategoryInput>
-  }
-
-  export type ProductUpdateWithWhereUniqueWithoutCategoryInput = {
-    where: ProductWhereUniqueInput
-    data: XOR<ProductUpdateWithoutCategoryInput, ProductUncheckedUpdateWithoutCategoryInput>
-  }
-
-  export type ProductUpdateManyWithWhereWithoutCategoryInput = {
-    where: ProductScalarWhereInput
-    data: XOR<ProductUpdateManyMutationInput, ProductUncheckedUpdateManyWithoutCategoryInput>
-  }
-
-  export type ProductScalarWhereInput = {
-    AND?: ProductScalarWhereInput | ProductScalarWhereInput[]
-    OR?: ProductScalarWhereInput[]
-    NOT?: ProductScalarWhereInput | ProductScalarWhereInput[]
-    id?: StringFilter<"Product"> | string
-    companyId?: StringFilter<"Product"> | string
-    name?: StringFilter<"Product"> | string
-    description?: StringNullableFilter<"Product"> | string | null
-    categoryId?: StringNullableFilter<"Product"> | string | null
-    brandId?: StringNullableFilter<"Product"> | string | null
-    categoryName?: StringNullableFilter<"Product"> | string | null
-    brandName?: StringNullableFilter<"Product"> | string | null
-    sku?: StringFilter<"Product"> | string
-    barcode?: StringNullableFilter<"Product"> | string | null
-    slug?: StringNullableFilter<"Product"> | string | null
-    weight?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
-    dimensions?: JsonNullableFilter<"Product">
-    color?: StringNullableFilter<"Product"> | string | null
-    size?: StringNullableFilter<"Product"> | string | null
-    material?: StringNullableFilter<"Product"> | string | null
-    costPrice?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: IntFilter<"Product"> | number
-    maxStockLevel?: IntNullableFilter<"Product"> | number | null
-    reorderPoint?: IntNullableFilter<"Product"> | number | null
-    reorderQuantity?: IntNullableFilter<"Product"> | number | null
-    status?: EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
-    isTrackable?: BoolFilter<"Product"> | boolean
-    isSerialized?: BoolFilter<"Product"> | boolean
-    images?: JsonNullableFilter<"Product">
-    primaryImage?: StringNullableFilter<"Product"> | string | null
-    metaTitle?: StringNullableFilter<"Product"> | string | null
-    metaDescription?: StringNullableFilter<"Product"> | string | null
-    tags?: JsonNullableFilter<"Product">
-    leadTimeSupply?: IntNullableFilter<"Product"> | number | null
-    shelfLife?: IntNullableFilter<"Product"> | number | null
-    createdAt?: DateTimeFilter<"Product"> | Date | string
-    updatedAt?: DateTimeFilter<"Product"> | Date | string
-    createdBy?: StringFilter<"Product"> | string
-  }
-
-  export type ProductCreateWithoutBrandInput = {
-    id?: string
-    companyId: string
-    name: string
-    description?: string | null
-    categoryName?: string | null
-    brandName?: string | null
-    sku: string
-    barcode?: string | null
-    slug?: string | null
-    weight?: Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: string | null
-    size?: string | null
-    material?: string | null
-    costPrice?: Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: number
-    maxStockLevel?: number | null
-    reorderPoint?: number | null
-    reorderQuantity?: number | null
-    status?: $Enums.ProductStatus
-    isTrackable?: boolean
-    isSerialized?: boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: string | null
-    metaTitle?: string | null
-    metaDescription?: string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: number | null
-    shelfLife?: number | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    createdBy: string
-    BundleItems?: BundleItemsCreateNestedManyWithoutProductsInput
-    BundleProducts?: BundleProductsCreateNestedManyWithoutProductsInput
-    goodsReceiptItems?: GoodsReceiptItemCreateNestedManyWithoutProductInput
-    auditItems?: InventoryAuditItemCreateNestedManyWithoutProductInput
-    audits?: InventoryAuditCreateNestedManyWithoutProductInput
-    inventoryItems?: InventoryItemCreateNestedManyWithoutProductInput
-    movements?: InventoryMovementCreateNestedManyWithoutProductInput
-    orderItems?: OrderItemCreateNestedManyWithoutProductInput
-    reviews?: ProductReviewCreateNestedManyWithoutProductInput
-    suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
-    variants?: ProductVariantCreateNestedManyWithoutProductInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
-    purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
-    transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
-  }
-
-  export type ProductUncheckedCreateWithoutBrandInput = {
-    id?: string
-    companyId: string
-    name: string
-    description?: string | null
-    categoryId?: string | null
-    categoryName?: string | null
-    brandName?: string | null
-    sku: string
-    barcode?: string | null
-    slug?: string | null
-    weight?: Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: string | null
-    size?: string | null
-    material?: string | null
-    costPrice?: Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: number
-    maxStockLevel?: number | null
-    reorderPoint?: number | null
-    reorderQuantity?: number | null
-    status?: $Enums.ProductStatus
-    isTrackable?: boolean
-    isSerialized?: boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: string | null
-    metaTitle?: string | null
-    metaDescription?: string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: number | null
-    shelfLife?: number | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    createdBy: string
-    BundleItems?: BundleItemsUncheckedCreateNestedManyWithoutProductsInput
-    BundleProducts?: BundleProductsUncheckedCreateNestedManyWithoutProductsInput
-    goodsReceiptItems?: GoodsReceiptItemUncheckedCreateNestedManyWithoutProductInput
-    auditItems?: InventoryAuditItemUncheckedCreateNestedManyWithoutProductInput
-    audits?: InventoryAuditUncheckedCreateNestedManyWithoutProductInput
-    inventoryItems?: InventoryItemUncheckedCreateNestedManyWithoutProductInput
-    movements?: InventoryMovementUncheckedCreateNestedManyWithoutProductInput
-    orderItems?: OrderItemUncheckedCreateNestedManyWithoutProductInput
-    reviews?: ProductReviewUncheckedCreateNestedManyWithoutProductInput
-    suppliers?: ProductSupplierUncheckedCreateNestedManyWithoutProductInput
-    variants?: ProductVariantUncheckedCreateNestedManyWithoutProductInput
-    purchaseItems?: PurchaseOrderItemUncheckedCreateNestedManyWithoutProductInput
-    transferItems?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
-  }
-
-  export type ProductCreateOrConnectWithoutBrandInput = {
-    where: ProductWhereUniqueInput
-    create: XOR<ProductCreateWithoutBrandInput, ProductUncheckedCreateWithoutBrandInput>
-  }
-
-  export type ProductCreateManyBrandInputEnvelope = {
-    data: ProductCreateManyBrandInput | ProductCreateManyBrandInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type ProductUpsertWithWhereUniqueWithoutBrandInput = {
-    where: ProductWhereUniqueInput
-    update: XOR<ProductUpdateWithoutBrandInput, ProductUncheckedUpdateWithoutBrandInput>
-    create: XOR<ProductCreateWithoutBrandInput, ProductUncheckedCreateWithoutBrandInput>
-  }
-
-  export type ProductUpdateWithWhereUniqueWithoutBrandInput = {
-    where: ProductWhereUniqueInput
-    data: XOR<ProductUpdateWithoutBrandInput, ProductUncheckedUpdateWithoutBrandInput>
-  }
-
-  export type ProductUpdateManyWithWhereWithoutBrandInput = {
-    where: ProductScalarWhereInput
-    data: XOR<ProductUpdateManyMutationInput, ProductUncheckedUpdateManyWithoutBrandInput>
   }
 
   export type BundleItemsCreateWithoutProduct_bundlesInput = {
@@ -70856,6 +70044,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -70896,8 +70086,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -71214,6 +70402,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -71254,8 +70444,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -71575,6 +70763,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -71615,8 +70805,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -71894,6 +71082,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -71934,8 +71124,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -72521,6 +71709,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -72561,8 +71751,6 @@ export namespace Prisma {
     orderItems?: OrderItemCreateNestedManyWithoutProductInput
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -72716,6 +71904,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -72756,8 +71946,6 @@ export namespace Prisma {
     orderItems?: OrderItemUpdateManyWithoutProductNestedInput
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -73741,6 +72929,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -73782,8 +72972,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
 
@@ -73973,6 +73161,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -74014,8 +73204,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
 
@@ -74616,6 +73804,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -74656,8 +73846,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -74828,6 +74016,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -74868,8 +74058,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -75984,6 +75172,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -76024,8 +75214,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -76236,6 +75424,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -76276,8 +75466,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -77499,6 +76687,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -77540,8 +76730,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
   }
 
@@ -77707,6 +76895,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -77748,8 +76938,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
   }
 
@@ -78695,6 +77883,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -78735,8 +77925,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -78912,6 +78100,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -78952,8 +78142,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -79152,6 +78340,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -79192,8 +78382,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -79457,6 +78645,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -79497,8 +78687,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -79703,6 +78891,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -79743,8 +78933,6 @@ export namespace Prisma {
     orderItems?: OrderItemCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -79821,6 +79009,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -79861,8 +79051,6 @@ export namespace Prisma {
     orderItems?: OrderItemUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -79923,6 +79111,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -79963,8 +79153,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -80072,6 +79260,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -80112,8 +79302,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -80211,6 +79399,8 @@ export namespace Prisma {
     companyId: string
     name: string
     description?: string | null
+    categoryId?: string | null
+    brandId?: string | null
     categoryName?: string | null
     brandName?: string | null
     sku: string
@@ -80251,8 +79441,6 @@ export namespace Prisma {
     reviews?: ProductReviewCreateNestedManyWithoutProductInput
     suppliers?: ProductSupplierCreateNestedManyWithoutProductInput
     variants?: ProductVariantCreateNestedManyWithoutProductInput
-    brand?: BrandCreateNestedOneWithoutProductsInput
-    category?: CategoryCreateNestedOneWithoutProductsInput
     purchaseItems?: PurchaseOrderItemCreateNestedManyWithoutProductInput
     transferItems?: StockTransferItemCreateNestedManyWithoutProductInput
   }
@@ -80360,6 +79548,8 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: NullableStringFieldUpdateOperationsInput | string | null
     brandName?: NullableStringFieldUpdateOperationsInput | string | null
     sku?: StringFieldUpdateOperationsInput | string
@@ -80400,8 +79590,6 @@ export namespace Prisma {
     reviews?: ProductReviewUpdateManyWithoutProductNestedInput
     suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
     variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
     purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
     transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
   }
@@ -82049,44 +81237,6 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type ProductCreateManyCategoryInput = {
-    id?: string
-    companyId: string
-    name: string
-    description?: string | null
-    brandId?: string | null
-    categoryName?: string | null
-    brandName?: string | null
-    sku: string
-    barcode?: string | null
-    slug?: string | null
-    weight?: Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: string | null
-    size?: string | null
-    material?: string | null
-    costPrice?: Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: number
-    maxStockLevel?: number | null
-    reorderPoint?: number | null
-    reorderQuantity?: number | null
-    status?: $Enums.ProductStatus
-    isTrackable?: boolean
-    isSerialized?: boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: string | null
-    metaTitle?: string | null
-    metaDescription?: string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: number | null
-    shelfLife?: number | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    createdBy: string
-  }
-
   export type CategoryUpdateWithoutParentInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -82101,7 +81251,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: CategoryUpdateManyWithoutParentNestedInput
-    products?: ProductUpdateManyWithoutCategoryNestedInput
   }
 
   export type CategoryUncheckedUpdateWithoutParentInput = {
@@ -82118,7 +81267,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: CategoryUncheckedUpdateManyWithoutParentNestedInput
-    products?: ProductUncheckedUpdateManyWithoutCategoryNestedInput
   }
 
   export type CategoryUncheckedUpdateManyWithoutParentInput = {
@@ -82134,324 +81282,6 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ProductUpdateWithoutCategoryInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
-    brandName?: NullableStringFieldUpdateOperationsInput | string | null
-    sku?: StringFieldUpdateOperationsInput | string
-    barcode?: NullableStringFieldUpdateOperationsInput | string | null
-    slug?: NullableStringFieldUpdateOperationsInput | string | null
-    weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: NullableStringFieldUpdateOperationsInput | string | null
-    size?: NullableStringFieldUpdateOperationsInput | string | null
-    material?: NullableStringFieldUpdateOperationsInput | string | null
-    costPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: IntFieldUpdateOperationsInput | number
-    maxStockLevel?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderPoint?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderQuantity?: NullableIntFieldUpdateOperationsInput | number | null
-    status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
-    isTrackable?: BoolFieldUpdateOperationsInput | boolean
-    isSerialized?: BoolFieldUpdateOperationsInput | boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: NullableStringFieldUpdateOperationsInput | string | null
-    metaTitle?: NullableStringFieldUpdateOperationsInput | string | null
-    metaDescription?: NullableStringFieldUpdateOperationsInput | string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: NullableIntFieldUpdateOperationsInput | number | null
-    shelfLife?: NullableIntFieldUpdateOperationsInput | number | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: StringFieldUpdateOperationsInput | string
-    BundleItems?: BundleItemsUpdateManyWithoutProductsNestedInput
-    BundleProducts?: BundleProductsUpdateManyWithoutProductsNestedInput
-    goodsReceiptItems?: GoodsReceiptItemUpdateManyWithoutProductNestedInput
-    auditItems?: InventoryAuditItemUpdateManyWithoutProductNestedInput
-    audits?: InventoryAuditUpdateManyWithoutProductNestedInput
-    inventoryItems?: InventoryItemUpdateManyWithoutProductNestedInput
-    movements?: InventoryMovementUpdateManyWithoutProductNestedInput
-    orderItems?: OrderItemUpdateManyWithoutProductNestedInput
-    reviews?: ProductReviewUpdateManyWithoutProductNestedInput
-    suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
-    variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    brand?: BrandUpdateOneWithoutProductsNestedInput
-    purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
-    transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
-  }
-
-  export type ProductUncheckedUpdateWithoutCategoryInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
-    brandName?: NullableStringFieldUpdateOperationsInput | string | null
-    sku?: StringFieldUpdateOperationsInput | string
-    barcode?: NullableStringFieldUpdateOperationsInput | string | null
-    slug?: NullableStringFieldUpdateOperationsInput | string | null
-    weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: NullableStringFieldUpdateOperationsInput | string | null
-    size?: NullableStringFieldUpdateOperationsInput | string | null
-    material?: NullableStringFieldUpdateOperationsInput | string | null
-    costPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: IntFieldUpdateOperationsInput | number
-    maxStockLevel?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderPoint?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderQuantity?: NullableIntFieldUpdateOperationsInput | number | null
-    status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
-    isTrackable?: BoolFieldUpdateOperationsInput | boolean
-    isSerialized?: BoolFieldUpdateOperationsInput | boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: NullableStringFieldUpdateOperationsInput | string | null
-    metaTitle?: NullableStringFieldUpdateOperationsInput | string | null
-    metaDescription?: NullableStringFieldUpdateOperationsInput | string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: NullableIntFieldUpdateOperationsInput | number | null
-    shelfLife?: NullableIntFieldUpdateOperationsInput | number | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: StringFieldUpdateOperationsInput | string
-    BundleItems?: BundleItemsUncheckedUpdateManyWithoutProductsNestedInput
-    BundleProducts?: BundleProductsUncheckedUpdateManyWithoutProductsNestedInput
-    goodsReceiptItems?: GoodsReceiptItemUncheckedUpdateManyWithoutProductNestedInput
-    auditItems?: InventoryAuditItemUncheckedUpdateManyWithoutProductNestedInput
-    audits?: InventoryAuditUncheckedUpdateManyWithoutProductNestedInput
-    inventoryItems?: InventoryItemUncheckedUpdateManyWithoutProductNestedInput
-    movements?: InventoryMovementUncheckedUpdateManyWithoutProductNestedInput
-    orderItems?: OrderItemUncheckedUpdateManyWithoutProductNestedInput
-    reviews?: ProductReviewUncheckedUpdateManyWithoutProductNestedInput
-    suppliers?: ProductSupplierUncheckedUpdateManyWithoutProductNestedInput
-    variants?: ProductVariantUncheckedUpdateManyWithoutProductNestedInput
-    purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
-    transferItems?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
-  }
-
-  export type ProductUncheckedUpdateManyWithoutCategoryInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    brandId?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
-    brandName?: NullableStringFieldUpdateOperationsInput | string | null
-    sku?: StringFieldUpdateOperationsInput | string
-    barcode?: NullableStringFieldUpdateOperationsInput | string | null
-    slug?: NullableStringFieldUpdateOperationsInput | string | null
-    weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: NullableStringFieldUpdateOperationsInput | string | null
-    size?: NullableStringFieldUpdateOperationsInput | string | null
-    material?: NullableStringFieldUpdateOperationsInput | string | null
-    costPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: IntFieldUpdateOperationsInput | number
-    maxStockLevel?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderPoint?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderQuantity?: NullableIntFieldUpdateOperationsInput | number | null
-    status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
-    isTrackable?: BoolFieldUpdateOperationsInput | boolean
-    isSerialized?: BoolFieldUpdateOperationsInput | boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: NullableStringFieldUpdateOperationsInput | string | null
-    metaTitle?: NullableStringFieldUpdateOperationsInput | string | null
-    metaDescription?: NullableStringFieldUpdateOperationsInput | string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: NullableIntFieldUpdateOperationsInput | number | null
-    shelfLife?: NullableIntFieldUpdateOperationsInput | number | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: StringFieldUpdateOperationsInput | string
-  }
-
-  export type ProductCreateManyBrandInput = {
-    id?: string
-    companyId: string
-    name: string
-    description?: string | null
-    categoryId?: string | null
-    categoryName?: string | null
-    brandName?: string | null
-    sku: string
-    barcode?: string | null
-    slug?: string | null
-    weight?: Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: string | null
-    size?: string | null
-    material?: string | null
-    costPrice?: Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: number
-    maxStockLevel?: number | null
-    reorderPoint?: number | null
-    reorderQuantity?: number | null
-    status?: $Enums.ProductStatus
-    isTrackable?: boolean
-    isSerialized?: boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: string | null
-    metaTitle?: string | null
-    metaDescription?: string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: number | null
-    shelfLife?: number | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    createdBy: string
-  }
-
-  export type ProductUpdateWithoutBrandInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
-    brandName?: NullableStringFieldUpdateOperationsInput | string | null
-    sku?: StringFieldUpdateOperationsInput | string
-    barcode?: NullableStringFieldUpdateOperationsInput | string | null
-    slug?: NullableStringFieldUpdateOperationsInput | string | null
-    weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: NullableStringFieldUpdateOperationsInput | string | null
-    size?: NullableStringFieldUpdateOperationsInput | string | null
-    material?: NullableStringFieldUpdateOperationsInput | string | null
-    costPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: IntFieldUpdateOperationsInput | number
-    maxStockLevel?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderPoint?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderQuantity?: NullableIntFieldUpdateOperationsInput | number | null
-    status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
-    isTrackable?: BoolFieldUpdateOperationsInput | boolean
-    isSerialized?: BoolFieldUpdateOperationsInput | boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: NullableStringFieldUpdateOperationsInput | string | null
-    metaTitle?: NullableStringFieldUpdateOperationsInput | string | null
-    metaDescription?: NullableStringFieldUpdateOperationsInput | string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: NullableIntFieldUpdateOperationsInput | number | null
-    shelfLife?: NullableIntFieldUpdateOperationsInput | number | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: StringFieldUpdateOperationsInput | string
-    BundleItems?: BundleItemsUpdateManyWithoutProductsNestedInput
-    BundleProducts?: BundleProductsUpdateManyWithoutProductsNestedInput
-    goodsReceiptItems?: GoodsReceiptItemUpdateManyWithoutProductNestedInput
-    auditItems?: InventoryAuditItemUpdateManyWithoutProductNestedInput
-    audits?: InventoryAuditUpdateManyWithoutProductNestedInput
-    inventoryItems?: InventoryItemUpdateManyWithoutProductNestedInput
-    movements?: InventoryMovementUpdateManyWithoutProductNestedInput
-    orderItems?: OrderItemUpdateManyWithoutProductNestedInput
-    reviews?: ProductReviewUpdateManyWithoutProductNestedInput
-    suppliers?: ProductSupplierUpdateManyWithoutProductNestedInput
-    variants?: ProductVariantUpdateManyWithoutProductNestedInput
-    category?: CategoryUpdateOneWithoutProductsNestedInput
-    purchaseItems?: PurchaseOrderItemUpdateManyWithoutProductNestedInput
-    transferItems?: StockTransferItemUpdateManyWithoutProductNestedInput
-  }
-
-  export type ProductUncheckedUpdateWithoutBrandInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
-    brandName?: NullableStringFieldUpdateOperationsInput | string | null
-    sku?: StringFieldUpdateOperationsInput | string
-    barcode?: NullableStringFieldUpdateOperationsInput | string | null
-    slug?: NullableStringFieldUpdateOperationsInput | string | null
-    weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: NullableStringFieldUpdateOperationsInput | string | null
-    size?: NullableStringFieldUpdateOperationsInput | string | null
-    material?: NullableStringFieldUpdateOperationsInput | string | null
-    costPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: IntFieldUpdateOperationsInput | number
-    maxStockLevel?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderPoint?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderQuantity?: NullableIntFieldUpdateOperationsInput | number | null
-    status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
-    isTrackable?: BoolFieldUpdateOperationsInput | boolean
-    isSerialized?: BoolFieldUpdateOperationsInput | boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: NullableStringFieldUpdateOperationsInput | string | null
-    metaTitle?: NullableStringFieldUpdateOperationsInput | string | null
-    metaDescription?: NullableStringFieldUpdateOperationsInput | string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: NullableIntFieldUpdateOperationsInput | number | null
-    shelfLife?: NullableIntFieldUpdateOperationsInput | number | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: StringFieldUpdateOperationsInput | string
-    BundleItems?: BundleItemsUncheckedUpdateManyWithoutProductsNestedInput
-    BundleProducts?: BundleProductsUncheckedUpdateManyWithoutProductsNestedInput
-    goodsReceiptItems?: GoodsReceiptItemUncheckedUpdateManyWithoutProductNestedInput
-    auditItems?: InventoryAuditItemUncheckedUpdateManyWithoutProductNestedInput
-    audits?: InventoryAuditUncheckedUpdateManyWithoutProductNestedInput
-    inventoryItems?: InventoryItemUncheckedUpdateManyWithoutProductNestedInput
-    movements?: InventoryMovementUncheckedUpdateManyWithoutProductNestedInput
-    orderItems?: OrderItemUncheckedUpdateManyWithoutProductNestedInput
-    reviews?: ProductReviewUncheckedUpdateManyWithoutProductNestedInput
-    suppliers?: ProductSupplierUncheckedUpdateManyWithoutProductNestedInput
-    variants?: ProductVariantUncheckedUpdateManyWithoutProductNestedInput
-    purchaseItems?: PurchaseOrderItemUncheckedUpdateManyWithoutProductNestedInput
-    transferItems?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
-  }
-
-  export type ProductUncheckedUpdateManyWithoutBrandInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    companyId?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    categoryName?: NullableStringFieldUpdateOperationsInput | string | null
-    brandName?: NullableStringFieldUpdateOperationsInput | string | null
-    sku?: StringFieldUpdateOperationsInput | string
-    barcode?: NullableStringFieldUpdateOperationsInput | string | null
-    slug?: NullableStringFieldUpdateOperationsInput | string | null
-    weight?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    dimensions?: NullableJsonNullValueInput | InputJsonValue
-    color?: NullableStringFieldUpdateOperationsInput | string | null
-    size?: NullableStringFieldUpdateOperationsInput | string | null
-    material?: NullableStringFieldUpdateOperationsInput | string | null
-    costPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    sellingPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    wholesalePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    minStockLevel?: IntFieldUpdateOperationsInput | number
-    maxStockLevel?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderPoint?: NullableIntFieldUpdateOperationsInput | number | null
-    reorderQuantity?: NullableIntFieldUpdateOperationsInput | number | null
-    status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
-    isTrackable?: BoolFieldUpdateOperationsInput | boolean
-    isSerialized?: BoolFieldUpdateOperationsInput | boolean
-    images?: NullableJsonNullValueInput | InputJsonValue
-    primaryImage?: NullableStringFieldUpdateOperationsInput | string | null
-    metaTitle?: NullableStringFieldUpdateOperationsInput | string | null
-    metaDescription?: NullableStringFieldUpdateOperationsInput | string | null
-    tags?: NullableJsonNullValueInput | InputJsonValue
-    leadTimeSupply?: NullableIntFieldUpdateOperationsInput | number | null
-    shelfLife?: NullableIntFieldUpdateOperationsInput | number | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: StringFieldUpdateOperationsInput | string
   }
 
   export type BundleItemsCreateManyProduct_bundlesInput = {
