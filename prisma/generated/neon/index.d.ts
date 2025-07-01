@@ -8444,8 +8444,6 @@ export namespace Prisma {
     slug: string | null
     parentId: string | null
     level: number | null
-    path: string | null
-    icon: string | null
     color: string | null
     image: string | null
     isActive: boolean | null
@@ -8460,8 +8458,6 @@ export namespace Prisma {
     slug: string | null
     parentId: string | null
     level: number | null
-    path: string | null
-    icon: string | null
     color: string | null
     image: string | null
     isActive: boolean | null
@@ -8476,8 +8472,6 @@ export namespace Prisma {
     slug: number
     parentId: number
     level: number
-    path: number
-    icon: number
     color: number
     image: number
     isActive: number
@@ -8502,8 +8496,6 @@ export namespace Prisma {
     slug?: true
     parentId?: true
     level?: true
-    path?: true
-    icon?: true
     color?: true
     image?: true
     isActive?: true
@@ -8518,8 +8510,6 @@ export namespace Prisma {
     slug?: true
     parentId?: true
     level?: true
-    path?: true
-    icon?: true
     color?: true
     image?: true
     isActive?: true
@@ -8534,8 +8524,6 @@ export namespace Prisma {
     slug?: true
     parentId?: true
     level?: true
-    path?: true
-    icon?: true
     color?: true
     image?: true
     isActive?: true
@@ -8637,8 +8625,6 @@ export namespace Prisma {
     slug: string
     parentId: string | null
     level: number
-    path: string | null
-    icon: string | null
     color: string | null
     image: string | null
     isActive: boolean
@@ -8672,8 +8658,6 @@ export namespace Prisma {
     slug?: boolean
     parentId?: boolean
     level?: boolean
-    path?: boolean
-    icon?: boolean
     color?: boolean
     image?: boolean
     isActive?: boolean
@@ -8691,8 +8675,6 @@ export namespace Prisma {
     slug?: boolean
     parentId?: boolean
     level?: boolean
-    path?: boolean
-    icon?: boolean
     color?: boolean
     image?: boolean
     isActive?: boolean
@@ -8708,8 +8690,6 @@ export namespace Prisma {
     slug?: boolean
     parentId?: boolean
     level?: boolean
-    path?: boolean
-    icon?: boolean
     color?: boolean
     image?: boolean
     isActive?: boolean
@@ -8725,8 +8705,6 @@ export namespace Prisma {
     slug?: boolean
     parentId?: boolean
     level?: boolean
-    path?: boolean
-    icon?: boolean
     color?: boolean
     image?: boolean
     isActive?: boolean
@@ -8734,7 +8712,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type CategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "slug" | "parentId" | "level" | "path" | "icon" | "color" | "image" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["category"]>
+  export type CategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "slug" | "parentId" | "level" | "color" | "image" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["category"]>
   export type CategoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     parent?: boolean | Category$parentArgs<ExtArgs>
     children?: boolean | Category$childrenArgs<ExtArgs>
@@ -8760,8 +8738,6 @@ export namespace Prisma {
       slug: string
       parentId: string | null
       level: number
-      path: string | null
-      icon: string | null
       color: string | null
       image: string | null
       isActive: boolean
@@ -9198,8 +9174,6 @@ export namespace Prisma {
     readonly slug: FieldRef<"Category", 'String'>
     readonly parentId: FieldRef<"Category", 'String'>
     readonly level: FieldRef<"Category", 'Int'>
-    readonly path: FieldRef<"Category", 'String'>
-    readonly icon: FieldRef<"Category", 'String'>
     readonly color: FieldRef<"Category", 'String'>
     readonly image: FieldRef<"Category", 'String'>
     readonly isActive: FieldRef<"Category", 'Boolean'>
@@ -9676,7 +9650,6 @@ export namespace Prisma {
     id: string | null
     name: string | null
     description: string | null
-    logo: string | null
     website: string | null
     contactEmail: string | null
     contactPhone: string | null
@@ -9689,7 +9662,6 @@ export namespace Prisma {
     id: string | null
     name: string | null
     description: string | null
-    logo: string | null
     website: string | null
     contactEmail: string | null
     contactPhone: string | null
@@ -9702,7 +9674,6 @@ export namespace Prisma {
     id: number
     name: number
     description: number
-    logo: number
     website: number
     contactEmail: number
     contactPhone: number
@@ -9717,7 +9688,6 @@ export namespace Prisma {
     id?: true
     name?: true
     description?: true
-    logo?: true
     website?: true
     contactEmail?: true
     contactPhone?: true
@@ -9730,7 +9700,6 @@ export namespace Prisma {
     id?: true
     name?: true
     description?: true
-    logo?: true
     website?: true
     contactEmail?: true
     contactPhone?: true
@@ -9743,7 +9712,6 @@ export namespace Prisma {
     id?: true
     name?: true
     description?: true
-    logo?: true
     website?: true
     contactEmail?: true
     contactPhone?: true
@@ -9829,7 +9797,6 @@ export namespace Prisma {
     id: string
     name: string
     description: string | null
-    logo: string | null
     website: string | null
     contactEmail: string | null
     contactPhone: string | null
@@ -9859,7 +9826,6 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     description?: boolean
-    logo?: boolean
     website?: boolean
     contactEmail?: boolean
     contactPhone?: boolean
@@ -9872,7 +9838,6 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     description?: boolean
-    logo?: boolean
     website?: boolean
     contactEmail?: boolean
     contactPhone?: boolean
@@ -9885,7 +9850,6 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     description?: boolean
-    logo?: boolean
     website?: boolean
     contactEmail?: boolean
     contactPhone?: boolean
@@ -9898,7 +9862,6 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     description?: boolean
-    logo?: boolean
     website?: boolean
     contactEmail?: boolean
     contactPhone?: boolean
@@ -9907,7 +9870,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type BrandOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "logo" | "website" | "contactEmail" | "contactPhone" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["brand"]>
+  export type BrandOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "website" | "contactEmail" | "contactPhone" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["brand"]>
 
   export type $BrandPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Brand"
@@ -9916,7 +9879,6 @@ export namespace Prisma {
       id: string
       name: string
       description: string | null
-      logo: string | null
       website: string | null
       contactEmail: string | null
       contactPhone: string | null
@@ -10349,7 +10311,6 @@ export namespace Prisma {
     readonly id: FieldRef<"Brand", 'String'>
     readonly name: FieldRef<"Brand", 'String'>
     readonly description: FieldRef<"Brand", 'String'>
-    readonly logo: FieldRef<"Brand", 'String'>
     readonly website: FieldRef<"Brand", 'String'>
     readonly contactEmail: FieldRef<"Brand", 'String'>
     readonly contactPhone: FieldRef<"Brand", 'String'>
@@ -49233,8 +49194,6 @@ export namespace Prisma {
     slug: 'slug',
     parentId: 'parentId',
     level: 'level',
-    path: 'path',
-    icon: 'icon',
     color: 'color',
     image: 'image',
     isActive: 'isActive',
@@ -49249,7 +49208,6 @@ export namespace Prisma {
     id: 'id',
     name: 'name',
     description: 'description',
-    logo: 'logo',
     website: 'website',
     contactEmail: 'contactEmail',
     contactPhone: 'contactPhone',
@@ -50884,8 +50842,6 @@ export namespace Prisma {
     slug?: StringFilter<"Category"> | string
     parentId?: StringNullableFilter<"Category"> | string | null
     level?: IntFilter<"Category"> | number
-    path?: StringNullableFilter<"Category"> | string | null
-    icon?: StringNullableFilter<"Category"> | string | null
     color?: StringNullableFilter<"Category"> | string | null
     image?: StringNullableFilter<"Category"> | string | null
     isActive?: BoolFilter<"Category"> | boolean
@@ -50902,8 +50858,6 @@ export namespace Prisma {
     slug?: SortOrder
     parentId?: SortOrderInput | SortOrder
     level?: SortOrder
-    path?: SortOrderInput | SortOrder
-    icon?: SortOrderInput | SortOrder
     color?: SortOrderInput | SortOrder
     image?: SortOrderInput | SortOrder
     isActive?: SortOrder
@@ -50923,8 +50877,6 @@ export namespace Prisma {
     description?: StringNullableFilter<"Category"> | string | null
     parentId?: StringNullableFilter<"Category"> | string | null
     level?: IntFilter<"Category"> | number
-    path?: StringNullableFilter<"Category"> | string | null
-    icon?: StringNullableFilter<"Category"> | string | null
     color?: StringNullableFilter<"Category"> | string | null
     image?: StringNullableFilter<"Category"> | string | null
     isActive?: BoolFilter<"Category"> | boolean
@@ -50941,8 +50893,6 @@ export namespace Prisma {
     slug?: SortOrder
     parentId?: SortOrderInput | SortOrder
     level?: SortOrder
-    path?: SortOrderInput | SortOrder
-    icon?: SortOrderInput | SortOrder
     color?: SortOrderInput | SortOrder
     image?: SortOrderInput | SortOrder
     isActive?: SortOrder
@@ -50965,8 +50915,6 @@ export namespace Prisma {
     slug?: StringWithAggregatesFilter<"Category"> | string
     parentId?: StringNullableWithAggregatesFilter<"Category"> | string | null
     level?: IntWithAggregatesFilter<"Category"> | number
-    path?: StringNullableWithAggregatesFilter<"Category"> | string | null
-    icon?: StringNullableWithAggregatesFilter<"Category"> | string | null
     color?: StringNullableWithAggregatesFilter<"Category"> | string | null
     image?: StringNullableWithAggregatesFilter<"Category"> | string | null
     isActive?: BoolWithAggregatesFilter<"Category"> | boolean
@@ -50981,7 +50929,6 @@ export namespace Prisma {
     id?: StringFilter<"Brand"> | string
     name?: StringFilter<"Brand"> | string
     description?: StringNullableFilter<"Brand"> | string | null
-    logo?: StringNullableFilter<"Brand"> | string | null
     website?: StringNullableFilter<"Brand"> | string | null
     contactEmail?: StringNullableFilter<"Brand"> | string | null
     contactPhone?: StringNullableFilter<"Brand"> | string | null
@@ -50994,7 +50941,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
-    logo?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     contactEmail?: SortOrderInput | SortOrder
     contactPhone?: SortOrderInput | SortOrder
@@ -51010,7 +50956,6 @@ export namespace Prisma {
     OR?: BrandWhereInput[]
     NOT?: BrandWhereInput | BrandWhereInput[]
     description?: StringNullableFilter<"Brand"> | string | null
-    logo?: StringNullableFilter<"Brand"> | string | null
     website?: StringNullableFilter<"Brand"> | string | null
     contactEmail?: StringNullableFilter<"Brand"> | string | null
     contactPhone?: StringNullableFilter<"Brand"> | string | null
@@ -51023,7 +50968,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
-    logo?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     contactEmail?: SortOrderInput | SortOrder
     contactPhone?: SortOrderInput | SortOrder
@@ -51042,7 +50986,6 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Brand"> | string
     name?: StringWithAggregatesFilter<"Brand"> | string
     description?: StringNullableWithAggregatesFilter<"Brand"> | string | null
-    logo?: StringNullableWithAggregatesFilter<"Brand"> | string | null
     website?: StringNullableWithAggregatesFilter<"Brand"> | string | null
     contactEmail?: StringNullableWithAggregatesFilter<"Brand"> | string | null
     contactPhone?: StringNullableWithAggregatesFilter<"Brand"> | string | null
@@ -55133,8 +55076,6 @@ export namespace Prisma {
     description?: string | null
     slug: string
     level?: number
-    path?: string | null
-    icon?: string | null
     color?: string | null
     image?: string | null
     isActive?: boolean
@@ -55151,8 +55092,6 @@ export namespace Prisma {
     slug: string
     parentId?: string | null
     level?: number
-    path?: string | null
-    icon?: string | null
     color?: string | null
     image?: string | null
     isActive?: boolean
@@ -55167,8 +55106,6 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -55185,8 +55122,6 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -55202,8 +55137,6 @@ export namespace Prisma {
     slug: string
     parentId?: string | null
     level?: number
-    path?: string | null
-    icon?: string | null
     color?: string | null
     image?: string | null
     isActive?: boolean
@@ -55217,8 +55150,6 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -55233,8 +55164,6 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -55246,7 +55175,6 @@ export namespace Prisma {
     id?: string
     name: string
     description?: string | null
-    logo?: string | null
     website?: string | null
     contactEmail?: string | null
     contactPhone?: string | null
@@ -55259,7 +55187,6 @@ export namespace Prisma {
     id?: string
     name: string
     description?: string | null
-    logo?: string | null
     website?: string | null
     contactEmail?: string | null
     contactPhone?: string | null
@@ -55272,7 +55199,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    logo?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     contactEmail?: NullableStringFieldUpdateOperationsInput | string | null
     contactPhone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -55285,7 +55211,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    logo?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     contactEmail?: NullableStringFieldUpdateOperationsInput | string | null
     contactPhone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -55298,7 +55223,6 @@ export namespace Prisma {
     id?: string
     name: string
     description?: string | null
-    logo?: string | null
     website?: string | null
     contactEmail?: string | null
     contactPhone?: string | null
@@ -55311,7 +55235,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    logo?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     contactEmail?: NullableStringFieldUpdateOperationsInput | string | null
     contactPhone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -55324,7 +55247,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    logo?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     contactEmail?: NullableStringFieldUpdateOperationsInput | string | null
     contactPhone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -60204,8 +60126,6 @@ export namespace Prisma {
     slug?: SortOrder
     parentId?: SortOrder
     level?: SortOrder
-    path?: SortOrder
-    icon?: SortOrder
     color?: SortOrder
     image?: SortOrder
     isActive?: SortOrder
@@ -60224,8 +60144,6 @@ export namespace Prisma {
     slug?: SortOrder
     parentId?: SortOrder
     level?: SortOrder
-    path?: SortOrder
-    icon?: SortOrder
     color?: SortOrder
     image?: SortOrder
     isActive?: SortOrder
@@ -60240,8 +60158,6 @@ export namespace Prisma {
     slug?: SortOrder
     parentId?: SortOrder
     level?: SortOrder
-    path?: SortOrder
-    icon?: SortOrder
     color?: SortOrder
     image?: SortOrder
     isActive?: SortOrder
@@ -60257,7 +60173,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrder
-    logo?: SortOrder
     website?: SortOrder
     contactEmail?: SortOrder
     contactPhone?: SortOrder
@@ -60270,7 +60185,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrder
-    logo?: SortOrder
     website?: SortOrder
     contactEmail?: SortOrder
     contactPhone?: SortOrder
@@ -60283,7 +60197,6 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrder
-    logo?: SortOrder
     website?: SortOrder
     contactEmail?: SortOrder
     contactPhone?: SortOrder
@@ -68926,8 +68839,6 @@ export namespace Prisma {
     description?: string | null
     slug: string
     level?: number
-    path?: string | null
-    icon?: string | null
     color?: string | null
     image?: string | null
     isActive?: boolean
@@ -68943,8 +68854,6 @@ export namespace Prisma {
     slug: string
     parentId?: string | null
     level?: number
-    path?: string | null
-    icon?: string | null
     color?: string | null
     image?: string | null
     isActive?: boolean
@@ -68963,8 +68872,6 @@ export namespace Prisma {
     description?: string | null
     slug: string
     level?: number
-    path?: string | null
-    icon?: string | null
     color?: string | null
     image?: string | null
     isActive?: boolean
@@ -68979,8 +68886,6 @@ export namespace Prisma {
     description?: string | null
     slug: string
     level?: number
-    path?: string | null
-    icon?: string | null
     color?: string | null
     image?: string | null
     isActive?: boolean
@@ -69016,8 +68921,6 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -69033,8 +68936,6 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -69068,8 +68969,6 @@ export namespace Prisma {
     slug?: StringFilter<"Category"> | string
     parentId?: StringNullableFilter<"Category"> | string | null
     level?: IntFilter<"Category"> | number
-    path?: StringNullableFilter<"Category"> | string | null
-    icon?: StringNullableFilter<"Category"> | string | null
     color?: StringNullableFilter<"Category"> | string | null
     image?: StringNullableFilter<"Category"> | string | null
     isActive?: BoolFilter<"Category"> | boolean
@@ -81228,8 +81127,6 @@ export namespace Prisma {
     description?: string | null
     slug: string
     level?: number
-    path?: string | null
-    icon?: string | null
     color?: string | null
     image?: string | null
     isActive?: boolean
@@ -81243,8 +81140,6 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -81259,8 +81154,6 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -81275,8 +81168,6 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     level?: IntFieldUpdateOperationsInput | number
-    path?: NullableStringFieldUpdateOperationsInput | string | null
-    icon?: NullableStringFieldUpdateOperationsInput | string | null
     color?: NullableStringFieldUpdateOperationsInput | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean

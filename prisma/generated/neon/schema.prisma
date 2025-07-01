@@ -96,8 +96,6 @@ model Category {
   slug        String     @unique
   parentId    String?
   level       Int        @default(0)
-  path        String?
-  icon        String?
   color       String?
   image       String?
   isActive    Boolean    @default(true)
@@ -113,7 +111,6 @@ model Brand {
   id           String   @id @default(uuid())
   name         String   @unique
   description  String?
-  logo         String?
   website      String?
   contactEmail String?
   contactPhone String?
