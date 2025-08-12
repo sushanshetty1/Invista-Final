@@ -130,6 +130,11 @@ body {
 	padding-top: 120px; /* Default padding for double-decker */
 }
 
+/* Sidebar shell (dashboard) removes artificial top padding; header handles its own height */
+.shell-layout {
+	padding-top: 0 !important;
+}
+
 /* For marketing pages with single deck navbar */
 .single-deck-layout {
 	padding-top: 80px !important;

@@ -2,11 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ScrollDetector } from "@/components/scroll-detector";
 import { AuthProvider } from "@/contexts/AuthContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Analytics } from "@vercel/analytics/next";
+import { LayoutContent } from "@/components/LayoutContent";
 
 const spaceGrotesk = Space_Grotesk({
 	subsets: ["latin"],
@@ -37,31 +34,26 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({
-	children,
+  children,
 }: Readonly<{
-	children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-	return (
-		<html lang="en" suppressHydrationWarning>
-			<body
-				className={`${spaceGrotesk.className} bg-background text-foreground antialiased`}
-			>
-				{" "}
-				<ThemeProvider
-					attribute="class"
-					defaultTheme="system"
-					enableSystem
-					disableTransitionOnChange
-				>
-					<AuthProvider>
-						<Analytics />
-						<Navbar />
-						<ScrollDetector />
-						{children}
-						<Footer />
-					</AuthProvider>
-				</ThemeProvider>
-			</body>
-		</html>
-	);
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${spaceGrotesk.className} bg-background text-foreground antialiased`}>
+        <ThemeProvider 
+          attribute="class" 
+          defaultTheme="system" 
+          enableSystem 
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <LayoutContent>
+              {children}
+            </LayoutContent>
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
 }

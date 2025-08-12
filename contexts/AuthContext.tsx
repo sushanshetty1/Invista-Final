@@ -311,39 +311,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		});
 	};
 
+	const logoutInFlightRef = { current: false } as { current: boolean };
+
 	const logout = async () => {
+		if (logoutInFlightRef.current) return; // prevent duplicate triggers
+		logoutInFlightRef.current = true;
 		try {
-			console.log("AuthContext - Starting logout process");
+			console.log("AuthContext - Starting logout process (optimized)");
 
-			// Clear localStorage access flags
-			if (typeof window !== "undefined" && user?.id) {
-				localStorage.removeItem(`invista_has_access_${user.id}`);
-				console.log("AuthContext - Cleared localStorage access flags");
-			}
-
-			// Sign out from Supabase
-			const { error } = await supabase.auth.signOut();
-			if (error) {
-				console.error("AuthContext - Error during signout:", error);
-				throw error;
-			}
-
-			console.log("AuthContext - Successfully signed out from Supabase");
-
-			// Clear local state immediately
+			// Optimistic UI: clear state immediately
+			const prevUserId = user?.id;
 			setUser(null);
 			setUserType(null);
 			setHasCompanyAccess(false);
 
-			// Redirect to home page
-			router.push("/");
+			// Clear localStorage flags ASAP
+			if (typeof window !== "undefined" && prevUserId) {
+				localStorage.removeItem(`invista_has_access_${prevUserId}`);
+			}
+
+			// Clear prefetched caches
+			try { dataPreloader.clearCache(); } catch (e) { /* ignore */ }
+
+			// Perform Supabase sign out with timeout race to avoid hanging UX
+			const signOutPromise = supabase.auth.signOut();
+			const timeout = new Promise<{ error?: any }>((resolve) =>
+				setTimeout(() => resolve({ error: null }), 4000)
+			);
+			const { error } = await Promise.race([signOutPromise, timeout]);
+			if (error) console.warn("AuthContext - Supabase signOut reported error", error);
+
+			// Navigate away (replace to prevent back navigation to authed pages)
+			router.replace("/");
 		} catch (error) {
-			console.error("AuthContext - Logout error:", error);
-			// Even if there's an error, clear local state and redirect
-			setUser(null);
-			setUserType(null);
-			setHasCompanyAccess(false);
-			router.push("/");
+			console.error("AuthContext - Logout error (optimized path):", error);
+			router.replace("/");
+		} finally {
+			logoutInFlightRef.current = false;
 		}
 	};
 
