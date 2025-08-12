@@ -41,7 +41,6 @@ export default function LoginPage() {
 			if (error) {
 				setError(error.message);
 			} else if (data?.user) {
-				// Update last login information in database
 				try {
 					await supabase
 						.from("users")
