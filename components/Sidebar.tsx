@@ -134,18 +134,32 @@ function SidebarInner({
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // auto-open active group
-    navItems.forEach((item) => {
-      const active =
-        pathname === item.href || pathname.startsWith(`${item.href}/`);
-      if (active) {
-        setOpenGroups((prev) => ({ ...prev, [item.id]: true }));
-      }
+    // auto-open active group, but close all others
+    const activeItem = navItems.find((item) => {
+      return pathname === item.href || pathname.startsWith(`${item.href}/`);
     });
+    
+    if (activeItem) {
+      setOpenGroups({ [activeItem.id]: true });
+    } else {
+      // If no active item found, close all groups
+      setOpenGroups({});
+    }
   }, [pathname]);
 
   const toggleGroup = (id: string) => {
-    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+    setOpenGroups((prev) => {
+      // Close all groups and only open the clicked one if it wasn't already open
+      const isCurrentlyOpen = prev[id];
+      const newState: Record<string, boolean> = {};
+      
+      // Only open the clicked group if it wasn't already open
+      if (!isCurrentlyOpen) {
+        newState[id] = true;
+      }
+      
+      return newState;
+    });
   };
 
   const { user, logout } = useAuth();
@@ -175,35 +189,50 @@ function SidebarInner({
         <div className="flex h-[60px] items-center justify-between border-b px-3">
           {!collapsed ? (
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-sm">
-                In
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-foreground text-sm leading-tight">
-                  Invista
-                </span>
-                <span className="text-xs text-muted-foreground leading-tight">
-                  Management
-                </span>
-              </div>
+              <Link
+                href="/dashboard"
+                className="flex items-center space-x-3 group flex-shrink-0 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-125" />
+                  <div className="relative w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-white/20 dark:border-white/10">
+                    <Package className="h-6 w-6 text-white drop-shadow-sm" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-background shadow-lg">
+                    <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-75" />
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent truncate group-hover:from-blue-500 group-hover:via-indigo-500 group-hover:to-purple-500 transition-all duration-300">
+                    Invista
+                  </span>
+                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300" />
+                </div>
+              </Link>
             </div>
           ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shadow-sm mx-auto hover:bg-primary/90"
-              onClick={toggleCollapse}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  toggleCollapse();
-                }
-              }}
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
-            >
-              In
-            </Button>
+            <div className="flex justify-center w-full">
+              <button
+                type="button"
+                onClick={toggleCollapse}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleCollapse();
+                  }
+                }}
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+                className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md group"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 w-9 h-9 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-all duration-300 group-hover:scale-125" />
+                  <div className="relative w-9 h-9 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-white/20 dark:border-white/10">
+                    <Package className="h-5 w-5 text-white drop-shadow-sm" />
+                  </div>
+                </div>
+              </button>
+            </div>
           )}
 
           {!collapsed && (
