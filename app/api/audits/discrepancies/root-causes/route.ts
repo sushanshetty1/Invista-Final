@@ -128,7 +128,9 @@ export async function GET(request: NextRequest) {
 				// Remove Sets (not JSON serializable) and return clean object
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const {
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					affectedProducts: _affectedProducts,
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					affectedWarehouses: _affectedWarehouses,
 					...cleanCause
 				} = cause;

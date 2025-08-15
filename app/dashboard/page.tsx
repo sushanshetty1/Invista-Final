@@ -69,6 +69,7 @@ import {
 	Cell,
 	Line,
 } from "recharts";
+import { useImportExport } from "@/hooks/use-import-export";
 
 // Sample data for charts and tables
 const revenueData = [
@@ -229,6 +230,10 @@ export default function DashboardPage() {
 	const { user } = useAuth();
 	const [timeRange, setTimeRange] = useState("7d");
 	const [selectedTab, setSelectedTab] = useState("overview");
+	
+	// Import/Export functionality for dashboard data
+	const { exportData } = useImportExport();
+	
 	const getStatusBadge = (status: string) => {
 		const variants = {
 			completed:
@@ -281,7 +286,41 @@ export default function DashboardPage() {
 									<SelectItem value="90d">Last 90 days</SelectItem>
 								</SelectContent>
 							</Select>
-							<Button variant="outline" size="sm" className="h-9 px-3">
+							<Button 
+								variant="outline" 
+								size="sm" 
+								className="h-9 px-3"
+								onClick={() => exportData([
+									{
+										metric: 'Total Revenue',
+										current_value: '$125,430',
+										previous_value: '$115,320',
+										change_percentage: '+8.8%',
+										period: timeRange
+									},
+									{
+										metric: 'Total Orders',
+										current_value: 1256,
+										previous_value: 1100,
+										change_percentage: '+14.2%',
+										period: timeRange
+									},
+									{
+										metric: 'Active Products',
+										current_value: 847,
+										previous_value: 823,
+										change_percentage: '+2.9%',
+										period: timeRange
+									},
+									{
+										metric: 'Total Customers',
+										current_value: 2845,
+										previous_value: 2756,
+										change_percentage: '+3.2%',
+										period: timeRange
+									}
+								], { filename: 'dashboard-metrics' })}
+							>
 								<Download className="h-4 w-4 mr-2" />
 								Export
 							</Button>

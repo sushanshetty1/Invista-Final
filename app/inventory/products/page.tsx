@@ -6,8 +6,6 @@ import {
 	Plus,
 	Search,
 	Filter,
-	Upload,
-	Download,
 	Edit,
 	Trash2,
 	Eye,
@@ -56,6 +54,8 @@ import ProductFormDialog from "@/components/inventory/ProductFormDialog";
 import { ProductVariantsManager } from "@/components/inventory/ProductVariantsManager";
 import { CategoryManager } from "@/components/inventory/CategoryManager";
 import { BulkActionsDialog } from "@/components/inventory/BulkActionsDialog";
+import { ImportExportButtons } from "@/components/ui/import-export-buttons";
+import { useImportExport } from "@/hooks/use-import-export";
 
 // Local interfaces that match component expectations
 interface ProductVariant {
@@ -160,7 +160,12 @@ export default function ProductsPage() {
 	const [showCategoryManager, setShowCategoryManager] = useState(false);
 	const [showVariantsDialog, setShowVariantsDialog] = useState(false);
 	const [showBulkActions, setShowBulkActions] = useState(false);
-	const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Load data
+	const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+	
+	// Import/Export functionality
+	const { exportData, handleFileUpload } = useImportExport();
+	
+	// Load data
 	useEffect(() => {
 		loadData();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -326,14 +331,36 @@ export default function ProductsPage() {
 						<Package className="h-4 w-4 mr-2" />
 						Categories
 					</Button>
-					<Button variant="outline">
-						<Upload className="h-4 w-4 mr-2" />
-						Import
-					</Button>
-					<Button variant="outline">
-						<Download className="h-4 w-4 mr-2" />
-						Export
-					</Button>
+					<ImportExportButtons
+						onExport={() => exportData(
+							products.map(product => ({
+								id: product.id,
+								name: product.name,
+								sku: product.sku,
+								description: product.description || '',
+								category: product.category?.name || '',
+								brand: product.brand?.name || '',
+								barcode: product.barcode || '',
+								cost_price: product.costPrice || 0,
+								selling_price: product.sellingPrice || 0,
+								wholesale_price: product.wholesalePrice || 0,
+								min_stock_level: product.minStockLevel,
+								max_stock_level: product.maxStockLevel || 0,
+								reorder_point: product.reorderPoint || 0,
+								status: product.status,
+								is_trackable: product.isTrackable,
+								is_serialized: product.isSerialized,
+								total_stock: product.totalStock,
+								available_stock: product.availableStock,
+								reserved_stock: product.reservedStock,
+								created_at: product.createdAt,
+								updated_at: product.updatedAt
+							})),
+							{ filename: 'products' }
+						)}
+						onImport={handleFileUpload}
+						variant="outline"
+					/>
 					<Button
 						onClick={() => {
 							setSelectedProduct(null);

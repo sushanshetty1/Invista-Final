@@ -22,7 +22,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const pathname = usePathname();
-  const isDashboardSection = /^\/(dashboard|inventory|orders|purchase-orders|audits|reports)(\/|$)/.test(pathname);
+  const isDashboardSection = /^\/(dashboard|inventory|orders|purchase-orders|audits|reports|suppliers)(\/|$)/.test(pathname);
   const isProtectedProfile = /^\/(user-profile|company-profile)(\/|$)/.test(pathname);
   const useShell = isDashboardSection || isProtectedProfile;
 

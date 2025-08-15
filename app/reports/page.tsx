@@ -31,6 +31,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InventoryInsights } from "@/components/inventory/InventoryInsights";
 import { ExportManager } from "@/components/analytics/ExportManager";
+import { useImportExport } from "@/hooks/use-import-export";
 
 const reportCategories = [
 	{
@@ -126,6 +127,9 @@ export default function ReportsPage() {
 	const { user, loading } = useAuth();
 	const router = useRouter();
 	const [activeTab, setActiveTab] = useState("overview");
+	
+	// Import/Export functionality for reports data
+	const { exportData } = useImportExport();
 
 	useEffect(() => {
 		if (!loading && !user) {
@@ -156,7 +160,36 @@ export default function ReportsPage() {
 						</p>
 					</div>
 					<div className="flex items-center gap-2">
-						<Button variant="outline" size="sm">
+						<Button 
+							variant="outline" 
+							size="sm"
+							onClick={() => exportData([
+								{
+									report_type: 'Inventory Analytics',
+									total_reports: 15,
+									last_generated: new Date().toISOString(),
+									status: 'Available'
+								},
+								{
+									report_type: 'Financial Analytics',
+									total_reports: 8,
+									last_generated: new Date().toISOString(),
+									status: 'Available'
+								},
+								{
+									report_type: 'Sales Performance',
+									total_reports: 12,
+									last_generated: new Date().toISOString(),
+									status: 'Available'
+								},
+								{
+									report_type: 'Purchase Analytics',
+									total_reports: 6,
+									last_generated: new Date().toISOString(),
+									status: 'Available'
+								}
+							], { filename: 'reports-summary' })}
+						>
 							<Download className="w-4 h-4 mr-2" />
 							Export All
 						</Button>

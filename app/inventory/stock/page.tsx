@@ -6,7 +6,6 @@ import {
 	Plus,
 	Search,
 	Filter,
-	Download,
 	TrendingUp,
 	TrendingDown,
 	AlertTriangle,
@@ -45,6 +44,8 @@ import { StockAdjustmentDialog } from "@/components/inventory/StockAdjustmentDia
 import { LowStockAlerts } from "@/components/inventory/LowStockAlerts";
 import { StockHistoryChart } from "@/components/inventory/StockHistoryChart";
 import DashboardGuard from "@/components/DashboardGuard";
+import { ImportExportButtons } from "@/components/ui/import-export-buttons";
+import { useImportExport } from "@/hooks/use-import-export";
 
 interface StockAdjustment {
 	stockItemId: string;
@@ -179,7 +180,12 @@ export default function StockPage() {
 	const [showMovementDialog, setShowMovementDialog] = useState(false);
 	const [showTransferDialog, setShowTransferDialog] = useState(false);
 	const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
-	const [selectedStockItem] = useState<StockItem | null>(null); // Currently unused but needed for StockAdjustmentDialog  // Load data
+	const [selectedStockItem] = useState<StockItem | null>(null); // Currently unused but needed for StockAdjustmentDialog
+	
+	// Import/Export functionality
+	const { exportData, handleFileUpload } = useImportExport();
+	
+	// Load data
 	
 	const loadData = useCallback(async () => {
 		try {
@@ -469,10 +475,33 @@ export default function StockPage() {
 							<Package className="h-4 w-4 mr-2" />
 							Adjust Stock
 						</Button>
-						<Button variant="outline">
-							<Download className="h-4 w-4 mr-2" />
-							Export
-						</Button>
+						<ImportExportButtons
+							onExport={() => exportData(
+								stockItems.map(item => ({
+									id: item.id,
+									product_name: item.product.name,
+									variant_name: item.variant?.name || '',
+									sku: item.variant?.sku || item.product.sku,
+									warehouse: item.warehouse.name,
+									quantity: item.quantity,
+									available_quantity: item.availableQuantity,
+									reserved_quantity: item.reservedQuantity,
+									min_stock_level: item.product.minStockLevel,
+									reorder_point: item.product.reorderPoint || 0,
+									average_cost: item.averageCost || 0,
+									last_cost: item.lastCost || 0,
+									status: item.status,
+									qc_status: item.qcStatus,
+									location_code: item.locationCode || '',
+									lot_number: item.lotNumber || '',
+									batch_number: item.batchNumber || '',
+									expiry_date: item.expiryDate || ''
+								})),
+								{ filename: 'stock-inventory' }
+							)}
+							onImport={handleFileUpload}
+							variant="outline"
+						/>
 						<Button onClick={() => setShowMovementDialog(true)}>
 							<Plus className="h-4 w-4 mr-2" />
 							Add Movement

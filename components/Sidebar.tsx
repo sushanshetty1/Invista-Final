@@ -64,7 +64,6 @@ const navItems: InternalNavItem[] = [
       { title: "Overview", href: "/inventory" },
       { title: "Products", href: "/inventory/products" },
       { title: "Stock Management", href: "/inventory/stock" },
-      { title: "Suppliers", href: "/inventory/suppliers" },
       { title: "Categories", href: "/inventory/categories" },
       { title: "Low Stock Alerts", href: "/inventory/alerts" },
       { title: "Stock Adjustments", href: "/inventory/adjustments" },
