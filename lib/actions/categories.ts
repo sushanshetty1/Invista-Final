@@ -4,6 +4,7 @@
 import { z } from "zod";
 import { neonClient } from "@/lib/db";
 import { actionError, actionSuccess, type ActionResponse } from "@/lib/api-utils";
+import type { Prisma } from "../../prisma/generated/neon";
 
 // Validation schemas
 export const createCategorySchema = z.object({
@@ -44,7 +45,7 @@ export async function getCategories(params: {
 		const skip = (page - 1) * limit;
 
 		// Build where clause
-		const where: any = {};
+		const where: Prisma.CategoryWhereInput = {};
 		if (search) {
 			where.OR = [
 				{ name: { contains: search, mode: "insensitive" } },
@@ -56,7 +57,7 @@ export async function getCategories(params: {
 		}
 
 		// Build orderBy
-		const orderBy: any = {};
+		const orderBy: Prisma.CategoryOrderByWithRelationInput = {};
 		if (sortBy === "name") {
 			orderBy.name = sortOrder;
 		} else if (sortBy === "createdAt") {
@@ -183,11 +184,11 @@ export async function updateCategory(
 		}
 
 		// Build update data
-		const updateData: any = {};
+		const updateData: Prisma.CategoryUpdateInput = {};
 		Object.keys(validatedInput).forEach((key) => {
-			const value = (validatedInput as any)[key];
+			const value = (validatedInput as Record<string, unknown>)[key];
 			if (value !== undefined) {
-				updateData[key] = value;
+				(updateData as Record<string, unknown>)[key] = value;
 			}
 		});
 

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { supabaseClient } from "@/lib/db";
 import { INDUSTRY_CATEGORIES } from "@/lib/industry-categories";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
 	try {
 		console.log("🔍 Test Industry categories API called - bypassing auth");

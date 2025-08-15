@@ -36,7 +36,7 @@ export async function PUT(
 		}
 
 		// First check if the company user record exists
-		const { data: _existingUser, error: userCheckError } = await supabase
+		const { error: userCheckError } = await supabase
 			.from("company_users")
 			.select("id, companyId, userId")
 			.eq("companyId", companyId)
@@ -122,7 +122,7 @@ export async function PUT(
 
 // GET /api/companies/[companyId]/users/[userId]/primary-location - Get user's primary location
 export async function GET(
-	request: NextRequest,
+	_request: NextRequest,
 	{ params }: { params: Promise<{ companyId: string; userId: string }> },
 ) {
 	try {

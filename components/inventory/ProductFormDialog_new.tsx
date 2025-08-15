@@ -144,6 +144,7 @@ export default function ProductFormDialog({
 }: ProductFormDialogProps) {
 	// Ensure props are always arrays (unused but kept for future reference)
 	// const safeCategories = Array.isArray(categories) ? categories : [];
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const _safeBrands = Array.isArray(brands) ? brands : [];
 
 	const [loading, setLoading] = useState(false);

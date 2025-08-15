@@ -213,11 +213,14 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 	open,
 	onOpenChange,
 	product = null,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	categories: _categories = [],
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	brands: _brands = [],
 	onSave,
 }: ProductFormDialogProps) {
 	// Get authentication context
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { user: _user } = useAuth();
 
 	// Get industry-based categories
