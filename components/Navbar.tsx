@@ -64,7 +64,7 @@ const Navbar = () => {
 		if (user && refreshAccess) {
 			refreshAccess();
 		}
-	}, [user, pathname, refreshAccess]); // Handle scroll effect
+	}, [user, refreshAccess]); // Handle scroll effect
 	useEffect(() => {
 		const handleScroll = () => {
 			setIsScrolled(window.scrollY > 20);
@@ -288,6 +288,7 @@ const Navbar = () => {
 				{/* Glow effect on hover */}
 				<div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-all duration-300" />{" "}
 				<button
+					type="button"
 					onClick={() => onToggle(item.href)}
 					className={`relative flex items-center h-9 lg:h-10 px-3 lg:px-4 text-xs lg:text-sm rounded-lg transition-all duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary/20 border group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/10 font-medium ${
 						isOpen
