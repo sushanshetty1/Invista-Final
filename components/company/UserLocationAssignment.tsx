@@ -45,7 +45,6 @@ import {
 	MapPin,
 	Users,
 	Plus,
-	Edit,
 	Trash2,
 	UserCheck,
 	Settings,
@@ -72,7 +71,13 @@ interface CompanyUser {
 		id: string;
 		name: string;
 		type: string;
-		address: any;
+		address: {
+			street?: string;
+			city?: string;
+			state?: string;
+			zip?: string;
+			country?: string;
+		} | string;
 	};
 }
 
@@ -88,6 +93,34 @@ interface LocationAccess {
 		name: string;
 		type: string;
 	};
+}
+
+interface TeamMember {
+	id: string;
+	type: string;
+	role: string;
+	title?: string;
+	status: string;
+	email: string;
+	firstName?: string;
+	lastName?: string;
+	displayName?: string;
+	user?: {
+		id: string;
+		email: string;
+		firstName?: string;
+		lastName?: string;
+		displayName?: string;
+	};
+}
+
+interface CompanyLocation {
+	id: string;
+	name: string;
+	type: string;
+	description?: string;
+	code?: string;
+	isActive: boolean;
 }
 
 interface UserLocationAssignmentProps {
@@ -142,7 +175,7 @@ export default function UserLocationAssignment({
 	companyId,
 }: UserLocationAssignmentProps) {
 	const [users, setUsers] = useState<CompanyUser[]>([]);
-	const [locations, setLocations] = useState<any[]>([]);
+	const [locations, setLocations] = useState<CompanyLocation[]>([]);
 	const [selectedUser, setSelectedUser] = useState<CompanyUser | null>(null);
 	const [userLocationAccess, setUserLocationAccess] = useState<
 		LocationAccess[]
@@ -156,6 +189,7 @@ export default function UserLocationAssignment({
 		if (companyId) {
 			fetchData();
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [companyId]);
 	const fetchData = async () => {
 		try {
@@ -175,8 +209,8 @@ export default function UserLocationAssignment({
 			if (usersResponse.ok && usersResult.teamMembers) {
 				// Transform team members data to match CompanyUser interface
 				const transformedUsers = usersResult.teamMembers
-					.filter((member: any) => member.type === "user")
-					.map((member: any) => ({
+					.filter((member: TeamMember) => member.type === "user")
+					.map((member: TeamMember) => ({
 						id: member.id,
 						userId: member.user?.id || member.id,
 						role: member.role,
@@ -599,7 +633,6 @@ export default function UserLocationAssignment({
 							locations={locations}
 							userLocationAccess={userLocationAccess}
 							onGrantAccess={handleGrantLocationAccess}
-							companyId={companyId}
 						/>
 					</DialogContent>
 				</Dialog>
@@ -615,7 +648,7 @@ function PrimaryLocationForm({
 	onAssign,
 }: {
 	user: CompanyUser;
-	locations: any[];
+	locations: CompanyLocation[];
 	onAssign: (locationId: string) => void;
 }) {
 	const [selectedLocationId, setSelectedLocationId] = useState(
@@ -670,10 +703,9 @@ function LocationAccessManager({
 	locations,
 	userLocationAccess,
 	onGrantAccess,
-	companyId,
 }: {
 	user: CompanyUser;
-	locations: any[];
+	locations: CompanyLocation[];
 	userLocationAccess: LocationAccess[];
 	onGrantAccess: (
 		userId: string,
@@ -681,7 +713,6 @@ function LocationAccessManager({
 		accessLevel: string,
 		canManage: boolean,
 	) => void;
-	companyId: string;
 }) {
 	const [selectedLocationId, setSelectedLocationId] = useState("");
 	const [accessLevel, setAccessLevel] = useState("STANDARD");

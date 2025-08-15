@@ -69,13 +69,6 @@ export async function getBrands(input: BrandQueryInput): Promise<
 		const [brands, total] = await Promise.all([
 			neonClient.brand.findMany({
 				where,
-				include: {
-					_count: {
-						select: {
-							products: true,
-						},
-					},
-				},
 				orderBy,
 				skip,
 				take: limit,
@@ -103,13 +96,6 @@ export async function getBrand(id: string): Promise<ActionResponse<unknown>> {
 	try {
 		const brand = await neonClient.brand.findUnique({
 			where: { id },
-			include: {
-				_count: {
-					select: {
-						products: true,
-					},
-				},
-			},
 		});
 
 		if (!brand) {
@@ -132,7 +118,6 @@ export async function createBrand(
 		const {
 			name,
 			description,
-			logo,
 			website,
 			contactEmail,
 			contactPhone,
@@ -152,18 +137,10 @@ export async function createBrand(
 			data: {
 				name,
 				description,
-				logo,
 				website,
 				contactEmail,
 				contactPhone,
 				isActive,
-			},
-			include: {
-				_count: {
-					select: {
-						products: true,
-					},
-				},
 			},
 		});
 
@@ -247,13 +224,6 @@ export async function updateBrand(
 		const brand = await neonClient.brand.update({
 			where: { id },
 			data: updateData,
-			include: {
-				_count: {
-					select: {
-						products: true,
-					},
-				},
-			},
 		});
 
 		return actionSuccess(brand, "Brand updated successfully");
@@ -281,17 +251,18 @@ export async function deleteBrand(
 		// Check if brand exists
 		const existingBrand = await neonClient.brand.findUnique({
 			where: { id },
-			include: {
-				products: true,
-			},
 		});
 
 		if (!existingBrand) {
 			return actionError("Brand not found");
 		}
 
-		// Check if brand has products
-		if (existingBrand.products.length > 0) {
+		// Check if brand has products (simplified check)
+		const productCount = await neonClient.product.count({
+			where: { brandId: id },
+		});
+
+		if (productCount > 0) {
 			return actionError("Cannot delete brand with associated products");
 		}
 

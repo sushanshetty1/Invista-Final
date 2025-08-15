@@ -628,8 +628,8 @@ export async function getInventory(
 							primaryImage: true,
 							minStockLevel: true,
 							reorderPoint: true,
-							category: { select: { name: true } },
-							brand: { select: { name: true } },
+							categoryName: true,
+							brandName: true,
 						},
 					},
 					variant: {

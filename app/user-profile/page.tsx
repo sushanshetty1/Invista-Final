@@ -613,6 +613,7 @@ export default function UserProfilePage() {
 										{THEMES.map((theme) => (
 											<button
 												key={theme.value}
+												type="button"
 												onClick={() =>
 													setUserProfile((prev) =>
 														prev ? { ...prev, theme: theme.value } : null,
@@ -725,16 +726,35 @@ function UserLocationInfo({
 	const [companyMemberships, setCompanyMemberships] = useState<
 		CompanyMembership[]
 	>([]);
-	const [locationData, setLocationData] = useState<any>({});
+	const [locationData, setLocationData] = useState<{
+		[companyId: string]: {
+			primaryLocation?: {
+				id: string;
+				name: string;
+				type: string;
+				address?: string | {
+					street?: string;
+					city?: string;
+					state?: string;
+					country?: string;
+					zip?: string;
+				};
+				city?: string;
+				state?: string;
+				country?: string;
+			};
+			locationAccess?: Array<{
+				id: string;
+				name: string;
+				type: string;
+				permissions?: string[];
+			}>;
+			role?: string;
+		};
+	}>({});
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		if (userProfile?.id) {
-			fetchUserLocationData();
-		}
-	}, [userProfile?.id]);
-
-	const fetchUserLocationData = async () => {
+	const fetchUserLocationData = useCallback(async () => {
 		try {
 			// Get user's company memberships first
 			const { data: memberships, error: membershipError } = await supabase
@@ -781,7 +801,7 @@ function UserLocationInfo({
 						return {
 							companyId: membership.companyId,
 							companyName:
-								(membership as any).company?.name || "Unknown Company",
+								(membership as { company?: { name?: string } }).company?.name || "Unknown Company",
 							primaryLocation,
 							locationAccess,
 							role: membership.role,
@@ -795,7 +815,7 @@ function UserLocationInfo({
 						return {
 							companyId: membership.companyId,
 							companyName:
-								(membership as any).company?.name || "Unknown Company",
+								(membership as { company?: { name?: string } }).company?.name || "Unknown Company",
 							primaryLocation: null,
 							locationAccess: [],
 							role: membership.role,
@@ -807,15 +827,44 @@ function UserLocationInfo({
 
 			// Convert to object with companyId as key
 			const locationDataObj = locationResults.reduce((acc, result) => {
-				acc[result.companyId] = result;
+				acc[result.companyId] = {
+					primaryLocation: result.primaryLocation,
+					locationAccess: result.locationAccess,
+					role: result.role,
+				};
 				return acc;
-			}, {} as any);
+			}, {} as {
+				[companyId: string]: {
+					primaryLocation?: {
+						id: string;
+						name: string;
+						type: string;
+						address?: string | {
+							street?: string;
+							city?: string;
+							state?: string;
+							country?: string;
+							zip?: string;
+						};
+						city?: string;
+						state?: string;
+						country?: string;
+					};
+					locationAccess?: Array<{
+						id: string;
+						name: string;
+						type: string;
+						permissions?: string[];
+					}>;
+					role?: string;
+				};
+			});
 
 			setLocationData(locationDataObj);
 			setCompanyMemberships(
 				memberships?.map((m) => ({
 					id: m.id,
-					companyName: (m as any).company?.name || "Unknown Company",
+					companyName: (m as { company?: { name?: string } }).company?.name || "Unknown Company",
 					role: m.role,
 					status: "ACTIVE" as const,
 					joinedAt: new Date().toISOString(), // This should come from the actual data
@@ -826,7 +875,13 @@ function UserLocationInfo({
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [userProfile?.id]);
+
+	useEffect(() => {
+		if (userProfile?.id) {
+			fetchUserLocationData();
+		}
+	}, [userProfile?.id, fetchUserLocationData]);
 
 	if (loading) {
 		return (
@@ -971,15 +1026,27 @@ function UserLocationInfo({
 								{companyLocationData.locationAccess &&
 								companyLocationData.locationAccess.length > 0 ? (
 									<div className="space-y-3">
-										{companyLocationData.locationAccess.map((access: any) => (
+										{companyLocationData.locationAccess.map((access: {
+											id: string;
+											name: string;
+											type: string;
+											permissions?: string[];
+											location?: {
+												name: string;
+												type: string;
+											};
+											accessLevel?: string;
+											canManage?: boolean;
+											endDate?: string;
+										}) => (
 											<div key={access.id} className="p-4 border rounded-lg">
 												<div className="flex items-start justify-between">
 													<div>
 														<h5 className="font-medium">
-															{access.location.name}
+															{access.location?.name}
 														</h5>
 														<p className="text-sm text-muted-foreground">
-															{access.location.type?.replace("_", " ")}
+															{access.location?.type?.replace("_", " ")}
 														</p>
 													</div>
 													<div className="flex flex-col items-end gap-2">

@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 		const filePath = `products/${fileName}`;
 
 		// Upload to Supabase storage
-		const { data, error } = await supabase.storage
+		const { error } = await supabase.storage
 			.from("prodctimg")
 			.upload(filePath, file, {
 				cacheControl: "3600",

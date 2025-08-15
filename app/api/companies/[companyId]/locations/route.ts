@@ -186,18 +186,20 @@ export async function POST(
 			success: true,
 			data: location,
 		});
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error("Error creating company location:", error);
 
 		// Handle specific database errors
-		if (error.code) {
-			switch (error.code) {
+		if (typeof error === 'object' && error !== null && 'code' in error) {
+			const dbError = error as { code: string; message?: string; meta?: { target?: string[] } };
+			const errorMessage = dbError.message || 'Unknown database error';
+			switch (dbError.code) {
 				case "23502": // NOT NULL violation
 					return NextResponse.json(
 						{
 							success: false,
 							error: "Missing required field",
-							details: error.message,
+							details: errorMessage,
 						},
 						{ status: 400 },
 					);
@@ -206,7 +208,7 @@ export async function POST(
 						{
 							success: false,
 							error: "Location code or name already exists",
-							details: error.message,
+							details: errorMessage,
 						},
 						{ status: 409 },
 					);
@@ -215,23 +217,24 @@ export async function POST(
 						{
 							success: false,
 							error: "Invalid company ID or reference",
-							details: error.message,
+							details: errorMessage,
 						},
 						{ status: 400 },
 					);
 				default:
 					return NextResponse.json(
-						{ success: false, error: "Database error", details: error.message },
+						{ success: false, error: "Database error", details: errorMessage },
 						{ status: 500 },
 					);
 			}
 		}
 
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 		return NextResponse.json(
 			{
 				success: false,
 				error: "Failed to create company location",
-				details: error.message,
+				details: errorMessage,
 			},
 			{ status: 500 },
 		);

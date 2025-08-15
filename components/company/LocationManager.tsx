@@ -47,8 +47,6 @@ import {
 	Users,
 	Package,
 	Plus,
-	Edit,
-	Trash2,
 	Warehouse,
 	Store,
 	Building,
@@ -60,25 +58,37 @@ interface CompanyLocation {
 	description?: string;
 	code?: string;
 	type: string;
-	address: any;
-	coordinates?: any;
+	address: {
+		street?: string;
+		city?: string;
+		state?: string;
+		zip?: string;
+		country?: string;
+	} | string;
+	coordinates?: {
+		lat: number;
+		lng: number;
+	};
 	timezone: string;
 	phone?: string;
 	email?: string;
 	managerName?: string;
 	managerUserId?: string;
-	businessHours?: any;
-	capacity?: any;
-	features?: any;
+	businessHours?: Record<string, unknown>;
+	capacity?: Record<string, unknown>;
+	features?: Record<string, unknown>;
 	storeFormat?: string;
-	salesChannels?: any;
+	salesChannels?: Record<string, unknown>;
 	allowsInventory: boolean;
 	allowsOrders: boolean;
 	allowsReturns: boolean;
 	allowsTransfers: boolean;
 	isPrimary: boolean;
 	isActive: boolean;
-	warehouse?: any;
+	warehouse?: {
+		code: string;
+		[key: string]: unknown;
+	};
 }
 
 interface LocationManagerProps {
@@ -109,13 +119,12 @@ const LOCATION_TYPES = [
 export default function LocationManager({ companyId }: LocationManagerProps) {
 	const [locations, setLocations] = useState<CompanyLocation[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [selectedLocation, setSelectedLocation] =
-		useState<CompanyLocation | null>(null);
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
 	useEffect(() => {
 		fetchLocations();
+		// Intentionally omitting fetchLocations from deps as it's stable
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [companyId]);
 
 	const fetchLocations = async () => {
@@ -145,7 +154,7 @@ export default function LocationManager({ companyId }: LocationManagerProps) {
 		return locationType?.label || type;
 	};
 
-	const handleCreateLocation = async (locationData: any) => {
+	const handleCreateLocation = async (locationData: Partial<CompanyLocation>) => {
 		try {
 			const response = await fetch(`/api/companies/${companyId}/locations`, {
 				method: "POST",
@@ -327,17 +336,6 @@ export default function LocationManager({ companyId }: LocationManagerProps) {
 
 								{/* Actions */}
 								<div className="flex space-x-2 pt-2">
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => {
-											setSelectedLocation(location);
-											setIsEditDialogOpen(true);
-										}}
-									>
-										<Edit className="h-4 w-4 mr-1" />
-										Edit
-									</Button>
 									<Button variant="outline" size="sm">
 										<Settings className="h-4 w-4 mr-1" />
 										Manage
@@ -376,32 +374,45 @@ function LocationForm({
 	onCancel,
 	initialData = null,
 }: {
-	onSubmit: (data: any) => void;
+	onSubmit: (data: Partial<CompanyLocation>) => void;
 	onCancel: () => void;
-	initialData?: any;
+	initialData?: Partial<CompanyLocation> | null;
 }) {
-	const [formData, setFormData] = useState({
-		name: "",
-		description: "",
-		code: "",
-		type: "WAREHOUSE",
-		address: {
-			street: "",
-			city: "",
-			state: "",
-			zip: "",
-			country: "",
-		},
-		timezone: "UTC",
-		phone: "",
-		email: "",
-		managerName: "",
-		allowsInventory: true,
-		allowsOrders: true,
-		allowsReturns: true,
-		allowsTransfers: true,
-		isPrimary: false,
-		...initialData,
+	const [formData, setFormData] = useState(() => {
+		const defaultData = {
+			name: "",
+			description: "",
+			code: "",
+			type: "WAREHOUSE",
+			address: {
+				street: "",
+				city: "",
+				state: "",
+				zip: "",
+				country: "",
+			},
+			timezone: "UTC",
+			phone: "",
+			email: "",
+			managerName: "",
+			allowsInventory: true,
+			allowsOrders: true,
+			allowsReturns: true,
+			allowsTransfers: true,
+			isPrimary: false,
+		};
+
+		if (initialData) {
+			return {
+				...defaultData,
+				...initialData,
+				address: typeof initialData.address === 'string' 
+					? { street: initialData.address, city: "", state: "", zip: "", country: "" }
+					: { ...defaultData.address, ...initialData.address }
+			};
+		}
+
+		return defaultData;
 	});
 
 	const handleSubmit = (e: React.FormEvent) => {

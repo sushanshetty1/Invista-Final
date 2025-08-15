@@ -94,7 +94,9 @@ export async function GET(request: NextRequest) {
 					investigationRate?: number;
 				}
 			>,
-		); // Calculate averages and determine severity
+		);
+		
+		// Calculate averages and determine severity
 		const rootCauses = Object.values(rootCauseStats)
 			.map((cause) => {
 				cause.averageAdjustment =
@@ -115,11 +117,15 @@ export async function GET(request: NextRequest) {
 					cause.severity = "MEDIUM";
 				} else {
 					cause.severity = "LOW";
-				} // Calculate investigation rate
+				}
+				
+				// Calculate investigation rate
 				cause.investigationRate =
 					cause.count > 0
 						? Math.round((cause.investigationsRequired / cause.count) * 100)
-						: 0; // Remove Sets (not JSON serializable) and return clean object
+						: 0;
+				
+				// Remove Sets (not JSON serializable) and return clean object
 				const {
 					affectedProducts: _affectedProducts,
 					affectedWarehouses: _affectedWarehouses,

@@ -78,11 +78,7 @@ export async function GET(request: NextRequest) {
 					select: {
 						costPrice: true,
 						categoryId: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
+						categoryName: true,
 					},
 				},
 			},
@@ -108,8 +104,8 @@ export async function GET(request: NextRequest) {
 			{};
 
 		orderItems.forEach((item) => {
-			if (item.order && item.product.category) {
-				const categoryName = item.product.category.name;
+			if (item.order && item.product.categoryName) {
+				const categoryName = item.product.categoryName;
 				if (!categoryData[categoryName]) {
 					categoryData[categoryName] = { revenue: 0, cogs: 0 };
 				}

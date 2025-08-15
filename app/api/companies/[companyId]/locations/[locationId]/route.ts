@@ -3,7 +3,7 @@ import { supabaseClient, neonClient } from "@/lib/db";
 
 // GET /api/companies/[companyId]/locations/[locationId] - Get specific location
 export async function GET(
-	request: NextRequest,
+	_request: NextRequest,
 	{ params }: { params: Promise<{ companyId: string; locationId: string }> },
 ) {
 	try {
@@ -22,34 +22,18 @@ export async function GET(
 			);
 		}
 
-		// Get warehouse data if applicable
+		// Find warehouse with this location
 		let warehouse = null;
-		if (
-			[
-				"WAREHOUSE",
-				"DISTRIBUTION_CENTER",
-				"RETAIL_STORE",
-				"FULFILLMENT_CENTER",
-			].includes(location.type)
-		) {
-			try {
-				warehouse = await neonClient.warehouse.findFirst({
-					where: {
-						companyId,
-						OR: [
-							{ name: location.name },
-							{
-								code: (location as any).code || `LOC-${location.id.slice(-8)}`,
-							},
-						],
-					},
-				});
-			} catch (error) {
-				console.warn("Could not fetch warehouse data:", error);
-			}
-		}
-
-		return NextResponse.json({
+		try {
+			warehouse = await neonClient.warehouse.findFirst({
+				where: {
+					companyId,
+					OR: [{ name: location.name }, { code: (location as { code?: string }).code }],
+				},
+			});
+		} catch (error) {
+			console.warn("Could not check warehouse association:", error);
+		}		return NextResponse.json({
 			success: true,
 			data: {
 				...location,
@@ -82,7 +66,7 @@ export async function PUT(
 				id: locationId,
 				companyId,
 			},
-			data: locationData as any, // Type assertion due to generated types not being up to date
+			data: locationData,
 		});
 
 		// Update warehouse data if it exists
@@ -99,7 +83,10 @@ export async function PUT(
 				await neonClient.warehouse.updateMany({
 					where: {
 						companyId,
-						OR: [{ name: location.name }, { code: (location as any).code }],
+						OR: [
+							{ name: location.name }, 
+							{ code: (location as { code?: string }).code }
+						],
 					},
 					data: warehouseConfig,
 				});
@@ -123,7 +110,7 @@ export async function PUT(
 
 // DELETE /api/companies/[companyId]/locations/[locationId] - Soft delete location
 export async function DELETE(
-	request: NextRequest,
+	_request: NextRequest,
 	{ params }: { params: Promise<{ companyId: string; locationId: string }> },
 ) {
 	try {
@@ -172,7 +159,7 @@ export async function DELETE(
 			await neonClient.warehouse.updateMany({
 				where: {
 					companyId,
-					OR: [{ name: location.name }, { code: (location as any).code }],
+					OR: [{ name: location.name }, { code: (location as { code?: string }).code }],
 				},
 				data: {
 					isActive: false,

@@ -72,7 +72,13 @@ interface CompanyProfile {
 	industry?: string;
 	website?: string;
 	logo?: string;
-	address?: any;
+	address?: {
+		street?: string;
+		city?: string;
+		state?: string;
+		country?: string;
+		postalCode?: string;
+	};
 	email?: string;
 	phone?: string;
 	size?: string;

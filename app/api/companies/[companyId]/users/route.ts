@@ -61,6 +61,7 @@ export async function GET(
 		// Transform data for consistent structure
 		const teamMembers = [
 			// Active users
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			...(usersResult.data || []).map((companyUser: any) => ({
 				id: companyUser.id,
 				email: companyUser.user?.email || "",
@@ -77,7 +78,8 @@ export async function GET(
 				departmentId: companyUser.departmentId,
 				type: "user",
 			})),
-			// Pending invites
+			// Pending invites  
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			...(invitesResult.data || []).map((invite: any) => ({
 				id: invite.id,
 				email: invite.email,

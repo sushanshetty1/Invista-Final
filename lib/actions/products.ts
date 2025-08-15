@@ -1,7 +1,6 @@
 "use server";
 
 import { neonClient } from "@/lib/db";
-import { supabase } from "@/lib/supabaseClient";
 import {
 	createProductSchema,
 	updateProductSchema,
@@ -48,11 +47,11 @@ export async function createProduct(
 				.replace(/[^a-z0-9]+/g, "-")
 				.replace(/(^-|-$)/g, "");
 		}		// Prepare the data for Prisma creation
-		const { categoryId, brandId, categoryName, brandName, ...productData } =
+		const { categoryId, brandId, categoryName: _categoryName, brandName: _brandName, ...productData } =
 			validatedData;
 
 		// Create the base data object
-		const createData: any = {
+		const createData = {
 			name: productData.name,
 			description: productData.description,
 			sku: productData.sku,
@@ -235,8 +234,7 @@ export async function getProducts(
 		} = validatedQuery;
 
 		const skip = (page - 1) * limit; // Build where clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const where: any = {};
+		const where: Record<string, unknown> = {};
 
 		if (search) {
 			where.OR = [
@@ -250,8 +248,7 @@ export async function getProducts(
 		if (categoryId) where.categoryId = categoryId;
 		if (brandId) where.brandId = brandId;
 		if (status) where.status = status; // Build order clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const orderBy: any = {};
+		const orderBy: Record<string, unknown> = {};
 		if (sortBy === "name") {
 			orderBy.name = sortOrder;
 		} else if (sortBy === "sku") {

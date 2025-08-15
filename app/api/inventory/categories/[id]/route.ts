@@ -101,7 +101,7 @@ export async function PUT(
 		const validatedInput = updateCategorySchema.parse(updateInput);
 
 		// Update category using server action
-		const result = await updateCategory(validatedInput);
+		const result = await updateCategory(id, validatedInput);
 
 		if (!result.success) {
 			return errorResponse(

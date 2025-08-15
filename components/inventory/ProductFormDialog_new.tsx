@@ -134,17 +134,17 @@ interface ProductFormDialogProps {
 	brands: Brand[];
 }
 
-export function ProductFormDialog({
+export default function ProductFormDialog({
 	open,
 	onOpenChange,
 	product,
 	onSave,
-	categories,
+	categories: _categories,
 	brands,
 }: ProductFormDialogProps) {
-	// Ensure props are always arrays
-	const safeCategories = Array.isArray(categories) ? categories : [];
-	const safeBrands = Array.isArray(brands) ? brands : [];
+	// Ensure props are always arrays (unused but kept for future reference)
+	// const safeCategories = Array.isArray(categories) ? categories : [];
+	const _safeBrands = Array.isArray(brands) ? brands : [];
 
 	const [loading, setLoading] = useState(false);
 	const [selectedImages, setSelectedImages] = useState<string[]>([]);
@@ -477,7 +477,7 @@ export function ProductFormDialog({
 														</SelectTrigger>
 													</FormControl>
 													<SelectContent>
-														{safeCategories.map((category) => (
+														{(_categories || []).map((category: { id: string; name: string }) => (
 															<SelectItem key={category.id} value={category.id}>
 																{category.name}
 															</SelectItem>

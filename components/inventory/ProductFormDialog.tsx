@@ -213,12 +213,12 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 	open,
 	onOpenChange,
 	product = null,
-	categories = [],
-	brands = [],
+	categories: _categories = [],
+	brands: _brands = [],
 	onSave,
 }: ProductFormDialogProps) {
 	// Get authentication context
-	const { user } = useAuth();
+	const { user: _user } = useAuth();
 
 	// Get industry-based categories
 	const {
@@ -227,15 +227,15 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 		industry,
 	} = useIndustryCategories();
 
-	// Ensure arrays are always stable arrays
-	const safeCategories = useMemo(
-		() => (Array.isArray(categories) ? categories : []),
-		[categories],
-	);
-	const safeBrands = useMemo(
-		() => (Array.isArray(brands) ? brands : []),
-		[brands],
-	);
+	// Ensure arrays are always stable arrays (unused but kept for future reference)
+	// const safeCategories = useMemo(
+	//	() => (Array.isArray(categories) ? categories : []),
+	//	[categories],
+	// );
+	// const safeBrands = useMemo(
+	//	() => (Array.isArray(brands) ? brands : []),
+	//	[brands],
+	// );
 	// State
 	const [loading, setLoading] = useState(false);
 	const [currentTab, setCurrentTab] = useState("basic");
@@ -517,7 +517,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 					? `/api/inventory/products/${product.id}`
 					: "/api/inventory/products";
 				const method = product ? "PUT" : "POST"; // Clean up the data before sending - remove fields that are empty/invalid
-				const cleanedData: any = {
+				const cleanedData: Record<string, unknown> = {
 					name: data.name,
 					sku: data.sku,
 					status: data.status || "ACTIVE",
@@ -683,14 +683,14 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 	}, []);
 
 	const goToNextTab = useCallback(() => {
-		const currentIndex = TABS.indexOf(currentTab as any);
+		const currentIndex = TABS.indexOf(currentTab as typeof TABS[number]);
 		if (currentIndex < TABS.length - 1) {
 			setCurrentTab(TABS[currentIndex + 1]);
 		}
 	}, [currentTab]);
 
 	const goToPreviousTab = useCallback(() => {
-		const currentIndex = TABS.indexOf(currentTab as any);
+		const currentIndex = TABS.indexOf(currentTab as typeof TABS[number]);
 		if (currentIndex > 0) {
 			setCurrentTab(TABS[currentIndex - 1]);
 		}
@@ -1525,10 +1525,11 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 											(form.watch("images") || []).length > 0 && (
 												<div className="grid grid-cols-4 gap-4">
 													{(form.watch("images") || []).map((url, index) => (
-														<div key={index} className="relative group">
+														<div key={url} className="relative group">
+															{/* eslint-disable-next-line @next/next/no-img-element */}
 															<img
 																src={url}
-																alt={`Product image ${index + 1}`}
+																alt={`Product ${index + 1}`}
 																className="w-full h-24 object-cover rounded-lg border"
 															/>
 															<div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">

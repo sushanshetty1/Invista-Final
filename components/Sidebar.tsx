@@ -1,25 +1,26 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import DashboardGuard from "@/components/DashboardGuard";
+import { usePathname } from "next/navigation";
 import {
+  BarChart3,
+  ChevronDown,
   ChevronLeft,
-  ChevronRight,
+  FileText,
   LayoutDashboard,
+  LogOut,
   Package,
   ShoppingCart,
   Truck,
-  Users,
-  FileText,
-  BarChart3,
+  User as UserIcon,
 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import DashboardGuard from "@/components/DashboardGuard";
 import { useAuth } from "@/contexts/AuthContext";
-import { User as UserIcon, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface NavItem {
   title: string;
@@ -28,7 +29,9 @@ interface NavItem {
   items?: { title: string; href: string }[];
 }
 
-interface InternalNavItem extends NavItem { id: string; }
+interface InternalNavItem extends NavItem {
+  id: string;
+}
 
 interface SidebarProps {
   className?: string;
@@ -37,6 +40,67 @@ interface SidebarProps {
   collapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
 }
+
+const navItems: InternalNavItem[] = [
+  {
+    id: "dashboard",
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    items: [{ title: "Overview", href: "/dashboard" }],
+  },
+  {
+    id: "inventory",
+    title: "Inventory",
+    href: "/inventory",
+    icon: Package,
+    items: [
+      { title: "Overview", href: "/inventory" },
+      { title: "Products", href: "/inventory/products" },
+      { title: "Stock", href: "/inventory/stock" },
+      { title: "Categories", href: "/inventory/categories" },
+      { title: "Suppliers", href: "/inventory/suppliers" },
+    ],
+  },
+  {
+    id: "orders",
+    title: "Orders",
+    href: "/orders",
+    icon: ShoppingCart,
+    items: [
+      { title: "All Orders", href: "/orders" },
+      { title: "Create Order", href: "/orders/create" },
+    ],
+  },
+  {
+    id: "purchase-orders",
+    title: "Purchase Orders",
+    href: "/purchase-orders",
+    icon: Truck,
+    items: [
+      { title: "All POs", href: "/purchase-orders" },
+      { title: "Create PO", href: "/purchase-orders/create" },
+    ],
+  },
+  {
+    id: "audits",
+    title: "Audits",
+    href: "/audits",
+    icon: FileText,
+    items: [{ title: "Overview", href: "/audits" }],
+  },
+  {
+    id: "reports",
+    title: "Reports",
+    href: "/reports",
+    icon: BarChart3,
+    items: [
+      { title: "Overview", href: "/reports" },
+      { title: "Financial", href: "/reports/financial" },
+      { title: "Inventory", href: "/reports/inventory" },
+    ],
+  },
+];
 
 function SidebarInner({
   className,
@@ -56,42 +120,32 @@ function SidebarInner({
   }, [collapsedProp, collapsed]);
 
   const toggleCollapse = useCallback(() => {
-    setCollapsed((c) => {
-      const next = !c;
-      onCollapsedChange?.(next);
-      return next;
-    });
-  }, [onCollapsedChange]);
+    const newCollapsed = !collapsed;
+    setCollapsed(newCollapsed);
+    onCollapsedChange?.(newCollapsed);
+  }, [collapsed, onCollapsedChange]);
 
   // Set a CSS variable on body for layout shift (used by layout container for margin-left)
   useEffect(() => {
-    const width = collapsed ? 60 : 240; // match class widths
-    document.documentElement.style.setProperty("--sidebar-width", width + "px");
+    const width = collapsed ? 60 : 240; // Back to original width
+    document.documentElement.style.setProperty("--sidebar-width", `${width}px`);
   }, [collapsed]);
-
-  const navItems: InternalNavItem[] = [
-    { id: "dashboard", title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, items: [{ title: "Overview", href: "/dashboard" }] },
-    { id: "inventory", title: "Inventory", href: "/inventory", icon: Package, items: [ { title: "Overview", href: "/inventory" }, { title: "Products", href: "/inventory/products" }, { title: "Stock", href: "/inventory/stock" }, { title: "Categories", href: "/inventory/categories" }, { title: "Suppliers", href: "/inventory/suppliers" } ] },
-    { id: "orders", title: "Orders", href: "/orders", icon: ShoppingCart, items: [ { title: "All Orders", href: "/orders" }, { title: "Create Order", href: "/orders/create" } ] },
-    { id: "purchase-orders", title: "Purchase Orders", href: "/purchase-orders", icon: Truck, items: [ { title: "All POs", href: "/purchase-orders" }, { title: "Create PO", href: "/purchase-orders/create" } ] },
-    { id: "audits", title: "Audits", href: "/audits", icon: FileText, items: [ { title: "Overview", href: "/audits" } ] },
-    { id: "reports", title: "Reports", href: "/reports", icon: BarChart3, items: [ { title: "Overview", href: "/reports" }, { title: "Financial", href: "/reports/financial" }, { title: "Inventory", href: "/reports/inventory" } ] },
-  ];
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // auto-open active group
-    navItems.forEach(item => {
-      const active = pathname === item.href || pathname.startsWith(item.href + "/");
+    navItems.forEach((item) => {
+      const active =
+        pathname === item.href || pathname.startsWith(`${item.href}/`);
       if (active) {
-        setOpenGroups(prev => ({ ...prev, [item.id]: true }));
+        setOpenGroups((prev) => ({ ...prev, [item.id]: true }));
       }
     });
   }, [pathname]);
 
   const toggleGroup = (id: string) => {
-    setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }));
+    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const { user, logout } = useAuth();
@@ -117,107 +171,183 @@ function SidebarInner({
           className
         )}
       >
-        <div className="flex h-[60px] items-center border-b px-3">
-          <Button
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 ml-auto"
-            onClick={toggleCollapse}
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+        {/* Header with logo and collapse button */}
+        <div className="flex h-[60px] items-center justify-between border-b px-3">
+          {!collapsed ? (
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-sm">
+                In
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-foreground text-sm leading-tight">
+                  Invista
+                </span>
+                <span className="text-xs text-muted-foreground leading-tight">
+                  Management
+                </span>
+              </div>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shadow-sm mx-auto hover:bg-primary/90"
+              onClick={toggleCollapse}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleCollapse();
+                }
+              }}
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+            >
+              In
+            </Button>
+          )}
+
+          {!collapsed && (
+            <Button
+              aria-label="Collapse sidebar"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={toggleCollapse}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         <ScrollArea className="flex-1 pt-3">
           <nav className="space-y-1 px-2" aria-label="Main navigation">
             {navItems.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              const active =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
               const groupOpen = openGroups[item.id];
+              const hasSubItems = item.items && item.items.length > 0;
+
               return (
                 <div key={item.id} className="group/navigation">
-                  <button
-                    type="button"
-                    onClick={() => (collapsed ? (window.location.href = item.href) : toggleGroup(item.id))}
-                    className={cn(
-                      "w-full flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                      active
-                        ? "bg-accent/20 text-foreground"
-                        : "text-muted-foreground hover:bg-accent/10 hover:text-foreground",
-                      collapsed && "justify-center"
-                    )}
-                    aria-expanded={!collapsed && !!groupOpen}
-                    aria-controls={`group-${item.id}`}
-                    aria-label={collapsed ? item.title : undefined}
-                    title={collapsed ? item.title : undefined}
-                  >
-                    <item.icon className="h-5 w-5 shrink-0" />
-                    {!collapsed && <span className="flex-1 text-left">{item.title}</span>}
-                    {!collapsed && item.items && item.items.length > 0 && (
-                      <span className={cn("transition-transform text-sm", groupOpen ? "rotate-90" : "")}>›</span>
-                    )}
-                  </button>
-                  {!collapsed && item.items && item.items.length > 0 && groupOpen && (
-                    <ul id={`group-${item.id}`} className="ml-4 mt-1 space-y-1" role="list">
-                      {item.items.map((sub) => {
+                  {collapsed ? (
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "w-full flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                        active
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      )}
+                      aria-label={item.title}
+                      title={item.title}
+                    >
+                      <item.icon className="h-5 w-5 shrink-0" />
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(item.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                        active
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      )}
+                      aria-expanded={!!groupOpen}
+                      aria-controls={`group-${item.id}`}
+                    >
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      <span className="flex-1 text-left">{item.title}</span>
+                      {hasSubItems && (
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 transition-transform",
+                            groupOpen ? "rotate-180" : ""
+                          )}
+                        />
+                      )}
+                    </button>
+                  )}
+
+                  {!collapsed && hasSubItems && groupOpen && (
+                    <div id={`group-${item.id}`} className="mt-1 space-y-1">
+                      {item.items?.map((sub) => {
                         const subActive = pathname === sub.href;
                         return (
-                          <li key={sub.href}>
-                            <Link
-                              href={sub.href}
-                              className={cn(
-                                "block rounded-md px-3 py-1.5 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                                subActive ? "bg-accent/15 text-foreground" : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-                              )}
-                              aria-label={collapsed ? sub.title : undefined}
-                              title={collapsed ? sub.title : undefined}
-                            >
-                              {sub.title}
-                            </Link>
-                          </li>
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            className={cn(
+                              "block rounded-md px-3 py-1.5 ml-4 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                              subActive
+                                ? "bg-accent/70 text-accent-foreground font-medium"
+                                : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
+                            )}
+                          >
+                            {sub.title}
+                          </Link>
                         );
                       })}
-                    </ul>
+                    </div>
                   )}
                 </div>
               );
             })}
           </nav>
         </ScrollArea>
+
         {/* User Profile / Account Section */}
-        <div className="border-t p-2">
-          <div className={cn("flex items-center gap-3 rounded-md px-2 py-2 transition-colors", collapsed ? "justify-center" : "")}> 
-            <Link
-              href={user ? "/user-profile" : "/auth/login"}
-              className={cn(
-                "group flex flex-1 items-center gap-3 rounded-md px-2 py-2 text-sm font-medium outline-none transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-ring",
-                collapsed && "justify-center px-0"
-              )}
-              aria-label={collapsed ? (user?.user_metadata?.full_name || user?.email || "Account") : "User profile"}
-              title={collapsed ? (user?.user_metadata?.full_name || user?.email || "Account") : undefined}
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/20 text-sm font-semibold">
-                {user?.email?.[0]?.toUpperCase() || <UserIcon className="h-4 w-4" />}
-              </div>
-              {!collapsed && (
-                <div className="flex min-w-0 flex-1 flex-col text-left">
-                  <span className="truncate text-sm font-medium">{user?.user_metadata?.full_name || user?.email || "Guest"}</span>
-                  <span className="truncate text-xs text-muted-foreground">{user ? "View profile" : "Sign in"}</span>
-                </div>
-              )}
-            </Link>
-            {!collapsed && user && (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Log out"
-                className="h-8 w-8 shrink-0"
-                onClick={() => logout()}
+        <div className="border-t p-3">
+          {collapsed ? (
+            <div className="flex justify-center">
+              <Link
+                href={user ? "/user-profile" : "/auth/login"}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                aria-label={
+                  user?.user_metadata?.full_name || user?.email || "Account"
+                }
+                title={
+                  user?.user_metadata?.full_name || user?.email || "Account"
+                }
               >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+                {user?.email?.[0]?.toUpperCase() || (
+                  <UserIcon className="h-4 w-4" />
+                )}
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-accent/30 transition-colors">
+              <Link
+                href={user ? "/user-profile" : "/auth/login"}
+                className="flex flex-1 items-center gap-3 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+                  {user?.email?.[0]?.toUpperCase() || (
+                    <UserIcon className="h-4 w-4" />
+                  )}
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col text-left">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {user?.user_metadata?.full_name || user?.email || "Guest"}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {user ? "View profile" : "Sign in"}
+                  </span>
+                </div>
+              </Link>
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Log out"
+                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => logout()}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </aside>
     </>

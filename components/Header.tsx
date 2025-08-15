@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Menu,
   Bell,
@@ -30,8 +29,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick, sidebarCollapsed }: HeaderProps) {
-  const router = useRouter();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {

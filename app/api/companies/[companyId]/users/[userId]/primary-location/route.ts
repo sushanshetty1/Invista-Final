@@ -36,7 +36,7 @@ export async function PUT(
 		}
 
 		// First check if the company user record exists
-		const { data: existingUser, error: userCheckError } = await supabase
+		const { data: _existingUser, error: userCheckError } = await supabase
 			.from("company_users")
 			.select("id, companyId, userId")
 			.eq("companyId", companyId)
