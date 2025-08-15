@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Building2,
   ChevronDown,
   ChevronLeft,
   FileText,
@@ -47,7 +48,12 @@ const navItems: InternalNavItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    items: [{ title: "Overview", href: "/dashboard" }],
+    items: [
+      { title: "Overview", href: "/dashboard" },
+      { title: "Analytics", href: "/dashboard/analytics" },
+      { title: "Notifications", href: "/dashboard/notifications" },
+      { title: "Settings", href: "/dashboard/settings" },
+    ],
   },
   {
     id: "inventory",
@@ -57,9 +63,12 @@ const navItems: InternalNavItem[] = [
     items: [
       { title: "Overview", href: "/inventory" },
       { title: "Products", href: "/inventory/products" },
-      { title: "Stock", href: "/inventory/stock" },
-      { title: "Categories", href: "/inventory/categories" },
+      { title: "Stock Management", href: "/inventory/stock" },
       { title: "Suppliers", href: "/inventory/suppliers" },
+      { title: "Categories", href: "/inventory/categories" },
+      { title: "Low Stock Alerts", href: "/inventory/alerts" },
+      { title: "Stock Adjustments", href: "/inventory/adjustments" },
+      { title: "Reports", href: "/inventory/reports" },
     ],
   },
   {
@@ -68,8 +77,12 @@ const navItems: InternalNavItem[] = [
     href: "/orders",
     icon: ShoppingCart,
     items: [
-      { title: "All Orders", href: "/orders" },
+      { title: "Customer Orders", href: "/orders" },
       { title: "Create Order", href: "/orders/create" },
+      { title: "Pending Orders", href: "/orders?status=PENDING" },
+      { title: "Processing", href: "/orders?status=PROCESSING" },
+      { title: "Shipped Orders", href: "/orders?status=SHIPPED" },
+      { title: "Order Analytics", href: "/orders/analytics" },
     ],
   },
   {
@@ -78,8 +91,12 @@ const navItems: InternalNavItem[] = [
     href: "/purchase-orders",
     icon: Truck,
     items: [
-      { title: "All POs", href: "/purchase-orders" },
+      { title: "All Purchase Orders", href: "/purchase-orders" },
       { title: "Create PO", href: "/purchase-orders/create" },
+      { title: "Pending Approval", href: "/purchase-orders?status=PENDING_APPROVAL" },
+      { title: "Awaiting Delivery", href: "/purchase-orders?status=APPROVED" },
+      { title: "Reorder Suggestions", href: "/purchase-orders?tab=reorder" },
+      { title: "Goods Receipt", href: "/purchase-orders/goods-receipt" },
     ],
   },
   {
@@ -87,7 +104,23 @@ const navItems: InternalNavItem[] = [
     title: "Audits",
     href: "/audits",
     icon: FileText,
-    items: [{ title: "Overview", href: "/audits" }],
+    items: [
+      { title: "Overview", href: "/audits" },
+      { title: "Cycle Counting", href: "/audits/cycle-counting" },
+      { title: "Compliance Reports", href: "/audits/compliance" },
+      { title: "Audit History", href: "/audits/history" },
+    ],
+  },
+  {
+    id: "suppliers",
+    title: "Suppliers",
+    href: "/suppliers",
+    icon: Building2,
+    items: [
+      { title: "All Suppliers", href: "/suppliers" },
+      { title: "Add Supplier", href: "/suppliers/add" },
+      { title: "Performance", href: "/suppliers/performance" },
+    ],
   },
   {
     id: "reports",
@@ -96,8 +129,10 @@ const navItems: InternalNavItem[] = [
     icon: BarChart3,
     items: [
       { title: "Overview", href: "/reports" },
-      { title: "Financial", href: "/reports/financial" },
-      { title: "Inventory", href: "/reports/inventory" },
+      { title: "Inventory Reports", href: "/reports/inventory" },
+      { title: "Sales Reports", href: "/reports/sales" },
+      { title: "Financial Reports", href: "/reports/financial" },
+      { title: "Custom Reports", href: "/reports/custom" },
     ],
   },
 ];

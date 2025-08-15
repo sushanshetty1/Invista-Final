@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
 	Plus,
@@ -180,12 +180,8 @@ export default function StockPage() {
 	const [showTransferDialog, setShowTransferDialog] = useState(false);
 	const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
 	const [selectedStockItem] = useState<StockItem | null>(null); // Currently unused but needed for StockAdjustmentDialog  // Load data
-	useEffect(() => {
-		loadData();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
-	const loadData = async () => {
+	
+	const loadData = useCallback(async () => {
 		try {
 			await Promise.all([
 				loadStockItems(),
@@ -196,7 +192,13 @@ export default function StockPage() {
 		} catch (error) {
 			console.error("Error loading data:", error);
 		}
-	};
+	// These functions are stable and don't change, safe to exclude from deps
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	useEffect(() => {
+		loadData();
+	}, [loadData]);
 
 	const loadStockItems = async () => {
 		// TODO: Implement API call to fetch stock items with product and warehouse data
@@ -603,7 +605,7 @@ export default function StockPage() {
 								{showFilters && (
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
 										<div>
-											<label className="text-sm font-medium mb-2 block">
+											<label htmlFor="warehouse-select" className="text-sm font-medium mb-2 block">
 												Warehouse
 											</label>
 											<Select
@@ -624,7 +626,7 @@ export default function StockPage() {
 											</Select>
 										</div>
 										<div>
-											<label className="text-sm font-medium mb-2 block">
+											<label htmlFor="status-select" className="text-sm font-medium mb-2 block">
 												Status
 											</label>
 											<Select
@@ -660,7 +662,6 @@ export default function StockPage() {
 							</CardHeader>
 							<CardContent className="overflow-x-auto">
 								<Table>
-									{" "}
 									<TableHeader>
 										<TableRow>
 											<TableHead>Product</TableHead>
