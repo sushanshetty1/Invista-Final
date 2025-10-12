@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { supabaseClient } from "@/lib/db";
-import { INDUSTRY_CATEGORIES } from "@/lib/industry-categories";
+import { getIndustryCategories } from "@/lib/industry-categories";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
@@ -60,8 +60,7 @@ export async function GET(_request: NextRequest) {
 		}
 
 		// Get categories for this industry
-		const categories =
-			INDUSTRY_CATEGORIES[industry as keyof typeof INDUSTRY_CATEGORIES] || [];
+		const categories = getIndustryCategories(industry);
 		console.log(
 			`📋 Found ${categories.length} categories for ${industry} industry`,
 		);

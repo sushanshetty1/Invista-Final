@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authenticate } from "@/lib/auth";
 import { supabaseClient } from "@/lib/db";
-import { INDUSTRY_CATEGORIES } from "@/lib/industry-categories";
+import { getIndustryCategories } from "@/lib/industry-categories";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -72,8 +72,7 @@ export async function GET(request: NextRequest) {
 		}
 
 		// Get categories for this industry
-		const categories =
-			INDUSTRY_CATEGORIES[industry as keyof typeof INDUSTRY_CATEGORIES] || [];
+		const categories = getIndustryCategories(industry);
 		console.log(
 			`📋 Found ${categories.length} categories for ${industry} industry`,
 		);
