@@ -67,6 +67,50 @@ const generateUniqueId = () => {
 	});
 };
 
+// Function to generate unique slug by checking existing ones in database
+const generateUniqueSlug = async (baseSlug: string): Promise<string> => {
+	let attempts = 0;
+	const maxAttempts = 10;
+	let slug = baseSlug;
+
+	while (attempts < maxAttempts) {
+		try {
+			// Get the current session token using Supabase
+			const { data: { session } } = await supabase.auth.getSession();
+
+			if (!session?.access_token) {
+				console.warn("No session token available, using generated slug");
+				return slug;
+			}
+
+			// Check if this slug already exists in the Product table
+			const response = await fetch(`/api/inventory/products?slug=${encodeURIComponent(slug)}&limit=1`, {
+				headers: {
+					Authorization: `Bearer ${session.access_token}`,
+				},
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				// If no products found with this slug, it's unique
+				if (!data.products || data.products.length === 0) {
+					return slug;
+				}
+			}
+		} catch (error) {
+			console.error("Error checking slug uniqueness:", error);
+			return slug; // Fallback to generated slug
+		}
+
+		// If slug exists, append a number
+		attempts++;
+		slug = `${baseSlug}-${attempts}`;
+	}
+
+	// Fallback: add timestamp if we can't verify uniqueness
+	return `${baseSlug}-${Date.now()}`;
+};
+
 // Function to generate unique categoryId by checking existing ones in database
 const generateUniqueCategoryId = async (): Promise<string> => {
 	let attempts = 0;
@@ -246,6 +290,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 	const [tagInput, setTagInput] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const uploadAbortControllerRef = useRef<AbortController | null>(null);
 	// Stable default values - never changes
 	const defaultValues = useMemo(
 		() => ({
@@ -294,17 +339,29 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 	// Image upload to API endpoint
 	const uploadImage = useCallback(
 		async (file: File): Promise<string | null> => {
+			// Cancel any existing upload
+			if (uploadAbortControllerRef.current) {
+				uploadAbortControllerRef.current.abort();
+			}
+
+			// Create new abort controller for this upload
+			uploadAbortControllerRef.current = new AbortController();
+			const signal = uploadAbortControllerRef.current.signal;
+
 			let timeoutId: NodeJS.Timeout | null = null;
 
 			try {
 				setImageUploading(true);
+				setError(null); // Clear any previous errors
 				console.log("Starting image upload:", file.name, file.size);
 
 				// Safety timeout to reset loading state after 30 seconds
 				timeoutId = setTimeout(() => {
-					console.error("Image upload timeout");
-					setImageUploading(false);
-					setError("Image upload timed out. Please try again.");
+					if (!signal.aborted) {
+						console.error("Image upload timeout");
+						setImageUploading(false);
+						setError("Image upload timed out. Please try again.");
+					}
 				}, 30000);
 
 				// Validate file size (10MB limit)
@@ -326,7 +383,9 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 						"Invalid file type. Please choose a JPG, PNG, or GIF image.",
 					);
 					return null;
-				} // Create form data
+				}
+
+				// Create form data
 				const formData = new FormData();
 				formData.append("file", file);
 
@@ -347,6 +406,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 						Authorization: `Bearer ${session.access_token}`,
 					},
 					body: formData,
+					signal, // Add abort signal
 				});
 
 				if (!response.ok) {
@@ -359,12 +419,22 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 				console.log("Upload successful:", data.url);
 				return data.url;
 			} catch (error) {
+				if (signal.aborted) {
+					console.log("Upload was cancelled");
+					return null;
+				}
 				console.error("Error uploading image:", error);
 				setError("Network error during image upload. Please try again.");
 				return null;
 			} finally {
 				if (timeoutId) clearTimeout(timeoutId);
-				setImageUploading(false);
+				if (!signal.aborted) {
+					setImageUploading(false);
+				}
+				// Clear the abort controller if this upload completed
+				if (uploadAbortControllerRef.current?.signal === signal) {
+					uploadAbortControllerRef.current = null;
+				}
 			}
 		},
 		[],
@@ -462,6 +532,17 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 	// Reset form when product changes or dialog opens
 	useEffect(() => {
 		if (open) {
+			// Cancel any ongoing uploads when opening dialog
+			if (uploadAbortControllerRef.current) {
+				uploadAbortControllerRef.current.abort();
+				uploadAbortControllerRef.current = null;
+			}
+
+			// Reset all states
+			setImageUploading(false);
+			setError(null);
+			setTagInput("");
+
 			if (product) {
 				// Editing existing product
 				form.reset({
@@ -507,8 +588,25 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 				form.reset(defaultValues);
 			}
 			setCurrentTab("basic");
+		} else {
+			// Dialog is closing - cancel any ongoing uploads
+			if (uploadAbortControllerRef.current) {
+				uploadAbortControllerRef.current.abort();
+				uploadAbortControllerRef.current = null;
+			}
+			setImageUploading(false);
 		}
 	}, [product, open, form, defaultValues]);
+
+	// Cleanup on unmount
+	useEffect(() => {
+		return () => {
+			// Cancel any ongoing uploads when component unmounts
+			if (uploadAbortControllerRef.current) {
+				uploadAbortControllerRef.current.abort();
+			}
+		};
+	}, []);
 	// Stable submit handler
 	const handleSubmit = useCallback(
 		async (data: ProductFormData) => {
@@ -538,6 +636,19 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 				}
 				if (data.slug && data.slug.trim() !== "") {
 					cleanedData.slug = data.slug.trim();
+				} else if (data.name && data.name.trim() !== "") {
+					// Generate unique slug from product name if no slug provided
+					const baseSlug = data.name
+						.toLowerCase()
+						.trim()
+						.replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+						.replace(/\s+/g, '-') // Replace spaces with hyphens
+						.replace(/-+/g, '-') // Replace multiple hyphens with single
+						.replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+
+					if (baseSlug) {
+						cleanedData.slug = await generateUniqueSlug(baseSlug);
+					}
 				}				// Handle category - include categoryName and auto-generate categoryId if needed
 				if (data.categoryName && data.categoryName.trim() !== "") {
 					cleanedData.categoryName = data.categoryName.trim();
@@ -1677,9 +1788,9 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 										<ChevronRight className="w-4 h-4 ml-2" />
 									</Button>
 								) : (
-									<Button type="submit" disabled={loading}>
+									<Button type="button" onClick={() => form.handleSubmit(handleSubmit)()}>
 										{loading
-											? "Saving..."
+											? "Creating..."
 											: product
 												? "Update Product"
 												: "Create Product"}
