@@ -48,15 +48,99 @@ import { supabase } from "@/lib/supabaseClient";
 // Constants outside component to prevent recreation
 const TABS = ["basic", "pricing", "inventory", "media"] as const;
 
-const generateSKU = () => {
-	const prefix = "SKU";
-	const timestamp = Date.now().toString().slice(-6);
-	const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-	return `${prefix}-${timestamp}-${random}`;
+const generateSKU = async (): Promise<string> => {
+	let attempts = 0;
+	const maxAttempts = 10;
+
+	while (attempts < maxAttempts) {
+		const prefix = "SKU";
+		const timestamp = Date.now().toString();
+		const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+		const sku = `${prefix}-${timestamp}-${random}`;
+
+		try {
+			// Get the current session token using Supabase
+			const { data: { session } } = await supabase.auth.getSession();
+
+			if (!session?.access_token) {
+				console.warn("No session token available, using generated SKU");
+				return sku;
+			}
+
+			// Check if this SKU already exists
+			const response = await fetch(`/api/inventory/products?sku=${encodeURIComponent(sku)}&limit=1`, {
+				headers: {
+					Authorization: `Bearer ${session.access_token}`,
+				},
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				// If no products found with this SKU, it's unique
+				if (!data.products || data.products.length === 0) {
+					return sku;
+				}
+			}
+		} catch (error) {
+			console.error("Error checking SKU uniqueness:", error);
+			return sku; // Fallback to generated SKU
+		}
+
+		attempts++;
+		// Add small delay to ensure different timestamp
+		await new Promise(resolve => setTimeout(resolve, 10));
+	}
+
+	// Fallback: add random suffix if we can't verify uniqueness
+	return `SKU-${Date.now()}-${Math.random().toString(36).substring(2, 12).toUpperCase()}`;
 };
 
-const generateBarcode = () => {
-	return Math.floor(100000000000 + Math.random() * 900000000000).toString();
+const generateBarcode = async (): Promise<string> => {
+	let attempts = 0;
+	const maxAttempts = 10;
+
+	while (attempts < maxAttempts) {
+		// Generate EAN-13 compatible barcode (12 digits + 1 check digit)
+		// Using timestamp + random to ensure uniqueness
+		const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+		const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0'); // 6 random digits
+		const barcode = timestamp + random; // 12 digits total
+
+		try {
+			// Get the current session token using Supabase
+			const { data: { session } } = await supabase.auth.getSession();
+
+			if (!session?.access_token) {
+				console.warn("No session token available, using generated barcode");
+				return barcode;
+			}
+
+			// Check if this barcode already exists
+			const response = await fetch(`/api/inventory/products?barcode=${encodeURIComponent(barcode)}&limit=1`, {
+				headers: {
+					Authorization: `Bearer ${session.access_token}`,
+				},
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				// If no products found with this barcode, it's unique
+				if (!data.products || data.products.length === 0) {
+					return barcode;
+				}
+			}
+		} catch (error) {
+			console.error("Error checking barcode uniqueness:", error);
+			return barcode; // Fallback to generated barcode
+		}
+
+		attempts++;
+		// Add small delay to ensure different timestamp
+		await new Promise(resolve => setTimeout(resolve, 10));
+	}
+
+	// Fallback: use full timestamp if we can't verify uniqueness
+	return Date.now().toString().slice(0, 12);
 };
 
 const generateUniqueId = () => {
@@ -296,9 +380,9 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 		() => ({
 			name: "",
 			description: "",
-			sku: generateSKU(),
+			sku: "",
 			slug: "",
-			barcode: generateBarcode(),
+			barcode: "",
 			categoryId: "",
 			brandId: "",
 			categoryName: "",
@@ -584,8 +668,21 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 					shelfLife: product.shelfLife || 0,
 				});
 			} else {
-				// Creating new product
-				form.reset(defaultValues);
+				// Creating new product - generate unique SKU and barcode
+				const initializeNewProduct = async () => {
+					const [newSKU, newBarcode] = await Promise.all([
+						generateSKU(),
+						generateBarcode(),
+					]);
+
+					form.reset({
+						...defaultValues,
+						sku: newSKU,
+						barcode: newBarcode,
+					});
+				};
+
+				initializeNewProduct();
 			}
 			setCurrentTab("basic");
 		} else {
@@ -636,19 +733,6 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 				}
 				if (data.slug && data.slug.trim() !== "") {
 					cleanedData.slug = data.slug.trim();
-				} else if (data.name && data.name.trim() !== "") {
-					// Generate unique slug from product name if no slug provided
-					const baseSlug = data.name
-						.toLowerCase()
-						.trim()
-						.replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-						.replace(/\s+/g, '-') // Replace spaces with hyphens
-						.replace(/-+/g, '-') // Replace multiple hyphens with single
-						.replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-
-					if (baseSlug) {
-						cleanedData.slug = await generateUniqueSlug(baseSlug);
-					}
 				}				// Handle category - include categoryName and auto-generate categoryId if needed
 				if (data.categoryName && data.categoryName.trim() !== "") {
 					cleanedData.categoryName = data.categoryName.trim();
@@ -764,6 +848,12 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 				if (response.ok) {
 					console.log("Product saved successfully");
 					await onSave();
+
+					// Clear form after successful creation (not after editing)
+					if (!product) {
+						form.reset(defaultValues);
+					}
+
 					onOpenChange(false);
 				} else {
 					const errorText = await response.text();
@@ -853,7 +943,41 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 											<FormItem>
 												<FormLabel>Product Name *</FormLabel>
 												<FormControl>
-													<Input placeholder="Enter product name" {...field} />
+													<Input
+														placeholder="Enter product name"
+														{...field}
+														onChange={(e) => {
+															field.onChange(e);
+															// Auto-generate slug from product name + timestamp
+															if (e.target.value && e.target.value.trim() !== "") {
+																const baseSlug = e.target.value
+																	.toLowerCase()
+																	.trim()
+																	.replace(/[^a-z0-9\s-]/g, '')
+																	.replace(/\s+/g, '-')
+																	.replace(/-+/g, '-')
+																	.replace(/^-|-$/g, '');
+
+																if (baseSlug) {
+																	// Generate timestamp: year+month+day+hour+minute+seconds+millisecond
+																	const now = new Date();
+																	const year = now.getFullYear();
+																	const month = String(now.getMonth() + 1).padStart(2, '0');
+																	const day = String(now.getDate()).padStart(2, '0');
+																	const hour = String(now.getHours()).padStart(2, '0');
+																	const minute = String(now.getMinutes()).padStart(2, '0');
+																	const second = String(now.getSeconds()).padStart(2, '0');
+																	const millisecond = String(now.getMilliseconds()).padStart(3, '0');
+																	const timestamp = `${year}${month}${day}${hour}${minute}${second}${millisecond}`;
+
+																	const slug = `${baseSlug}-${timestamp}`;
+																	form.setValue("slug", slug);
+																}
+															} else {
+																form.setValue("slug", "");
+															}
+														}}
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -866,7 +990,12 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 											<FormItem>
 												<FormLabel>SKU *</FormLabel>
 												<FormControl>
-													<Input placeholder="Product SKU" {...field} />
+													<Input
+														placeholder="Product SKU"
+														{...field}
+														readOnly
+														className="bg-gray-50 font-mono"
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -1048,7 +1177,12 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 											<FormItem>
 												<FormLabel>Slug</FormLabel>
 												<FormControl>
-													<Input placeholder="Product URL slug" {...field} />
+													<Input
+														placeholder="Product URL slug"
+														{...field}
+														readOnly
+														className="bg-gray-50 font-mono"
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -1173,6 +1307,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 														onChange={(e) =>
 															field.onChange(parseFloat(e.target.value) || 0)
 														}
+														onWheel={(e) => e.currentTarget.blur()}
 														style={{
 															WebkitAppearance: "none",
 															MozAppearance: "textfield",
@@ -1204,6 +1339,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																		parseFloat(e.target.value) || 0,
 																	)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
@@ -1230,6 +1366,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																		parseFloat(e.target.value) || 0,
 																	)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
@@ -1256,6 +1393,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																		parseFloat(e.target.value) || 0,
 																	)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
@@ -1311,6 +1449,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 														onChange={(e) =>
 															field.onChange(parseFloat(e.target.value) || 0)
 														}
+														onWheel={(e) => e.currentTarget.blur()}
 														style={{
 															WebkitAppearance: "none",
 															MozAppearance: "textfield",
@@ -1337,6 +1476,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 														onChange={(e) =>
 															field.onChange(parseFloat(e.target.value) || 0)
 														}
+														onWheel={(e) => e.currentTarget.blur()}
 														style={{
 															WebkitAppearance: "none",
 															MozAppearance: "textfield",
@@ -1363,6 +1503,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 														onChange={(e) =>
 															field.onChange(parseFloat(e.target.value) || 0)
 														}
+														onWheel={(e) => e.currentTarget.blur()}
 														style={{
 															WebkitAppearance: "none",
 															MozAppearance: "textfield",
@@ -1397,6 +1538,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																onChange={(e) =>
 																	field.onChange(parseInt(e.target.value) || 0)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
@@ -1421,6 +1563,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																onChange={(e) =>
 																	field.onChange(parseInt(e.target.value) || 0)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
@@ -1445,6 +1588,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																onChange={(e) =>
 																	field.onChange(parseInt(e.target.value) || 0)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
@@ -1469,6 +1613,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																onChange={(e) =>
 																	field.onChange(parseInt(e.target.value) || 0)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
@@ -1503,6 +1648,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																onChange={(e) =>
 																	field.onChange(parseInt(e.target.value) || 0)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
@@ -1528,6 +1674,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 																onChange={(e) =>
 																	field.onChange(parseInt(e.target.value) || 0)
 																}
+																onWheel={(e) => e.currentTarget.blur()}
 																style={{
 																	WebkitAppearance: "none",
 																	MozAppearance: "textfield",
