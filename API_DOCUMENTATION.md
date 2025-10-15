@@ -9,7 +9,6 @@ The Invista API provides comprehensive endpoints for managing inventory, product
 - **Server actions** for optimistic updates
 - **Comprehensive error handling**
 - **Authentication and authorization**
-- **CORS support**
 
 ## Base URL
 
