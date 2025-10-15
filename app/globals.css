@@ -120,6 +120,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px; /* Account for navbar height + some extra padding */
+  }
   body {
     @apply bg-background text-foreground;
   }

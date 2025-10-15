@@ -105,7 +105,7 @@ const InvistaLanding = () => {
 					<div className="w-2 h-2 bg-emerald-400 rounded-full blur-[0.5px]" />
 				</div>{" "}
 				<div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[500px] sm:min-h-[600px]">
+					<div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start min-h-[500px] sm:min-h-[600px]">
 						<div className="space-y-6 lg:space-y-8 flex flex-col justify-center order-2 lg:order-1">
 							{/* Status Badge */}
 							<div className="inline-flex items-center bg-gradient-to-r from-emerald-50/80 to-blue-50/80 dark:from-primary/10 dark:to-chart-2/10 text-emerald-700 dark:text-primary px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium border border-emerald-200/50 dark:border-primary/20 backdrop-blur-sm w-fit">
@@ -263,49 +263,7 @@ const InvistaLanding = () => {
 									</div>
 								</div>
 							</div>{" "}
-							{/* Registration Options */}
-							<div className="bg-white/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/30 dark:border-border/30 shadow-lg">
-								<h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4 text-center">
-									Choose Your Registration Type
-								</h3>
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="p-4 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 dark:from-primary/10 dark:to-chart-3/10 rounded-xl border border-blue-200/30 dark:border-primary/20">
-										<div className="flex items-center space-x-3 mb-3">
-											<Building className="h-6 w-6 text-blue-600 dark:text-primary" />
-											<h4 className="font-semibold text-foreground">
-												Company Account
-											</h4>
-										</div>
-										<p className="text-sm text-muted-foreground mb-3">
-											Perfect for businesses starting fresh or switching from
-											another platform
-										</p>
-										<ul className="text-xs text-muted-foreground space-y-1">
-											<li>• Full administrative control</li>
-											<li>• Create company structure</li>
-											<li>• Invite team members</li>
-											<li>• Configure all settings</li>
-										</ul>
-									</div>
-									<div className="p-4 bg-gradient-to-br from-emerald-50/80 to-green-50/80 dark:from-chart-2/10 dark:to-chart-2/5 rounded-xl border border-emerald-200/30 dark:border-chart-2/20">
-										<div className="flex items-center space-x-3 mb-3">
-											<User className="h-6 w-6 text-emerald-600 dark:text-chart-2" />
-											<h4 className="font-semibold text-foreground">
-												Individual Account
-											</h4>
-										</div>
-										<p className="text-sm text-muted-foreground mb-3">
-											For joining an existing company or receiving an invitation
-										</p>
-										<ul className="text-xs text-muted-foreground space-y-1">
-											<li>• Join existing company</li>
-											<li>• Accept team invitations</li>
-											<li>• Role-based permissions</li>
-											<li>• Quick setup process</li>
-										</ul>
-									</div>
-								</div>
-							</div>
+
 							{/* CTA Buttons */}
 							<div className="flex flex-col gap-3">
 								<div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -334,11 +292,11 @@ const InvistaLanding = () => {
 							</div>
 						</div>{" "}
 						{/* Enhanced Right Side - Dashboard Preview */}
-						<div className="hidden lg:block relative group items-center justify-center order-1 lg:order-2">
+						<div className="hidden lg:flex relative group flex-col items-center justify-start order-1 lg:order-2">
 							{/* Main Dashboard Card */}
 							<div className="relative bg-white/90 dark:bg-card/90 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl border border-white/40 dark:border-border/40 backdrop-blur-sm group-hover:shadow-3xl transition-all duration-500 transform group-hover:-translate-y-2 w-full max-w-sm sm:max-w-md">
 								{/* Header */}
-								<div className="flex items-center justify-between mb-4 sm:mb-6">
+								<div className="flex items-center justify-between mb-2 sm:mb-3">
 									<div className="flex items-center space-x-2">
 										<div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-400 rounded-full" />
 										<div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-yellow-400 rounded-full" />
@@ -350,7 +308,7 @@ const InvistaLanding = () => {
 								</div>
 
 								{/* Dashboard Content */}
-								<div className="space-y-4 sm:space-y-6">
+								<div className="space-y-3 sm:space-y-4">
 									{" "}
 									{/* Status Cards */}
 									<div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -516,7 +474,7 @@ const InvistaLanding = () => {
 								</div>
 							</div>
 							{/* Floating Cards - Better Positioned */}
-							<div className="flex flex-row mt-2 justify-center   gap-28 ">
+							<div className="flex flex-row mt-2 justify-center ml-26   gap-28 ">
 								<div className="hidden sm:block  bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-2 sm:p-3 lg:p-4 rounded-xl shadow-lg transform rotate0 hover:rotate-2 transition-transform duration-300">
 									<div className="flex items-center space-x-1 sm:space-x-2">
 										<Truck className="h-3 w-3 sm:h-4 sm:w-4 lg:h-6 lg:w-6" />
