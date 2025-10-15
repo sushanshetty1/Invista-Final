@@ -613,10 +613,35 @@ export const INDUSTRY_CATEGORIES = {
 export type Industry = keyof typeof INDUSTRY_CATEGORIES;
 
 export const getIndustryCategories = (industry: string): string[] => {
+	if (!industry) {
+		console.warn("⚠️ No industry provided to getIndustryCategories");
+		return [];
+	}
+
+	// Normalize the industry name to lowercase with dashes
 	const normalizedIndustry = industry
 		.toLowerCase()
-		.replace(/\s+/g, "-") as Industry;
-	return [...(INDUSTRY_CATEGORIES[normalizedIndustry] || [])];
+		.trim()
+		.replace(/&/g, "")  // Remove &
+		.replace(/\s+/g, "-")  // Replace spaces with dashes
+		.replace(/-+/g, "-")  // Replace multiple dashes with single dash
+		.replace(/^-|-$/g, "") as Industry;  // Remove leading/trailing dashes
+
+	console.log("🔍 Original industry:", industry);
+	console.log("🔍 Normalized industry:", normalizedIndustry);
+	console.log("📋 Available industries:", Object.keys(INDUSTRY_CATEGORIES));
+
+	const categories = INDUSTRY_CATEGORIES[normalizedIndustry];
+
+	if (!categories) {
+		console.error(`❌ No categories found for industry: "${normalizedIndustry}"`);
+		console.error("Available industries:", Object.keys(INDUSTRY_CATEGORIES));
+		return [];
+	}
+
+	console.log(`✅ Found ${categories.length} categories for ${normalizedIndustry}`);
+
+	return [...categories];
 };
 
 export const getAllIndustries = (): Industry[] => {
