@@ -675,3 +675,61 @@ body {
     opacity: 0.5;
   }
 }
+
+/* Custom responsive utilities for mobile responsivity message */
+@media (max-width: 374px) {
+  .xs\:max-w-md {
+    max-width: 20rem;
+  }
+  .xs\:h-20 {
+    height: 5rem;
+  }
+  .xs\:w-20 {
+    width: 5rem;
+  }
+  .xs\:h-8 {
+    height: 2rem;
+  }
+  .xs\:w-8 {
+    width: 2rem;
+  }
+  .xs\:h-4 {
+    height: 1rem;
+  }
+  .xs\:w-4 {
+    width: 1rem;
+  }
+  .xs\:text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  .xs\:text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  .xs\:text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .xs\:space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+  .xs\:space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+  .xs\:pt-4 {
+    padding-top: 1rem;
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-height: 500px) and (orientation: landscape) {
+  .mobile-responsivity-container {
+    padding: 0.75rem;
+  }
+  
+  .mobile-responsivity-content {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}

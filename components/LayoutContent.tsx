@@ -8,6 +8,7 @@ import { ScrollDetector } from "@/components/scroll-detector";
 import { Analytics } from "@vercel/analytics/next";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import { MobileResponsivityMessage } from "@/components/MobileResponsivityMessage";
 
 const Sidebar = dynamic(() => import("@/components/Sidebar"), {
   ssr: false
@@ -49,6 +50,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
   if (!useShell) {
     return (
       <>
+        <MobileResponsivityMessage />
         <Navbar />
         {children}
       </>
@@ -57,6 +59,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
 
   return (
     <>
+      <MobileResponsivityMessage />
       <Sidebar
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
