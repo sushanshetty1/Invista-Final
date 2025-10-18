@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { dataPreloader } from "@/hooks/use-data-preloader";
+import { logLoginAttempt } from "@/lib/login-history";
 
 type AuthContextType = {
 	user: any;
@@ -216,6 +217,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 								);
 								setUser(session.user);
 
+								// Log successful login (for both email/password and OAuth)
+								if (event === "SIGNED_IN") {
+									await logLoginAttempt({
+										userId: session.user.id,
+										email: session.user.email || "",
+										successful: true,
+									});
+								}
+
 								// Handle Google sign-in user creation
 								const { data: existingUser } = await supabase
 									.from("users")
@@ -299,7 +309,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	};
 
 	const login = async (email: string, password: string) => {
-		return await supabase.auth.signInWithPassword({ email, password });
+		try {
+			const result = await supabase.auth.signInWithPassword({ email, password });
+
+			// Log login attempt
+			if (result.data?.user) {
+				// Successful login
+				await logLoginAttempt({
+					userId: result.data.user.id,
+					email: email,
+					successful: true,
+				});
+			} else if (result.error) {
+				// Failed login - try to get userId by email
+				await logLoginAttempt({
+					email: email,
+					successful: false,
+					failReason: result.error.message,
+				});
+			}
+
+			return result;
+		} catch (error) {
+			console.error("Login error:", error);
+			// Log failed attempt
+			await logLoginAttempt({
+				email: email,
+				successful: false,
+				failReason: error instanceof Error ? error.message : "Unknown error",
+			});
+			throw error;
+		}
 	};
 
 	const signInWithGoogle = async () => {

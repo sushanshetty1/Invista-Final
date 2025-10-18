@@ -11,6 +11,7 @@ This document provides a comprehensive overview of all tables in both Supabase a
 - **companies**: Company profiles and settings
 - **company_users**: User-company relationships and roles
 - **company_invites**: Invitation system for joining companies
+- **login_history**: Authentication audit trail
 
 ### Should Be Used (Recommended)
 - **company_locations**: Multi-location support (warehouses, stores, offices)
@@ -20,7 +21,6 @@ This document provides a comprehensive overview of all tables in both Supabase a
 - **user_notifications**: In-app notifications
 - **billing_history**: Subscription and payment tracking
 - **user_sessions**: Active session management
-- **login_history**: Authentication audit trail
 - **password_resets**: Password recovery
 - **user_roles / roles**: Global role assignment and definitions
 - **user_preferences**: User settings storage
@@ -164,11 +164,6 @@ Needs: companyId (you have this)
 Company-scoped audit trail
 Start logging NOW!
 user_sessions ✅ HIGH PRIORITY
-
-Needs: userId (you have this)
-Track active sessions
-Implement on login
-login_history ✅ HIGH PRIORITY
 
 Needs: userId (you have this)
 Log every login attempt
