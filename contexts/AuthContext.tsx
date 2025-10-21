@@ -392,9 +392,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	};
 
 	const resetPassword = async (email: string) => {
-		return await supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: `${location.origin}/auth/reset-password`,
-		});
+		try {
+			// Step 1: Send reset email via Supabase Auth
+			const result = await supabase.auth.resetPasswordForEmail(email, {
+				redirectTo: `${location.origin}/auth/reset-password`,
+			});
+
+			if (result.error) {
+				return result;
+			}
+
+			// Step 2: Log password reset request to password_resets table
+			try {
+				// Get user ID from email
+				const { data: userData } = await supabase
+					.from("users")
+					.select("id")
+					.eq("email", email)
+					.single();
+
+				if (userData?.id) {
+					// Generate a token placeholder (actual token is in the email link)
+					const tokenPlaceholder = `reset_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+					// Log to password_resets table
+					await supabase.from("password_resets").insert({
+						userId: userData.id,
+						token: tokenPlaceholder,
+						expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
+						isUsed: false,
+						ipAddress: typeof window !== "undefined" ? window.location.hostname : null,
+						userAgent: typeof window !== "undefined" ? window.navigator.userAgent : null,
+					});
+
+					console.log("✅ Password reset logged to database");
+				}
+			} catch (logError) {
+				console.error("⚠️ Failed to log password reset:", logError);
+				// Don't fail the reset request if logging fails
+			}
+
+			return result;
+		} catch (error) {
+			console.error("❌ Password reset error:", error);
+			throw error;
+		}
 	};
 
 	const deleteAccount = async () => {

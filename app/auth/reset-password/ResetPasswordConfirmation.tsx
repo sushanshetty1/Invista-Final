@@ -31,10 +31,32 @@ export default function ResetPasswordConfirmation() {
 			return;
 		}
 		try {
-			const { error } = await supabase.auth.updateUser({ password });
+			// Step 1: Update password via Supabase Auth
+			const { data, error } = await supabase.auth.updateUser({ password });
 			if (error) {
 				setError(error.message);
 			} else {
+				// Step 2: Mark the password reset as used in database
+				try {
+					if (data?.user?.id) {
+						await supabase
+							.from("password_resets")
+							.update({
+								isUsed: true,
+								usedAt: new Date().toISOString(),
+							})
+							.eq("userId", data.user.id)
+							.eq("isUsed", false)
+							.order("createdAt", { ascending: false })
+							.limit(1);
+
+						console.log("✅ Password reset marked as used in database");
+					}
+				} catch (logError) {
+					console.error("⚠️ Failed to mark password reset as used:", logError);
+					// Don't fail the password update if logging fails
+				}
+
 				setSuccess(true);
 				setTimeout(() => {
 					router.push("/auth/login");

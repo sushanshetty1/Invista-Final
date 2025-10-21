@@ -12,6 +12,7 @@ This document provides a comprehensive overview of all tables in both Supabase a
 - **company_users**: User-company relationships and roles
 - **company_invites**: Invitation system for joining companies
 - **login_history**: Authentication audit trail
+- **password_resets**: Password recovery
 
 ### Should Be Used (Recommended)
 - **company_locations**: Multi-location support (warehouses, stores, offices)
@@ -21,7 +22,6 @@ This document provides a comprehensive overview of all tables in both Supabase a
 - **user_notifications**: In-app notifications
 - **billing_history**: Subscription and payment tracking
 - **user_sessions**: Active session management
-- **password_resets**: Password recovery
 - **user_roles / roles**: Global role assignment and definitions
 - **user_preferences**: User settings storage
 - **user_invitations**: Platform user invites
@@ -35,10 +35,10 @@ This document provides a comprehensive overview of all tables in both Supabase a
 
 ### Currently Active Tables
 - **products**: Product catalog
+- **brands**: Product brands
 
 ### Critical Tables (Must Use with Products)
 - **categories**: Product classification (seed from industry categories)
-- **brands**: Product brands
 - **warehouses**: Storage locations (create during company setup)
 - **inventory_items**: Stock tracking per warehouse
 - **inventory_movements**: Audit trail of all inventory changes
