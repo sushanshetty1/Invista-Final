@@ -2,6 +2,7 @@ generator neonClient {
   provider        = "prisma-client-js"
   output          = "./generated/neon"
   previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource neonDb {

@@ -2,6 +2,7 @@ generator supabaseClient {
   provider        = "prisma-client-js"
   output          = "./generated/supabase"
   previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource supabaseDb {
