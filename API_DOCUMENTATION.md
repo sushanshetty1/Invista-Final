@@ -39,7 +39,6 @@ X-API-Key: <api_key>
 ## Response Format
 
 All API responses follow a consistent format:
-
 ### Success Response
 ```json
 {
