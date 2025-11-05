@@ -147,52 +147,8 @@ const generateUniqueId = () => {
 	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
 		const r = (Math.random() * 16) | 0;
 		const v = c == "x" ? r : (r & 0x3) | 0x8;
-		return v.toString(16);
-	});
-};
-
-// Function to generate unique slug by checking existing ones in database
-const generateUniqueSlug = async (baseSlug: string): Promise<string> => {
-	let attempts = 0;
-	const maxAttempts = 10;
-	let slug = baseSlug;
-
-	while (attempts < maxAttempts) {
-		try {
-			// Get the current session token using Supabase
-			const { data: { session } } = await supabase.auth.getSession();
-
-			if (!session?.access_token) {
-				console.warn("No session token available, using generated slug");
-				return slug;
-			}
-
-			// Check if this slug already exists in the Product table
-			const response = await fetch(`/api/inventory/products?slug=${encodeURIComponent(slug)}&limit=1`, {
-				headers: {
-					Authorization: `Bearer ${session.access_token}`,
-				},
-			});
-
-			if (response.ok) {
-				const data = await response.json();
-				// If no products found with this slug, it's unique
-				if (!data.products || data.products.length === 0) {
-					return slug;
-				}
-			}
-		} catch (error) {
-			console.error("Error checking slug uniqueness:", error);
-			return slug; // Fallback to generated slug
-		}
-
-		// If slug exists, append a number
-		attempts++;
-		slug = `${baseSlug}-${attempts}`;
-	}
-
-	// Fallback: add timestamp if we can't verify uniqueness
-	return `${baseSlug}-${Date.now()}`;
+	return v.toString(16);
+});
 };
 
 // Function to generate unique categoryId by checking existing ones in database
@@ -878,7 +834,7 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 				setLoading(false);
 			}
 		},
-		[product, onSave, onOpenChange],
+		[product, onSave, onOpenChange, defaultValues, form],
 	);
 
 	// Stable tab navigation

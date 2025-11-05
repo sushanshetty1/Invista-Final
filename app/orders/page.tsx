@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
 	Card,
@@ -34,20 +34,20 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import {
-	Search,
-	Filter,
-	Plus,
-	Eye,
-	Edit,
-	Truck,
-	Package,
-	Clock,
-	CheckCircle,
-	XCircle,
-	RefreshCw,
-	Users,
-	DollarSign,
 	BarChart3,
+	CheckCircle,
+	Clock,
+	DollarSign,
+	Edit,
+	Eye,
+	Filter,
+	Package,
+	Plus,
+	RefreshCw,
+	Search,
+	Truck,
+	Users,
+	XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -108,6 +108,7 @@ interface OrderStats {
 	totalOrders: number;
 	pendingOrders: number;
 	shippedOrders: number;
+	deliveredOrders: number;
 	totalRevenue: number;
 	averageOrderValue: number;
 }
@@ -115,10 +116,19 @@ interface OrderStats {
 export default function OrdersPage() {
 	const [orders, setOrders] = useState<Order[]>([]);
 	const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+	const [pagination, setPagination] = useState({
+		page: 1,
+		limit: 10,
+		totalCount: 0,
+		totalPages: 0,
+		hasNext: false,
+		hasPrev: false,
+	});
 	const [stats, setStats] = useState<OrderStats>({
 		totalOrders: 0,
 		pendingOrders: 0,
 		shippedOrders: 0,
+		deliveredOrders: 0,
 		totalRevenue: 0,
 		averageOrderValue: 0,
 	});
@@ -126,12 +136,11 @@ export default function OrdersPage() {
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [statusFilter, setStatusFilter] = useState<string>("all");
+	const [fulfillmentFilter, setFulfillmentFilter] = useState<string>("all");
+	const [paymentFilter, setPaymentFilter] = useState<string>("all");
 	const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
 	// Load orders and reorder suggestions
-	useEffect(() => {
-		loadOrders();
-	}, []);
-	const loadOrders = async () => {
+	const loadOrders = useCallback(async () => {
 		setLoading(true);
 		try {
 			// Fetch orders from API
@@ -152,11 +161,17 @@ export default function OrdersPage() {
 
 			setOrders(ordersData.orders || []);
 			setFilteredOrders(ordersData.orders || []);
+			
+			if (ordersData.pagination) {
+				setPagination(ordersData.pagination);
+			}
+			
 			setStats(
 				statsData.stats || {
 					totalOrders: 0,
 					pendingOrders: 0,
 					shippedOrders: 0,
+					deliveredOrders: 0,
 					totalRevenue: 0,
 					averageOrderValue: 0,
 				},
@@ -167,7 +182,11 @@ export default function OrdersPage() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		loadOrders();
+	}, [loadOrders]);
 
 	// Filter orders based on search and status
 	useEffect(() => {
@@ -196,8 +215,16 @@ export default function OrdersPage() {
 			filtered = filtered.filter((order) => order.status === statusFilter);
 		}
 
+		if (fulfillmentFilter !== "all") {
+			filtered = filtered.filter((order) => order.fulfillmentStatus === fulfillmentFilter);
+		}
+
+		if (paymentFilter !== "all") {
+			filtered = filtered.filter((order) => order.paymentStatus === paymentFilter);
+		}
+
 		setFilteredOrders(filtered);
-	}, [orders, searchTerm, statusFilter]);
+	}, [orders, searchTerm, statusFilter, fulfillmentFilter, paymentFilter]);
 	const getStatusBadge = (status: string) => {
 		type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 		const statusConfig: Record<
@@ -207,12 +234,25 @@ export default function OrdersPage() {
 				icon: React.ComponentType<{ className?: string }>;
 			}
 		> = {
+			// Order Status
 			PENDING: { variant: "secondary", icon: Clock },
 			CONFIRMED: { variant: "default", icon: CheckCircle },
 			PROCESSING: { variant: "default", icon: RefreshCw },
 			SHIPPED: { variant: "default", icon: Truck },
 			DELIVERED: { variant: "default", icon: Package },
 			CANCELLED: { variant: "destructive", icon: XCircle },
+			
+			// Fulfillment Status
+			UNFULFILLED: { variant: "secondary", icon: Clock },
+			PARTIAL: { variant: "outline", icon: Package },
+			FULFILLED: { variant: "default", icon: CheckCircle },
+			
+			// Payment Status
+			UNPAID: { variant: "secondary", icon: Clock },
+			PARTIAL_PAYMENT: { variant: "outline", icon: DollarSign },
+			PAID: { variant: "default", icon: CheckCircle },
+			REFUNDED: { variant: "outline", icon: RefreshCw },
+			FAILED: { variant: "destructive", icon: XCircle },
 		};
 
 		const config =
@@ -284,16 +324,24 @@ export default function OrdersPage() {
 								Manage customer orders, track fulfillment, and process shipments
 							</p>
 						</div>
-						<Button asChild>
-							<Link href="/orders/create">
-								<Plus className="mr-2 h-4 w-4" />
-								New Order
-							</Link>
-						</Button>
+						<div className="flex gap-2">
+							<Button variant="outline" asChild>
+								<Link href="/orders/fulfillment">
+									<Package className="mr-2 h-4 w-4" />
+									Fulfillment
+								</Link>
+							</Button>
+							<Button asChild>
+								<Link href="/orders/create">
+									<Plus className="mr-2 h-4 w-4" />
+									New Order
+								</Link>
+							</Button>
+						</div>
 					</div>
 
 					{/* Stats Cards */}
-					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
 						<Card>
 							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 								<CardTitle className="text-sm font-medium">
@@ -327,6 +375,18 @@ export default function OrdersPage() {
 							</CardHeader>
 							<CardContent>
 								<div className="text-2xl font-bold">{stats.shippedOrders}</div>
+							</CardContent>
+						</Card>
+
+						<Card>
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium">
+									Delivered Orders
+								</CardTitle>
+								<Package className="h-4 w-4 text-muted-foreground" />
+							</CardHeader>
+							<CardContent>
+								<div className="text-2xl font-bold">{stats.deliveredOrders}</div>
 							</CardContent>
 						</Card>
 
@@ -380,21 +440,56 @@ export default function OrdersPage() {
 										/>
 									</div>
 								</div>
-								<Select value={statusFilter} onValueChange={setStatusFilter}>
-									<SelectTrigger className="w-[180px]">
-										<Filter className="mr-2 h-4 w-4" />
-										<SelectValue placeholder="Filter by status" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="all">All Statuses</SelectItem>
-										<SelectItem value="PENDING">Pending</SelectItem>
-										<SelectItem value="CONFIRMED">Confirmed</SelectItem>
-										<SelectItem value="PROCESSING">Processing</SelectItem>
-										<SelectItem value="SHIPPED">Shipped</SelectItem>
-										<SelectItem value="DELIVERED">Delivered</SelectItem>
-										<SelectItem value="CANCELLED">Cancelled</SelectItem>
-									</SelectContent>
-								</Select>
+								<div className="flex space-x-2">
+									<Select value={statusFilter} onValueChange={setStatusFilter}>
+										<SelectTrigger className="w-[180px]">
+											<Filter className="mr-2 h-4 w-4" />
+											<SelectValue placeholder="Order Status" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="all">All Statuses</SelectItem>
+											<SelectItem value="PENDING">Pending</SelectItem>
+											<SelectItem value="CONFIRMED">Confirmed</SelectItem>
+											<SelectItem value="PROCESSING">Processing</SelectItem>
+											<SelectItem value="SHIPPED">Shipped</SelectItem>
+											<SelectItem value="DELIVERED">Delivered</SelectItem>
+											<SelectItem value="CANCELLED">Cancelled</SelectItem>
+											<SelectItem value="RETURNED">Returned</SelectItem>
+											<SelectItem value="COMPLETED">Completed</SelectItem>
+										</SelectContent>
+									</Select>
+
+									<Select value={fulfillmentFilter} onValueChange={setFulfillmentFilter}>
+										<SelectTrigger className="w-[180px]">
+											<SelectValue placeholder="Fulfillment" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="all">All Fulfillment</SelectItem>
+											<SelectItem value="PENDING">Pending</SelectItem>
+											<SelectItem value="PICKING">Picking</SelectItem>
+											<SelectItem value="PACKED">Packed</SelectItem>
+											<SelectItem value="SHIPPED">Shipped</SelectItem>
+											<SelectItem value="DELIVERED">Delivered</SelectItem>
+											<SelectItem value="CANCELLED">Cancelled</SelectItem>
+										</SelectContent>
+									</Select>
+
+									<Select value={paymentFilter} onValueChange={setPaymentFilter}>
+										<SelectTrigger className="w-[180px]">
+											<SelectValue placeholder="Payment" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="all">All Payments</SelectItem>
+											<SelectItem value="PENDING">Pending</SelectItem>
+											<SelectItem value="PROCESSING">Processing</SelectItem>
+											<SelectItem value="PAID">Paid</SelectItem>
+											<SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
+											<SelectItem value="REFUNDED">Refunded</SelectItem>
+											<SelectItem value="CANCELLED">Cancelled</SelectItem>
+											<SelectItem value="FAILED">Failed</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
 							</div>
 
 							{/* Orders Table */}
@@ -465,6 +560,15 @@ export default function OrdersPage() {
 										))}
 									</TableBody>
 								</Table>
+								
+								{/* Pagination Info */}
+								{pagination.totalCount > 0 && (
+									<div className="flex items-center justify-between px-2 py-4">
+										<div className="text-sm text-muted-foreground">
+											Showing {Math.min(pagination.limit, filteredOrders.length)} of {pagination.totalCount} orders
+										</div>
+									</div>
+								)}
 							</div>
 						</CardContent>
 					</Card>

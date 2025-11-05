@@ -21,7 +21,16 @@ export async function POST(request: NextRequest) {
         const location = await getLocationFromIP(ipAddress);
 
         // Create login history record
-        const loginHistoryData: any = {
+        const loginHistoryData: {
+            userId: string | null;
+            successful: boolean;
+            failReason: string | null;
+            ipAddress: string;
+            userAgent: string;
+            location: string | null;
+            deviceType: string;
+            attemptedAt: string;
+        } = {
             userId: userId || null,
             successful,
             failReason: failReason || null,
@@ -46,7 +55,16 @@ export async function POST(request: NextRequest) {
         // Only log if we have a userId
         if (loginHistoryData.userId) {
             const loginHistory = await supabaseClient.loginHistory.create({
-                data: loginHistoryData,
+                data: {
+                    userId: loginHistoryData.userId,
+                    successful: loginHistoryData.successful,
+                    failReason: loginHistoryData.failReason,
+                    ipAddress: loginHistoryData.ipAddress,
+                    userAgent: loginHistoryData.userAgent,
+                    location: loginHistoryData.location,
+                    deviceType: loginHistoryData.deviceType,
+                    attemptedAt: loginHistoryData.attemptedAt,
+                },
             });
 
             console.log("✅ Login history logged:", {

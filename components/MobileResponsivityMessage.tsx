@@ -73,7 +73,7 @@ export function MobileResponsivityMessage() {
                 ? 'text-xs sm:text-sm px-2' 
                 : 'text-xs xs:text-sm px-1'
             }`}>
-              We're currently optimizing the mobile experience for this application. 
+              We&apos;re currently optimizing the mobile experience for this application. 
               For the best experience, please use a desktop or tablet device.
             </p>
           </div>

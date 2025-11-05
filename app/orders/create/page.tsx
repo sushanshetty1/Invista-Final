@@ -81,20 +81,54 @@ export default function CreateOrderPage() {
 	const router = useRouter();
 	const [customers, setCustomers] = useState<Customer[]>([]);
 	const [products, setProducts] = useState<Product[]>([]);
+	const [warehouses, setWarehouses] = useState<
+		Array<{ id: string; name: string; code: string }>
+	>([]);
 	const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 	const [selectedCustomerId, setSelectedCustomerId] = useState("");
+	const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
 	const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 	const [requiredDate, setRequiredDate] = useState("");
+	const [promisedDate, setPromisedDate] = useState("");
+	const [orderType, setOrderType] = useState<"SALES" | "RETURN" | "EXCHANGE" | "SAMPLE" | "REPLACEMENT">("SALES");
+	const [orderChannel, setOrderChannel] = useState<"DIRECT" | "ONLINE" | "PHONE" | "EMAIL" | "RETAIL" | "WHOLESALE" | "B2B_PORTAL">("DIRECT");
+	const [orderPriority, setOrderPriority] = useState<"LOW" | "NORMAL" | "HIGH" | "URGENT">("NORMAL");
 	const [shippingMethod, setShippingMethod] = useState("");
 	const [shippingAddress, setShippingAddress] = useState("");
 	const [notes, setNotes] = useState("");
+	const [internalNotes, setInternalNotes] = useState("");
+	const [rushOrder, setRushOrder] = useState(false);
 	const [isProductSelectOpen, setIsProductSelectOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	useEffect(() => {
 		loadCustomers();
 		loadProducts();
+		loadWarehouses();
 	}, []);
+
+	const loadWarehouses = async () => {
+		try {
+			const response = await fetch("/api/warehouses");
+			const data = await response.json();
+
+			if (response.ok) {
+				setWarehouses(Array.isArray(data.warehouses) ? data.warehouses : []);
+				// Auto-select first warehouse if only one exists
+				if (data.warehouses?.length === 1) {
+					setSelectedWarehouseId(data.warehouses[0].id);
+				}
+			} else {
+				console.error("Failed to load warehouses:", data.error);
+				toast.error("Failed to load warehouses");
+				setWarehouses([]);
+			}
+		} catch (error) {
+			console.error("Error loading warehouses:", error);
+			toast.error("Failed to load warehouses");
+			setWarehouses([]);
+		}
+	};
 	const loadCustomers = async () => {
 		try {
 			const response = await fetch("/api/customers");
@@ -226,6 +260,11 @@ export default function CreateOrderPage() {
 			return;
 		}
 
+		if (!selectedWarehouseId) {
+			toast.error("Please select a warehouse");
+			return;
+		}
+
 		if (orderItems.length === 0) {
 			toast.error("Please add at least one item to the order");
 			return;
@@ -236,14 +275,17 @@ export default function CreateOrderPage() {
 		try {
 			const orderData = {
 				customerId: selectedCustomerId,
-				warehouseId: "default-warehouse", // TODO: Allow warehouse selection
-				type: "SALES" as const,
-				channel: "DIRECT" as const,
-				priority: "NORMAL" as const,
-				requiredDate: requiredDate ? new Date(requiredDate) : undefined,
+				warehouseId: selectedWarehouseId,
+				type: orderType,
+				channel: orderChannel,
+				priority: orderPriority,
+				requiredDate: requiredDate ? new Date(requiredDate).toISOString() : undefined,
+				promisedDate: promisedDate ? new Date(promisedDate).toISOString() : undefined,
 				shippingMethod,
 				shippingAddress,
 				notes,
+				internalNotes,
+				rushOrder,
 				items: orderItems.map((item) => ({
 					productId: item.productId,
 					variantId: item.variantId,
@@ -280,10 +322,10 @@ export default function CreateOrderPage() {
 	// Helper function to safely convert price values to numbers
 	const convertToNumber = (value: unknown): number => {
 		if (value == null) return 0;
-		if (typeof value === "number") return isNaN(value) ? 0 : value;
+		if (typeof value === "number") return Number.isNaN(value) ? 0 : value;
 		if (typeof value === "string") {
 			const parsed = parseFloat(value);
-			return isNaN(parsed) ? 0 : parsed;
+			return Number.isNaN(parsed) ? 0 : parsed;
 		}
 		return 0;
 	};
@@ -344,31 +386,112 @@ export default function CreateOrderPage() {
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				{/* Order Details */}
 				<div className="lg:col-span-2 space-y-6">
-					{/* Customer Selection */}
+					{/* Customer and Warehouse Selection */}
 					<Card>
 						<CardHeader>
-							<CardTitle>Customer Information</CardTitle>
+							<CardTitle>Order Information</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
-							<div>
-								<Label htmlFor="customer">Customer</Label>
-								<Select
-									value={selectedCustomerId}
-									onValueChange={setSelectedCustomerId}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Select a customer" />
-									</SelectTrigger>
-									<SelectContent>
-										{customers.map((customer) => (
-											<SelectItem key={customer.id} value={customer.id}>
-												{customer.companyName ||
-													`${customer.firstName} ${customer.lastName}`}{" "}
-												- {customer.email}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div>
+									<Label htmlFor="customer">Customer *</Label>
+									<Select
+										value={selectedCustomerId}
+										onValueChange={setSelectedCustomerId}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="Select a customer" />
+										</SelectTrigger>
+										<SelectContent>
+											{customers.map((customer) => (
+												<SelectItem key={customer.id} value={customer.id}>
+													{customer.companyName ||
+														`${customer.firstName} ${customer.lastName}`}{" "}
+													- {customer.email}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+
+								<div>
+									<Label htmlFor="warehouse">Warehouse *</Label>
+									<Select
+										value={selectedWarehouseId}
+										onValueChange={setSelectedWarehouseId}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="Select a warehouse" />
+										</SelectTrigger>
+										<SelectContent>
+											{warehouses.map((warehouse) => (
+												<SelectItem key={warehouse.id} value={warehouse.id}>
+													{warehouse.name} ({warehouse.code})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+							</div>
+
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+								<div>
+									<Label htmlFor="orderType">Order Type</Label>
+									<Select
+										value={orderType}
+										onValueChange={(value: typeof orderType) => setOrderType(value)}
+									>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="SALES">Sales</SelectItem>
+											<SelectItem value="RETURN">Return</SelectItem>
+											<SelectItem value="EXCHANGE">Exchange</SelectItem>
+											<SelectItem value="SAMPLE">Sample</SelectItem>
+											<SelectItem value="REPLACEMENT">Replacement</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+
+								<div>
+									<Label htmlFor="orderChannel">Channel</Label>
+									<Select
+										value={orderChannel}
+										onValueChange={(value: typeof orderChannel) => setOrderChannel(value)}
+									>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="DIRECT">Direct</SelectItem>
+											<SelectItem value="ONLINE">Online</SelectItem>
+											<SelectItem value="PHONE">Phone</SelectItem>
+											<SelectItem value="EMAIL">Email</SelectItem>
+											<SelectItem value="RETAIL">Retail</SelectItem>
+											<SelectItem value="WHOLESALE">Wholesale</SelectItem>
+											<SelectItem value="B2B_PORTAL">B2B Portal</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+
+								<div>
+									<Label htmlFor="priority">Priority</Label>
+									<Select
+										value={orderPriority}
+										onValueChange={(value: typeof orderPriority) => setOrderPriority(value)}
+									>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="LOW">Low</SelectItem>
+											<SelectItem value="NORMAL">Normal</SelectItem>
+											<SelectItem value="HIGH">High</SelectItem>
+											<SelectItem value="URGENT">Urgent</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
 							</div>
 						</CardContent>
 					</Card>
@@ -563,14 +686,26 @@ export default function CreateOrderPage() {
 							<CardTitle>Order Details</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
-							<div>
-								<Label htmlFor="requiredDate">Required Date</Label>
-								<Input
-									id="requiredDate"
-									type="date"
-									value={requiredDate}
-									onChange={(e) => setRequiredDate(e.target.value)}
-								/>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div>
+									<Label htmlFor="requiredDate">Required Date</Label>
+									<Input
+										id="requiredDate"
+										type="date"
+										value={requiredDate}
+										onChange={(e) => setRequiredDate(e.target.value)}
+									/>
+								</div>
+
+								<div>
+									<Label htmlFor="promisedDate">Promised Date</Label>
+									<Input
+										id="promisedDate"
+										type="date"
+										value={promisedDate}
+										onChange={(e) => setPromisedDate(e.target.value)}
+									/>
+								</div>
 							</div>
 
 							<div>
@@ -587,6 +722,7 @@ export default function CreateOrderPage() {
 										<SelectItem value="express">Express Shipping</SelectItem>
 										<SelectItem value="overnight">Overnight</SelectItem>
 										<SelectItem value="pickup">Customer Pickup</SelectItem>
+										<SelectItem value="same-day">Same Day</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
@@ -601,8 +737,19 @@ export default function CreateOrderPage() {
 								/>
 							</div>
 
+							<div className="flex items-center space-x-2">
+								<input
+									type="checkbox"
+									id="rushOrder"
+									checked={rushOrder}
+									onChange={(e) => setRushOrder(e.target.checked)}
+									className="rounded"
+								/>
+								<Label htmlFor="rushOrder">Rush Order</Label>
+							</div>
+
 							<div>
-								<Label htmlFor="notes">Notes</Label>
+								<Label htmlFor="notes">Customer Notes</Label>
 								<Textarea
 									id="notes"
 									value={notes}
@@ -611,11 +758,24 @@ export default function CreateOrderPage() {
 								/>
 							</div>
 
+							<div>
+								<Label htmlFor="internalNotes">Internal Notes</Label>
+								<Textarea
+									id="internalNotes"
+									value={internalNotes}
+									onChange={(e) => setInternalNotes(e.target.value)}
+									placeholder="Add internal notes (not visible to customer)..."
+								/>
+							</div>
+
 							<Button
 								className="w-full"
 								onClick={handleSubmit}
 								disabled={
-									isSubmitting || orderItems.length === 0 || !selectedCustomerId
+									isSubmitting || 
+									orderItems.length === 0 || 
+									!selectedCustomerId || 
+									!selectedWarehouseId
 								}
 							>
 								{isSubmitting ? "Creating Order..." : "Create Order"}
