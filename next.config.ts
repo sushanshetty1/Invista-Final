@@ -26,10 +26,8 @@ const nextConfig: NextConfig = {
 
 	// Experimental features to help with caching issues
 	experimental: {
-		// Disable webpack cache in development to prevent cache corruption
-		...(process.env.NODE_ENV === "development" && {
-			webpackBuildWorker: false,
-		}),
+		// Enable webpack build worker for faster builds
+		webpackBuildWorker: true,
 	},
 };
 

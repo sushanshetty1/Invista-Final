@@ -24,10 +24,10 @@ export default function AuthRedirect() {
 				setTimeout(() => {
 					if (hasCompanyAccess) {
 						console.log(
-							"AuthRedirect - User has company access, redirecting to dashboard",
+							"AuthRedirect - User has company access, redirecting to AI Assistant",
 						);
 						setHasRedirected(true);
-						router.push("/dashboard");
+						router.push("/rag");
 					} else {
 						console.log(
 							"AuthRedirect - User without company access, redirecting to waiting",

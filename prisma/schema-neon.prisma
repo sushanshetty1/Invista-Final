@@ -1,13 +1,14 @@
 generator neonClient {
   provider        = "prisma-client-js"
   output          = "./generated/neon"
-  previewFeatures = ["multiSchema"]
+  previewFeatures = ["multiSchema", "postgresqlExtensions"]
   binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource neonDb {
   provider = "postgresql"
   url      = env("NEON_DATABASE_URL")
+  extensions = [vector]
 }
 
 model Product {
@@ -1130,4 +1131,18 @@ enum AuditItemStatus {
   VERIFIED
   ADJUSTED
   EXCEPTION
+}
+
+model RagDocument {
+  id         BigInt   @id @default(autoincrement())
+  source     String
+  chunkIndex Int      @map("chunk_index")
+  content    String
+  embedding  Unsupported("vector(1536)")?
+  tenantId   String?  @map("tenant_id")
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("rag_documents")
+  @@index([tenantId])
 }

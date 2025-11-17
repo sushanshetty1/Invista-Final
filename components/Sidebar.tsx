@@ -11,6 +11,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   Package,
   ShoppingCart,
   Truck,
@@ -133,6 +134,12 @@ const navItems: InternalNavItem[] = [
       { title: "Financial Reports", href: "/reports/financial" },
       { title: "Custom Reports", href: "/reports/custom" },
     ],
+  },
+  {
+    id: "rag",
+    title: "AI Assistant",
+    href: "/rag",
+    icon: MessageSquare,
   },
 ];
 
@@ -306,7 +313,7 @@ function SidebarInner({
                     >
                       <item.icon className="h-5 w-5 shrink-0" />
                     </Link>
-                  ) : (
+                  ) : hasSubItems ? (
                     <button
                       type="button"
                       onClick={() => toggleGroup(item.id)}
@@ -330,6 +337,21 @@ function SidebarInner({
                         />
                       )}
                     </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                        active
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      )}
+                      aria-label={item.title}
+                      title={item.title}
+                    >
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      <span className="flex-1 text-left">{item.title}</span>
+                    </Link>
                   )}
 
                   {!collapsed && hasSubItems && groupOpen && (
