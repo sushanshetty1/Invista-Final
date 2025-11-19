@@ -256,3 +256,6 @@ Blocked by Other Tables:
 ❌ product_variants - Needs products ✅ (you can actually do this!)
 ❌ stock_reservations - Needs inventory_items
 ❌ user_location_access - Needs company_locations
+
+
+hellooooooo
