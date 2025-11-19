@@ -86,6 +86,7 @@
 		"@biomejs/biome": "2.0.6",
 		"@tailwindcss/postcss": "^4",
 		"@types/node": "^20",
+		"@types/pg": "^8.15.6",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"dotenv": "^17.2.3",

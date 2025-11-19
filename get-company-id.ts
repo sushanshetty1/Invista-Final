@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from './lib/supabaseClient';
 
 async function getCompanyId() {
   const { data, error } = await supabase

@@ -90,6 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				if (typeof window !== "undefined") {
 					localStorage.setItem(`invista_has_access_${user.id}`, "true");
 				}
+
 				return;
 			}
 
@@ -108,6 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				if (typeof window !== "undefined") {
 					localStorage.setItem(`invista_has_access_${user.id}`, "true");
 				}
+
 				return;
 			}
 
@@ -141,11 +143,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		}
 	};
 
+	const checkSessionExpiry = () => {
+		if (!user?.id) return;
+		const loginTime = localStorage.getItem(`invista_login_time_${user.id}`);
+		if (loginTime) {
+			const elapsed = Date.now() - parseInt(loginTime);
+			if (elapsed > 6 * 60 * 60 * 1000) { // 6 hours
+				console.log("Session expired, logging out");
+				logout();
+			}
+		}
+	};
+
 	useEffect(() => {
 		let isMounted = true;
 		let subscription: { unsubscribe: () => void } | undefined;
 
 		const initializeAuth = async () => {
+			// Check session expiry on mount
+			checkSessionExpiry();
 			try {
 				console.log("AuthContext - Initializing auth state");
 
@@ -191,6 +207,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 							);
 							// Don't fail initialization if access check fails
 						}
+
+						// Check session expiry after access check
+						checkSessionExpiry();
 					} else {
 						console.log("AuthContext - No session found");
 						setUser(null);
@@ -216,6 +235,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 									session.user.email,
 								);
 								setUser(session.user);
+
+								// Set login time
+								if (typeof window !== "undefined") {
+									localStorage.setItem(`invista_login_time_${session.user.id}`, Date.now().toString());
+								}
 
 								// Log successful login (for both email/password and OAuth)
 								if (event === "SIGNED_IN") {
@@ -320,6 +344,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 					email: email,
 					successful: true,
 				});
+				// Set login time for session timeout
+				if (typeof window !== "undefined") {
+					localStorage.setItem(`invista_login_time_${result.data.user.id}`, Date.now().toString());
+				}
 			} else if (result.error) {
 				// Failed login - try to get userId by email
 				await logLoginAttempt({
@@ -371,11 +399,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			}
 
 			// Clear prefetched caches
-			try { dataPreloader.clearCache(); } catch (e) { /* ignore */ }
+			try { dataPreloader.clearCache(); } catch { /* ignore */ }
 
 			// Perform Supabase sign out with timeout race to avoid hanging UX
 			const signOutPromise = supabase.auth.signOut();
-			const timeout = new Promise<{ error?: any }>((resolve) =>
+			const timeout = new Promise<{ error?: Error | null }>((resolve) =>
 				setTimeout(() => resolve({ error: null }), 4000)
 			);
 			const { error } = await Promise.race([signOutPromise, timeout]);
@@ -442,7 +470,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const deleteAccount = async () => {
 		const {
 			data: { user },
-			error,
 		} = await supabase.auth.getUser();
 
 		if (user) {

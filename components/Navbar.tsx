@@ -56,7 +56,7 @@ const Navbar = () => {
 	const router = useRouter();
 	const { user, logout, loading, userType, hasCompanyAccess, refreshAccess } =
 		useAuth();
-	const { userRole, canAccessCompanyProfile } = useUserRole();
+	const { userRole } = useUserRole();
 	const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
 	// Refresh access status when user or location changes
@@ -347,9 +347,14 @@ const Navbar = () => {
 		<>
 			{/* Mobile Menu Backdrop */}
 			{isOpen && (
-				<div
-					className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
+				<button
+					type="button"
+					className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden cursor-default"
 					onClick={() => setIsOpen(false)}
+					onKeyDown={(e) => {
+						if (e.key === 'Escape') setIsOpen(false);
+					}}
+					aria-label="Close mobile menu"
 				/>
 			)}{" "}
 			{/* Single Line Futuristic Navbar */}
@@ -516,8 +521,8 @@ const Navbar = () => {
 											</div>
 										</div>
 
-										{/* Show both profile options for OWNER, ADMIN, MANAGER */}
-										{canAccessCompanyProfile ? (
+										{/* Show both profile options for users with company access */}
+										{hasCompanyAccess ? (
 											<>
 												<DropdownMenuItem
 													className="cursor-pointer hover:bg-accent/60 dark:hover:bg-accent/40 mx-2 my-1 rounded-lg py-3"
@@ -821,7 +826,7 @@ const Navbar = () => {
 												</div>
 												<div className="text-xs text-primary font-medium">
 													{userRole
-														? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()} Role`
+														? `${userRole.charAt(0) + userRole.slice(1).toLowerCase()}`
 														: userType === "company"
 															? "Company Admin"
 															: "Individual User"}
@@ -830,8 +835,8 @@ const Navbar = () => {
 										</div>
 
 										<div className="space-y-2 mt-4">
-											{/* Show both profile options for OWNER, ADMIN, MANAGER */}
-											{canAccessCompanyProfile ? (
+											{/* Show both profile options for users with company access */}
+											{hasCompanyAccess ? (
 												<>
 													<Button
 														variant="ghost"

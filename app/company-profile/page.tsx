@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardGuard from "@/components/DashboardGuard";
 import { Button } from "@/components/ui/button";
 import {
@@ -167,8 +167,15 @@ export default function CompanyProfilePage() {
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [editData, setEditData] = useState<Partial<CompanyProfile>>({});
 
+	// Minimum loading time to prevent flash
+	const [minLoading, setMinLoading] = useState(true);
+	useEffect(() => {
+		const timer = setTimeout(() => setMinLoading(false), 1500); // 1.5 seconds minimum loading
+		return () => clearTimeout(timer);
+	}, []);
+
 	// Handle loading state
-	if (loading) {
+	if (loading || minLoading) {
 		return (
 			<DashboardGuard>
 				<CompanyProfileSkeleton />

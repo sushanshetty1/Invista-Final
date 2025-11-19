@@ -326,22 +326,22 @@ export default function InvistaChatbot() {
                 <div className="p-4 border rounded-lg text-left">
                   <div className="text-blue-600 font-medium mb-2">📚 Knowledge</div>
                   <div className="text-sm text-muted-foreground">
-                    "How do I create a purchase order?"<br/>
-                    "Explain the audit workflow"
+                    &quot;How do I create a purchase order?&quot;<br/>
+                    &quot;Explain the audit workflow&quot;
                   </div>
                 </div>
                 <div className="p-4 border rounded-lg text-left">
                   <div className="text-green-600 font-medium mb-2">📊 Live Data</div>
                   <div className="text-sm text-muted-foreground">
-                    "Show low stock items"<br/>
-                    "What's the status of order #123?"
+                    &quot;Show low stock items&quot;<br/>
+                    &quot;What&apos;s the status of order #123?&quot;
                   </div>
                 </div>
                 <div className="p-4 border rounded-lg text-left">
                   <div className="text-indigo-600 font-medium mb-2">🧭 Navigation</div>
                   <div className="text-sm text-muted-foreground">
-                    "Open inventory page"<br/>
-                    "Go to reports"
+                    &quot;Open inventory page&quot;<br/>
+                    &quot;Go to reports&quot;
                   </div>
                 </div>
               </div>
@@ -436,7 +436,7 @@ export default function InvistaChatbot() {
           </button>
         </div>
         <div className="text-xs text-muted-foreground mt-2">
-          💡 Tip: Ask "How do I..." for processes, or "Show me..." for data
+          💡 Tip: Ask &quot;How do I...&quot; for processes, or &quot;Show me...&quot; for data
         </div>
       </div>
     </div>
