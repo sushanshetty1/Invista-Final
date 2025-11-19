@@ -56,3 +56,99 @@ export async function getCustomerById(customerId: string) {
 		return { success: false, error: "Failed to fetch customer" };
 	}
 }
+
+export interface CreateCustomerInput {
+	companyId: string;
+	type?: "INDIVIDUAL" | "BUSINESS" | "RESELLER" | "DISTRIBUTOR";
+	firstName?: string;
+	lastName?: string;
+	companyName?: string;
+	taxId?: string;
+	email?: string;
+	phone?: string;
+	mobile?: string;
+	billingAddress?: {
+		street?: string;
+		city?: string;
+		state?: string;
+		zipCode?: string;
+		country?: string;
+	};
+	shippingAddress?: {
+		street?: string;
+		city?: string;
+		state?: string;
+		zipCode?: string;
+		country?: string;
+	};
+	creditLimit?: number;
+	paymentTerms?: string;
+	currency?: string;
+	notes?: string;
+	createdBy: string;
+}
+
+// Create a new customer
+export async function createCustomer(input: CreateCustomerInput) {
+	try {
+		// Generate customer number
+		const lastCustomer = await neonClient.customer.findFirst({
+			where: { companyId: input.companyId },
+			orderBy: { customerNumber: "desc" },
+		});
+
+		let customerNumber = "CUST-0001";
+		if (lastCustomer?.customerNumber) {
+			const lastNumber = parseInt(
+				lastCustomer.customerNumber.replace("CUST-", ""),
+			);
+			customerNumber = `CUST-${String(lastNumber + 1).padStart(4, "0")}`;
+		}
+
+		// Validate required fields based on type
+		if (
+			input.type === "INDIVIDUAL" &&
+			(!input.firstName || !input.lastName)
+		) {
+			return {
+				success: false,
+				error: "First name and last name are required for individual customers",
+			};
+		}
+
+		if (input.type === "BUSINESS" && !input.companyName) {
+			return {
+				success: false,
+				error: "Company name is required for business customers",
+			};
+		}
+
+		const customer = await neonClient.customer.create({
+			data: {
+				companyId: input.companyId,
+				customerNumber,
+				type: input.type || "INDIVIDUAL",
+				firstName: input.firstName,
+				lastName: input.lastName,
+				companyName: input.companyName,
+				taxId: input.taxId,
+				email: input.email,
+				phone: input.phone,
+				mobile: input.mobile,
+				billingAddress: input.billingAddress || {},
+				shippingAddress: input.shippingAddress || {},
+				creditLimit: input.creditLimit,
+				paymentTerms: input.paymentTerms,
+				currency: input.currency || "USD",
+				notes: input.notes,
+				status: "ACTIVE",
+				createdBy: input.createdBy,
+			},
+		});
+
+		return { success: true, data: customer };
+	} catch (error) {
+		console.error("Error creating customer:", error);
+		return { success: false, error: "Failed to create customer" };
+	}
+}

@@ -24,10 +24,10 @@ export default function AuthRedirect() {
 				setTimeout(() => {
 					if (hasCompanyAccess) {
 						console.log(
-							"AuthRedirect - User has company access, redirecting to AI Assistant",
+							"AuthRedirect - User has company access, redirecting to dashboard",
 						);
 						setHasRedirected(true);
-						router.push("/rag");
+						router.push("/dashboard");
 					} else {
 						console.log(
 							"AuthRedirect - User without company access, redirecting to waiting",
@@ -35,7 +35,7 @@ export default function AuthRedirect() {
 						setHasRedirected(true);
 						router.push("/waiting");
 					}
-				}, 1000);
+				}, 500);
 			} else if (!loading && !user) {
 				// Not authenticated - redirect to login
 				console.log("AuthRedirect - No user, redirecting to login");

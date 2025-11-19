@@ -33,12 +33,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	// Add debouncing to prevent multiple rapid access checks
 	const [lastAccessCheck, setLastAccessCheck] = useState<number>(0);
-	const ACCESS_CHECK_DEBOUNCE = 1000; // 1 second
+	const [isCheckingAccess, setIsCheckingAccess] = useState(false);
+	const ACCESS_CHECK_DEBOUNCE = 2000; // 2 seconds
 
 	const checkUserAccess = async () => {
 		if (!user?.email || !user?.id) {
 			setUserType(null);
 			setHasCompanyAccess(false);
+			return;
+		}
+
+		// Prevent concurrent checks
+		if (isCheckingAccess) {
+			console.log("AuthContext - Access check already in progress");
 			return;
 		}
 
@@ -49,6 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			return;
 		}
 		setLastAccessCheck(now);
+		setIsCheckingAccess(true);
 
 		console.log("AuthContext - Checking user access");
 
@@ -140,6 +148,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			console.error("AuthContext - Error checking user access:", error);
 			setUserType("individual");
 			setHasCompanyAccess(false);
+		} finally {
+			setIsCheckingAccess(false);
 		}
 	};
 
