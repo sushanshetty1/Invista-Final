@@ -222,6 +222,8 @@ export async function getProducts(
 	input: ProductQueryInput,
 ): Promise<ActionResponse> {
 	try {
+		console.log("🔍 getProducts: Starting with input:", input);
+
 		const validatedQuery = productQuerySchema.parse(input);
 		const {
 			page,
@@ -234,7 +236,9 @@ export async function getProducts(
 			sortOrder,
 		} = validatedQuery;
 
-		const skip = (page - 1) * limit; // Build where clause
+		const skip = (page - 1) * limit;
+
+		console.log("🔍 getProducts: Query params:", { page, limit, skip, search, categoryId, brandId, status }); // Build where clause
 		const where: Record<string, unknown> = {};
 
 		if (search) {
@@ -260,7 +264,9 @@ export async function getProducts(
 			orderBy.updatedAt = sortOrder;
 		}
 
-		const [products, total] = await Promise.all([
+		console.log("🔍 getProducts: Querying database with where:", where);
+
+		const [rawProducts, total] = await Promise.all([
 			neonClient.product.findMany({
 				where,
 				orderBy,
@@ -291,12 +297,57 @@ export async function getProducts(
 			neonClient.product.count({ where }),
 		]);
 
+		console.log("🔍 getProducts: Database returned:", {
+			rawProductsCount: rawProducts.length,
+			total,
+			firstProduct: rawProducts[0] ? { id: rawProducts[0].id, name: rawProducts[0].name } : null
+		});
+
+		// Calculate aggregated stock values and add category/brand objects for each product
+		const products = rawProducts.map(product => {
+			const totalStock = product.inventoryItems.reduce(
+				(sum, item) => sum + (item.quantity || 0),
+				0
+			);
+			const availableStock = product.inventoryItems.reduce(
+				(sum, item) => sum + (item.availableQuantity || 0),
+				0
+			);
+			const reservedStock = product.inventoryItems.reduce(
+				(sum, item) => sum + (item.reservedQuantity || 0),
+				0
+			);
+
+			return {
+				...product,
+				// Convert Decimal types to numbers for frontend
+				costPrice: product.costPrice ? Number(product.costPrice) : undefined,
+				sellingPrice: product.sellingPrice ? Number(product.sellingPrice) : undefined,
+				wholesalePrice: product.wholesalePrice ? Number(product.wholesalePrice) : undefined,
+				weight: product.weight ? Number(product.weight) : undefined,
+				totalStock,
+				availableStock,
+				reservedStock,
+				// Add category and brand objects for frontend compatibility
+				category: product.categoryId && product.categoryName ? {
+					id: product.categoryId,
+					name: product.categoryName,
+				} : undefined,
+				brand: product.brandId && product.brandName ? {
+					id: product.brandId,
+					name: product.brandName,
+				} : undefined,
+			};
+		});
+
 		const pagination = {
 			page,
 			limit,
 			total,
 			totalPages: Math.ceil(total / limit),
 		};
+
+		console.log("✅ getProducts: Returning", products.length, "products with pagination:", pagination);
 
 		return actionSuccess(
 			{ products, pagination },

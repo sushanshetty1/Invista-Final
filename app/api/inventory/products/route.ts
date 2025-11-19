@@ -63,10 +63,20 @@ export async function GET(request: NextRequest) {
 		// Validate query parameters
 		const validatedQuery = productQuerySchema.parse(queryInput);
 
+		console.log("📦 Products API: Fetching products with query:", validatedQuery);
+
 		// Fetch products using server action
 		const result = await getProducts(validatedQuery);
 
+		console.log("📦 Products API: Result:", {
+			success: result.success,
+			dataKeys: result.data ? Object.keys(result.data) : null,
+			productsCount: result.data?.products?.length,
+			error: result.error,
+		});
+
 		if (!result.success) {
+			console.error("📦 Products API: Error:", result.error);
 			return errorResponse(result.error!, 400);
 		}
 

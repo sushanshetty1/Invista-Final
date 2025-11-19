@@ -161,10 +161,10 @@ export default function ProductsPage() {
 	const [showVariantsDialog, setShowVariantsDialog] = useState(false);
 	const [showBulkActions, setShowBulkActions] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-	
+
 	// Import/Export functionality
 	const { exportData, handleFileUpload } = useImportExport();
-	
+
 	// Load data
 	useEffect(() => {
 		loadData();
@@ -183,17 +183,23 @@ export default function ProductsPage() {
 			const response = await fetch("/api/inventory/products");
 			if (response.ok) {
 				const data = await response.json();
-				const productsData = data.data || data.products || [];
+				console.log("Products API response:", data);
+
+				// API returns: { success: true, data: { products, pagination } }
+				const productsData = data.data?.products || data.products || [];
+				console.log("Extracted products:", productsData);
 
 				// Ensure we always set an array
 				if (Array.isArray(productsData)) {
 					setProducts(productsData);
+					console.log(`✅ Loaded ${productsData.length} products`);
 				} else {
 					console.warn("Products API returned non-array data:", productsData);
 					setProducts([]);
 				}
 			} else {
-				console.error("Failed to fetch products");
+				const errorText = await response.text();
+				console.error("Failed to fetch products:", response.status, errorText);
 				setProducts([]);
 			}
 		} catch (error) {
@@ -341,9 +347,9 @@ export default function ProductsPage() {
 								category: product.category?.name || '',
 								brand: product.brand?.name || '',
 								barcode: product.barcode || '',
-								cost_price: product.costPrice || 0,
-								selling_price: product.sellingPrice || 0,
-								wholesale_price: product.wholesalePrice || 0,
+								cost_price: Number(product.costPrice) || 0,
+								selling_price: Number(product.sellingPrice) || 0,
+								wholesale_price: Number(product.wholesalePrice) || 0,
 								min_stock_level: product.minStockLevel,
 								max_stock_level: product.maxStockLevel || 0,
 								reorder_point: product.reorderPoint || 0,
@@ -636,7 +642,7 @@ export default function ProductsPage() {
 									</TableCell>
 									<TableCell className="hidden sm:table-cell">
 										{product.sellingPrice
-											? `$${product.sellingPrice.toFixed(2)}`
+											? `$${Number(product.sellingPrice).toFixed(2)}`
 											: "-"}
 									</TableCell>
 									<TableCell>{getStatusBadge(product.status)}</TableCell>
