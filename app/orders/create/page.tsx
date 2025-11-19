@@ -1082,14 +1082,14 @@ export default function CreateOrderPage() {
 												Add Product
 											</Button>
 										</DialogTrigger>
-										<DialogContent className="max-w-4xl max-h-[90vh]">
-											<DialogHeader className="pb-4">
+										<DialogContent className="sm:max-w-none w-[60vw] max-w-[1200px] max-h-[90vh] overflow-hidden flex flex-col">
+											<DialogHeader className="pb-4 flex-shrink-0">
 												<DialogTitle className="text-xl">Select Products</DialogTitle>
 												<p className="text-sm text-muted-foreground mt-1">Choose products to add to your order</p>
 											</DialogHeader>
-											<div className="space-y-4">
-												<Input placeholder="Search products by name or SKU..." className="h-10" />
-												<div className="border rounded-lg overflow-hidden">
+											<div className="flex-1 overflow-hidden flex flex-col space-y-4">
+												<Input placeholder="Search products by name or SKU..." className="h-10 flex-shrink-0" />
+												<div className="flex-1 border rounded-lg overflow-hidden">
 													{isLoadingProducts ? (
 														<div className="flex items-center justify-center py-20 text-muted-foreground">
 															<div className="text-center space-y-2">
@@ -1106,15 +1106,15 @@ export default function CreateOrderPage() {
 															</div>
 														</div>
 													) : (
-														<div className="max-h-[500px] overflow-y-auto">
-															<Table>
-																<TableHeader className="sticky top-0 bg-background z-10 border-b">
+														<div className="overflow-y-auto h-full">
+															<Table className="min-w-full">
+																<TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 border-b">
 																	<TableRow className="hover:bg-transparent">
-																		<TableHead className="w-[35%] font-semibold">Product</TableHead>
-																		<TableHead className="w-[20%] font-semibold">SKU</TableHead>
-																		<TableHead className="text-right font-semibold">Price</TableHead>
-																		<TableHead className="text-center font-semibold">Stock</TableHead>
-																		<TableHead className="w-[120px]"></TableHead>
+																		<TableHead className="font-semibold bg-background min-w-[280px]">Product</TableHead>
+																		<TableHead className="font-semibold bg-background min-w-[200px]">SKU</TableHead>
+																		<TableHead className="text-right font-semibold bg-background min-w-[100px]">Price</TableHead>
+																		<TableHead className="text-center font-semibold bg-background min-w-[150px]">Stock</TableHead>
+																		<TableHead className="bg-background min-w-[80px]"></TableHead>
 																	</TableRow>
 																</TableHeader>
 																<TableBody>
@@ -1128,17 +1128,17 @@ export default function CreateOrderPage() {
 																			
 																			return (
 																				<TableRow key={product.id} className="group hover:bg-muted/50">
-																					<TableCell>
+																					<TableCell className="w-3/4 align-middle">
 																						<div>
 																							<div className="font-medium text-sm">{product.name}</div>
 																						</div>
 																					</TableCell>
-																					<TableCell>
+																					<TableCell className="min-w-[200px] align-middle">
 																						<span className="text-sm text-muted-foreground font-mono">
 																							{product.sku}
 																						</span>
 																					</TableCell>
-																					<TableCell className="text-right">
+																					<TableCell className="min-w-[100px] text-right align-middle">
 																						{price > 0 ? (
 																							<span className="font-semibold text-sm">{formatCurrency(price)}</span>
 																						) : (
@@ -1147,7 +1147,7 @@ export default function CreateOrderPage() {
 																							</span>
 																						)}
 																					</TableCell>
-																					<TableCell className="text-center">
+																					<TableCell className="min-w-[150px] text-center align-middle">
 																						<div className="flex items-center justify-center gap-1.5">
 																							{isOutOfStock ? (
 																								<>
@@ -1173,7 +1173,7 @@ export default function CreateOrderPage() {
 																							)}
 																						</div>
 																					</TableCell>
-																					<TableCell>
+																					<TableCell className="min-w-[80px] align-middle">
 																						<Button
 																							size="sm"
 																							onClick={() => addProduct(product)}
