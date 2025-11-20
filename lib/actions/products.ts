@@ -94,6 +94,43 @@ export async function createProduct(
 			JSON.stringify(createData, null, 2),
 		);
 
+		// AUTO-CREATE CATEGORY: If categoryName is provided, create/find the category
+		let finalCategoryId = categoryId || null;
+
+		if (validatedData.categoryName && validatedData.slug) {
+			console.log("🏷️ Auto-creating category from product data...");
+
+			// Check if category with this slug already exists
+			const existingCategory = await neonClient.category.findFirst({
+				where: { slug: validatedData.slug },
+			});
+
+			if (existingCategory) {
+				console.log("✅ Category already exists:", existingCategory.id);
+				finalCategoryId = existingCategory.id;
+			} else {
+				// Create new category from product data
+				const newCategory = await neonClient.category.create({
+					data: {
+						name: validatedData.categoryName,
+						description: validatedData.description || null,
+						slug: validatedData.slug,
+						color: validatedData.color || null,
+						image: validatedData.primaryImage || null,
+						parentId: null,
+						level: 0,
+						isActive: true,
+					},
+				});
+
+				console.log("✅ Created new category:", newCategory.id);
+				finalCategoryId = newCategory.id;
+			}
+		}
+
+		// Update createData with the final categoryId
+		createData.categoryId = finalCategoryId;
+
 		const product = await neonClient.product.create({
 			data: createData,
 			include: {
