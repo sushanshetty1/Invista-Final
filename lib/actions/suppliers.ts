@@ -27,36 +27,47 @@ import { revalidatePath } from "next/cache";
 
 // Create a new supplier
 export async function createSupplier(
-	input: CreateSupplierInput,
+	input: CreateSupplierInput & { companyId?: string; userId?: string },
 ): Promise<ActionResponse> {
 	try {
-		// Get current user session from Supabase
-		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
-		if (sessionError || !session?.user?.id) {
-			return actionError("Authentication required");
+		// Extract companyId and userId if provided (from API route)
+		const { companyId: providedCompanyId, userId: providedUserId, ...inputData } = input;
+		
+		let companyId = providedCompanyId;
+		
+		// If not provided, try to get from session (for direct server action calls)
+		if (!companyId) {
+			const {
+				data: { session },
+				error: sessionError,
+			} = await supabase.auth.getSession();
+			if (sessionError || !session?.user?.id) {
+				console.error("Authentication error:", sessionError);
+				return actionError("Authentication required");
+			}
+
+			// Get user's company from Supabase
+			const { data: companyUser, error: companyError } = await supabase
+				.from("company_users")
+				.select("companyId")
+				.eq("userId", session.user.id)
+				.eq("isActive", true)
+				.single();
+
+			if (companyError || !companyUser) {
+				console.error("Company lookup error:", companyError);
+				return actionError("User not associated with any company");
+			}
+			
+			companyId = companyUser.companyId;
 		}
 
-		// Get user's company from Supabase
-		const { data: companyUser, error: companyError } = await supabase
-			.from("company_users")
-			.select("companyId")
-			.eq("userId", session.user.id)
-			.eq("isActive", true)
-			.single();
-
-		if (companyError || !companyUser) {
-			return actionError("User not associated with any company");
-		}
-
-		const validatedData = createSupplierSchema.parse(input);
+		const validatedData = createSupplierSchema.parse(inputData);
 
 		const supplier = await neonClient.supplier.create({
 			data: {
 				...validatedData,
-				companyId: companyUser.companyId, // Use the user's company ID
+				companyId, // Use the provided or retrieved company ID
 				billingAddress: validatedData.billingAddress,
 				shippingAddress: validatedData.shippingAddress,
 				certifications: validatedData.certifications,
@@ -77,6 +88,9 @@ export async function createSupplier(
 		return actionSuccess(supplier, "Supplier created successfully");
 	} catch (error) {
 		console.error("Error creating supplier:", error);
+		if (error instanceof Error) {
+			return actionError(error.message);
+		}
 		return actionError("Failed to create supplier");
 	}
 }

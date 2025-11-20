@@ -1,7 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { supabaseClient } from "@/lib/db";
+// import { supabaseClient } from "@/lib/db"; // DISABLED
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
+    // DISABLED: This endpoint is temporarily disabled to prevent system overload
+    return NextResponse.json(
+        {
+            success: true,
+            message: "Login history logging is temporarily disabled",
+        },
+        { status: 200 },
+    );
+
+    /* DISABLED CODE - Uncomment to re-enable
     try {
         const body = await request.json();
         const { userId, successful, failReason, email } = body;
@@ -117,57 +127,5 @@ export async function POST(request: NextRequest) {
             { status: 500 },
         );
     }
-}
-
-// Helper function to determine device type from user agent
-function getDeviceType(userAgent: string): string {
-    const ua = userAgent.toLowerCase();
-
-    if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
-        return "Mobile";
-    }
-    if (ua.includes("tablet") || ua.includes("ipad")) {
-        return "Tablet";
-    }
-    if (ua.includes("windows") || ua.includes("macintosh") || ua.includes("linux")) {
-        return "Desktop";
-    }
-    return "Unknown";
-}
-
-// Helper function to get location from IP
-// For now returns basic info, you can integrate with IP geolocation API later
-async function getLocationFromIP(ipAddress: string): Promise<string | null> {
-    // Skip for local/unknown IPs
-    if (
-        ipAddress === "unknown" ||
-        ipAddress === "127.0.0.1" ||
-        ipAddress.startsWith("192.168.") ||
-        ipAddress.startsWith("10.") ||
-        ipAddress === "::1"
-    ) {
-        return "Local";
-    }
-
-    try {
-        // You can integrate with services like:
-        // - ipapi.co
-        // - ip-api.com
-        // - ipgeolocation.io
-        // For now, we'll just return null and you can add this later
-
-        // Example integration (uncomment when you have API key):
-        /*
-        const response = await fetch(`https://ipapi.co/${ipAddress}/json/`);
-        if (response.ok) {
-            const data = await response.json();
-            return `${data.city}, ${data.country_name}`;
-        }
-        */
-
-        return null;
-    } catch (error) {
-        console.error("Error getting location from IP:", error);
-        return null;
-    }
+    */
 }

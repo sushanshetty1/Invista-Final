@@ -1,17 +1,23 @@
 /**
  * Utility function to log login attempts to login_history table
+ * DISABLED: Temporarily disabled to prevent system overload
  */
 export async function logLoginAttempt({
-    userId,
-    email,
-    successful,
-    failReason,
+    userId: _userId,
+    email: _email,
+    successful: _successful,
+    failReason: _failReason,
 }: {
     userId?: string;
     email?: string;
     successful: boolean;
     failReason?: string;
 }) {
+    // DISABLED: Function temporarily disabled to prevent system overload
+    // Just return success without making the API call
+    return { success: true, disabled: true };
+
+    /* DISABLED CODE - Uncomment to re-enable
     try {
         const response = await fetch("/api/auth/login-history", {
             method: "POST",
@@ -41,4 +47,5 @@ export async function logLoginAttempt({
             error: error instanceof Error ? error.message : "Unknown error",
         };
     }
+    */
 }
