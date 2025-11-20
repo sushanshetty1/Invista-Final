@@ -78,6 +78,7 @@ export default function CreatePurchaseOrderPage() {
 	useEffect(() => {
 		loadSuppliers();
 		loadProducts();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const loadSuppliers = async () => {
@@ -202,7 +203,7 @@ export default function CreatePurchaseOrderPage() {
 		try {
 			const purchaseOrderData = {
 				supplierId: selectedSupplierId,
-				warehouseId: "default-warehouse", // TODO: Allow warehouse selection
+				// warehouseId is optional - can be specified later
 				expectedDate: expectedDate ? new Date(expectedDate) : undefined,
 				paymentTerms,
 				shippingTerms,
@@ -300,15 +301,15 @@ export default function CreatePurchaseOrderPage() {
 											<Plus className="h-4 w-4 mr-2" />
 											Add Product
 										</Button>
-									</DialogTrigger>
-									<DialogContent className="max-w-3xl">
-										<DialogHeader>
-											<DialogTitle>Select Product</DialogTitle>
-										</DialogHeader>
-										<div className="space-y-4">
-											<Input placeholder="Search products..." />
-											<div className="max-h-96 overflow-y-auto">
-												<Table>
+								</DialogTrigger>
+								<DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+									<DialogHeader>
+										<DialogTitle>Select Product</DialogTitle>
+									</DialogHeader>
+									<div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+										<Input placeholder="Search products..." className="flex-shrink-0" />
+										<div className="flex-1 overflow-y-auto border rounded-md">
+											<Table>
 													<TableHeader>
 														<TableRow>
 															<TableHead>Product</TableHead>

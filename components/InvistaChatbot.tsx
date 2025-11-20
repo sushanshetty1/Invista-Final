@@ -77,6 +77,9 @@ export default function InvistaChatbot() {
     const currentQuery = query;
     setQuery("");
 
+    // Create abort controller for this request
+    abortControllerRef.current = new AbortController();
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -86,6 +89,7 @@ export default function InvistaChatbot() {
           companyId,
           history: messages.slice(-10), // Send recent conversation history
         }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -158,13 +162,30 @@ export default function InvistaChatbot() {
         }
       }
     } catch (err: any) {
-      setError(err?.message ?? "Unknown error");
-      const errorMessage: Message = { 
-        role: 'assistant', 
-        content: `Sorry, I encountered an error: ${err?.message ?? "Unknown error"}` 
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      if (err.name === 'AbortError') {
+        // Request was aborted, add a message
+        const abortMessage: Message = { 
+          role: 'assistant', 
+          content: 'Response generation stopped.' 
+        };
+        setMessages(prev => [...prev, abortMessage]);
+      } else {
+        setError(err?.message ?? "Unknown error");
+        const errorMessage: Message = { 
+          role: 'assistant', 
+          content: `Sorry, I encountered an error: ${err?.message ?? "Unknown error"}` 
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
+      setLoading(false);
+      abortControllerRef.current = null;
+    }
+  }
+
+  function stopGeneration() {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
       setLoading(false);
     }
   }
@@ -470,12 +491,18 @@ export default function InvistaChatbot() {
           
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-muted p-3 rounded-lg">
+              <div className="bg-muted p-3 rounded-lg flex items-center gap-3">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
+                <button
+                  onClick={stopGeneration}
+                  className="px-2 py-1 text-xs bg-background hover:bg-background/80 border rounded transition-colors"
+                >
+                  ⏹ Stop
+                </button>
               </div>
             </div>
           )}

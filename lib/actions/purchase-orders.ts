@@ -47,6 +47,7 @@ export interface PurchaseOrderFilters {
 	dateFrom?: Date;
 	dateTo?: Date;
 	searchTerm?: string;
+	companyId?: string;
 }
 
 export interface GoodsReceiptData {
@@ -115,7 +116,7 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderData) {
 			data: {
 				orderNumber,
 				supplierId: data.supplierId,
-				warehouseId: data.warehouseId,
+				...(data.warehouseId && { warehouseId: data.warehouseId }),
 				subtotal,
 				totalAmount: subtotal,
 				expectedDate: data.expectedDate,
@@ -166,6 +167,13 @@ export async function getPurchaseOrders(filters: PurchaseOrderFilters = {}) {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const where: any = {};
 
+		// Filter by company through supplier relation
+		if (filters.companyId) {
+			where.supplier = {
+				companyId: filters.companyId,
+			};
+		}
+
 		if (filters.status) {
 			where.status = filters.status;
 		}
@@ -189,14 +197,29 @@ export async function getPurchaseOrders(filters: PurchaseOrderFilters = {}) {
 		}
 
 		if (filters.searchTerm) {
-			where.OR = [
+			const searchConditions = [
 				{ orderNumber: { contains: filters.searchTerm, mode: "insensitive" } },
-				{
+			];
+			
+			// If supplier filter exists, merge it with search
+			if (filters.companyId) {
+				searchConditions.push({
+					supplier: {
+						AND: [
+							{ companyId: filters.companyId },
+							{ name: { contains: filters.searchTerm, mode: "insensitive" } },
+						],
+					},
+				});
+			} else {
+				searchConditions.push({
 					supplier: {
 						name: { contains: filters.searchTerm, mode: "insensitive" },
 					},
-				},
-			];
+				});
+			}
+			
+			where.OR = searchConditions;
 		}
 
 		const purchaseOrders = await neonClient.purchaseOrder.findMany({
@@ -499,19 +522,23 @@ export async function createGoodsReceipt(data: GoodsReceiptData) {
 }
 
 // Get reorder suggestions
-export async function getReorderSuggestions(): Promise<{
+export async function getReorderSuggestions(companyId?: string): Promise<{
 	success: boolean;
-	data?: ReorderSuggestion[];
+	data?: { suggestions: ReorderSuggestion[] };
 	error?: string;
 }> {
 	try {
+		// Build where clause with company filter
+		const where = {
+			reorderPoint: {
+				gt: 0,
+			},
+			...(companyId && { companyId }),
+		};
+
 		// Find products that are below reorder point
 		const products = await neonClient.product.findMany({
-			where: {
-				reorderPoint: {
-					gt: 0,
-				},
-			},
+			where,
 			include: {
 				inventoryItems: {
 					select: {
@@ -556,7 +583,7 @@ export async function getReorderSuggestions(): Promise<{
 			}
 		}
 
-		return { success: true, data: suggestions };
+		return { success: true, data: { suggestions } };
 	} catch {
 		// Error handled silently in production
 		return { success: false, error: "Failed to fetch reorder suggestions" };
@@ -606,18 +633,23 @@ export async function createPurchaseOrderFromSuggestion(
 }
 
 // Get purchase order statistics
-export async function getPurchaseOrderStats() {
+export async function getPurchaseOrderStats(companyId?: string) {
 	try {
+		// Build base where clause for company filtering
+		const baseWhere = companyId ? { supplier: { companyId } } : {};
+
 		const [totalOrders, pendingApproval, awaitingDelivery, valueResult] =
 			await Promise.all([
-				neonClient.purchaseOrder.count(),
+				neonClient.purchaseOrder.count({ where: baseWhere }),
 				neonClient.purchaseOrder.count({
 					where: {
+						...baseWhere,
 						status: "PENDING_APPROVAL",
 					},
 				}),
 				neonClient.purchaseOrder.count({
 					where: {
+						...baseWhere,
 						status: {
 							in: ["APPROVED", "SENT", "ACKNOWLEDGED", "PARTIALLY_RECEIVED"],
 						},
@@ -628,6 +660,7 @@ export async function getPurchaseOrderStats() {
 						totalAmount: true,
 					},
 					where: {
+						...baseWhere,
 						status: {
 							notIn: ["CANCELLED"],
 						},
@@ -641,11 +674,13 @@ export async function getPurchaseOrderStats() {
 		return {
 			success: true,
 			data: {
-				totalOrders,
-				pendingApproval,
-				awaitingDelivery,
-				totalValue,
-				avgOrderValue,
+				stats: {
+					totalOrders,
+					pendingApproval,
+					awaitingDelivery,
+					totalValue,
+					avgOrderValue,
+				},
 			},
 		};
 	} catch {

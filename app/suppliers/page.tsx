@@ -334,14 +334,20 @@ export default function SuppliersPage() {
 
 	if (loading) {
 		return (
-			<div className="py-16 px-6 mx-4 md:mx-8 space-y-6">
-				<div className="animate-pulse">
-					<div className="h-8 bg-muted rounded w-1/4 mb-2"></div>
-					<div className="h-4 bg-muted rounded w-1/3 mb-8"></div>
-					<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-						{Array.from({ length: 4 }, (_, i) => (
-							<div key={`skeleton-metric-${i + 1}`} className="h-24 bg-muted rounded"></div>
-						))}
+			<div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+				<div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+					<div className="animate-pulse space-y-8">
+						<div className="space-y-2">
+							<div className="h-10 bg-muted rounded-lg w-1/3"></div>
+							<div className="h-4 bg-muted rounded w-1/2"></div>
+						</div>
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+							{Array.from({ length: 4 }, (_, i) => (
+								<div key={`skeleton-metric-${i + 1}`} className="h-32 bg-muted rounded-xl shadow-lg"></div>
+							))}
+						</div>
+						<div className="h-20 bg-muted rounded-xl shadow-md"></div>
+						<div className="h-96 bg-muted rounded-xl shadow-lg"></div>
 					</div>
 				</div>
 			</div>
@@ -349,137 +355,162 @@ export default function SuppliersPage() {
 	}
 
 	return (
-		<div className="py-16 px-6 mx-4 md:mx-8 space-y-6">
-			{/* Header */}
-			<div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between sm:items-center">
-				<div>
-					<h1 className="text-3xl font-bold">Suppliers Management</h1>
-					<p className="text-sm sm:text-base text-muted-foreground">
-						Manage your supplier relationships, contacts, and performance
-					</p>
-				</div>
-				<div className="flex gap-2 mt-2 sm:mt-0">
-					<ImportExportButtons
-						onExport={() => exportData(filteredSuppliers)}
-						onImport={handleFileUpload}
-						onDownloadTemplate={() => downloadTemplate()}
-						isExporting={isExporting}
-						isImporting={isImporting}
-						variant="outline"
-					/>
-					<Link href="/suppliers/add">
-						<Button>
-							<Plus className="h-4 w-4 mr-2" />
-							Add Supplier
-						</Button>
-					</Link>
-				</div>
-			</div>
-
-			{/* Import Progress */}
-			<ImportProgressCard show={isImporting} progress={importProgress} />
-
-			{/* Stats Cards */}
-			<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">
-							Total Suppliers
-						</CardTitle>
-						<Building2 className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{Array.isArray(suppliers) ? suppliers.length : 0}</div>
-						<p className="text-xs text-muted-foreground">
-							+5.2% from last month
-						</p>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2 sm:p-4">
-						<CardTitle className="text-xs sm:text-sm font-medium">
-							Active Suppliers
-						</CardTitle>
-						<TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent className="p-2 sm:p-4 pt-0">
-						<div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600">
-							{Array.isArray(suppliers) ? suppliers.filter((s) => s.status === "ACTIVE").length : 0}
+		<div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+			<div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+				{/* Header Section */}
+				<div className="flex flex-col gap-6">
+					<div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-start">
+						<div className="space-y-1">
+							<h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+								Suppliers Management
+							</h1>
+							<p className="text-base text-muted-foreground max-w-2xl">
+								Manage your supplier relationships, contacts, and performance metrics
+							</p>
 						</div>
-						<p className="text-xs text-muted-foreground">
-							{Array.isArray(suppliers) && suppliers.length > 0 ? (
-								(suppliers.filter((s) => s.status === "ACTIVE").length /
-									suppliers.length) *
-								100
-							).toFixed(1) : "0"}
-							% of total
-						</p>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2 sm:p-4">
-						<CardTitle className="text-xs sm:text-sm font-medium">
-							Avg Rating
-						</CardTitle>
-						<Star className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent className="p-2 sm:p-4 pt-0">
-						<div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600">
-							{Array.isArray(suppliers) && suppliers.length > 0 ? (
-								suppliers
-									.filter((s) => s.rating)
-									.reduce((acc, s) => acc + (s.rating || 0), 0) /
-								suppliers.filter((s) => s.rating).length
-							).toFixed(1) : "N/A"}
+						<div className="flex flex-wrap gap-2">
+							<ImportExportButtons
+								onExport={() => exportData(filteredSuppliers)}
+								onImport={handleFileUpload}
+								onDownloadTemplate={() => downloadTemplate()}
+								isExporting={isExporting}
+								isImporting={isImporting}
+								variant="outline"
+							/>
+							<Link href="/suppliers/add">
+								<Button size="default" className="shadow-md hover:shadow-lg transition-all">
+									<Plus className="h-4 w-4 mr-2" />
+									Add Supplier
+								</Button>
+							</Link>
 						</div>
-						<p className="text-xs text-muted-foreground">Overall performance</p>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2 sm:p-4">
-						<CardTitle className="text-xs sm:text-sm font-medium">
-							Total Products
-						</CardTitle>
-						<Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent className="p-2 sm:p-4 pt-0">
-						<div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">
-							{Array.isArray(suppliers) ? suppliers.reduce((acc, s) => acc + (s._count?.products || 0), 0) : 0}
-						</div>
-						<p className="text-xs text-muted-foreground">Supplied products</p>
-					</CardContent>
-				</Card>
-			</div>
-
-			{/* Search and Filters */}
-			<Card>
-				<CardContent className="pt-6">
-					<div className="flex gap-4 mb-4">
-						<div className="flex-1">
-							<div className="relative">
-								<Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-								<Input
-									placeholder="Search suppliers by name, code, email, or contact..."
-									value={searchTerm}
-									onChange={(e) => setSearchTerm(e.target.value)}
-									className="pl-10"
-								/>
-							</div>
-						</div>
-						<Button
-							variant="outline"
-							onClick={() => setShowFilters(!showFilters)}
-						>
-							<Filter className="h-4 w-4 mr-2" />
-							Filters
-						</Button>
 					</div>
 
-					{showFilters && (
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-							<div>
-								<span className="text-sm font-medium mb-2 block">
-									Status
+					{/* Import Progress */}
+					<ImportProgressCard show={isImporting} progress={importProgress} />
+				</div>
+
+				{/* Stats Cards */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+					<Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+								Total Suppliers
+							</CardTitle>
+							<div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+								<Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+							</div>
+						</CardHeader>
+						<CardContent>
+							<div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+								{Array.isArray(suppliers) ? suppliers.length : 0}
+							</div>
+							<p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+								<TrendingUp className="h-3 w-3 text-green-600" />
+								+5.2% from last month
+							</p>
+						</CardContent>
+					</Card>
+
+					<Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-semibold text-green-700 dark:text-green-400">
+								Active Suppliers
+							</CardTitle>
+							<div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+								<TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+							</div>
+						</CardHeader>
+						<CardContent>
+							<div className="text-3xl font-bold text-green-900 dark:text-green-100">
+								{Array.isArray(suppliers) ? suppliers.filter((s) => s.status === "ACTIVE").length : 0}
+							</div>
+							<p className="text-xs text-muted-foreground mt-1">
+								{Array.isArray(suppliers) && suppliers.length > 0 ? (
+									(suppliers.filter((s) => s.status === "ACTIVE").length /
+										suppliers.length) *
+									100
+								).toFixed(1) : "0"}
+								% of total suppliers
+							</p>
+						</CardContent>
+					</Card>
+
+					<Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-yellow-50 to-white dark:from-yellow-950/20 dark:to-background">
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">
+								Average Rating
+							</CardTitle>
+							<div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+								<Star className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+							</div>
+						</CardHeader>
+						<CardContent>
+							<div className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
+								{Array.isArray(suppliers) && suppliers.length > 0 ? (
+									suppliers
+										.filter((s) => s.rating)
+										.reduce((acc, s) => acc + (s.rating || 0), 0) /
+									suppliers.filter((s) => s.rating).length
+								).toFixed(1) : "N/A"}
+							</div>
+							<p className="text-xs text-muted-foreground mt-1">Overall performance score</p>
+						</CardContent>
+					</Card>
+
+					<Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background">
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-semibold text-purple-700 dark:text-purple-400">
+								Total Products
+							</CardTitle>
+							<div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+								<Package className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+							</div>
+						</CardHeader>
+						<CardContent>
+							<div className="text-3xl font-bold text-purple-900 dark:text-purple-100">
+								{Array.isArray(suppliers) ? suppliers.reduce((acc, s) => acc + (s._count?.products || 0), 0) : 0}
+							</div>
+							<p className="text-xs text-muted-foreground mt-1">Products supplied</p>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Search and Filters */}
+				<Card className="border-none shadow-md">
+					<CardContent className="pt-6">
+						<div className="flex flex-col sm:flex-row gap-3">
+							<div className="flex-1">
+								<div className="relative">
+									<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+									<Input
+										placeholder="Search suppliers by name, code, email, or contact..."
+										value={searchTerm}
+										onChange={(e) => setSearchTerm(e.target.value)}
+										className="pl-10 h-11 border-muted-foreground/20 focus-visible:ring-primary"
+									/>
+								</div>
+							</div>
+							<Button
+								variant="outline"
+								onClick={() => setShowFilters(!showFilters)}
+								className="h-11 px-6 border-muted-foreground/20"
+							>
+								<Filter className="h-4 w-4 mr-2" />
+								Filters
+								{(statusFilter !== "all" || companyTypeFilter !== "all") && (
+									<Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center">
+										{(statusFilter !== "all" ? 1 : 0) + (companyTypeFilter !== "all" ? 1 : 0)}
+									</Badge>
+								)}
+							</Button>
+						</div>
+
+						{showFilters && (
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 mt-4 bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl border border-muted-foreground/10">
+							<div className="space-y-2">
+								<span className="text-sm font-semibold text-foreground block">
+									Status Filter
 								</span>
 								<Select
 									value={statusFilter}
@@ -497,9 +528,9 @@ export default function SuppliersPage() {
 										<SelectItem value="BLACKLISTED">Blacklisted</SelectItem>
 									</SelectContent>
 								</Select>
-							</div>
-							<div>
-								<span className="text-sm font-medium mb-2 block">Company Type</span>
+								</div>
+							<div className="space-y-2">
+								<span className="text-sm font-semibold text-foreground block">Company Type Filter</span>
 								<Select value={companyTypeFilter} onValueChange={setCompanyTypeFilter}>
 									<SelectTrigger>
 										<SelectValue placeholder="All Types" />
@@ -515,40 +546,65 @@ export default function SuppliersPage() {
 										<SelectItem value="OTHER">Other</SelectItem>
 									</SelectContent>
 								</Select>
+								</div>
 							</div>
-						</div>
-					)}
-				</CardContent>
-			</Card>
-
-			{/* Bulk Actions */}
-			{selectedSuppliers.length > 0 && (
-				<Card>
-					<CardContent className="p-3 sm:p-6">
-						<div className="flex items-center justify-between">
-							<span className="text-xs sm:text-sm text-muted-foreground">
-								{selectedSuppliers.length} supplier(s) selected
-							</span>
-							<Button variant="outline" size="sm">
-								Bulk Actions
-							</Button>
-						</div>
+						)}
 					</CardContent>
 				</Card>
-			)}
 
-			{/* Suppliers Table */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Suppliers ({filteredSuppliers.length})</CardTitle>
-					<CardDescription>
-						Manage your supplier relationships and contact information
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="overflow-x-auto">
-					<Table>
-						<TableHeader>
-							<TableRow>
+				{/* Bulk Actions */}
+				{selectedSuppliers.length > 0 && (
+					<Card className="border-primary/50 bg-primary/5 shadow-md">
+						<CardContent className="p-4">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-3">
+									<div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+										<span className="text-sm font-bold text-primary">{selectedSuppliers.length}</span>
+									</div>
+									<span className="text-sm font-medium">
+										{selectedSuppliers.length} supplier{selectedSuppliers.length > 1 ? 's' : ''} selected
+									</span>
+								</div>
+								<div className="flex gap-2">
+									<Button variant="outline" size="sm" onClick={() => setSelectedSuppliers([])}>
+										Clear
+									</Button>
+									<Button variant="default" size="sm">
+										Bulk Actions
+									</Button>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				)}
+
+				{/* Suppliers Table */}
+				<Card className="border-none shadow-lg">
+					<CardHeader className="border-b bg-muted/30">
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+							<div>
+								<CardTitle className="text-xl flex items-center gap-2">
+									Suppliers Directory
+									<Badge variant="secondary" className="font-normal">
+										{filteredSuppliers.length}
+									</Badge>
+								</CardTitle>
+								<CardDescription className="mt-1">
+									Manage your supplier relationships and contact information
+								</CardDescription>
+							</div>
+							{filteredSuppliers.length !== suppliers.length && (
+								<Badge variant="outline" className="text-xs">
+									Filtered from {suppliers.length} total
+								</Badge>
+							)}
+						</div>
+					</CardHeader>
+					<CardContent className="p-0">
+						<div className="overflow-x-auto">
+							<Table>
+								<TableHeader>
+									<TableRow className="bg-muted/50 hover:bg-muted/50">
 								<TableHead className="w-12">
 									<Checkbox
 										checked={
@@ -568,9 +624,36 @@ export default function SuppliersPage() {
 								<TableHead className="text-right">Actions</TableHead>
 							</TableRow>
 						</TableHeader>
-						<TableBody>
-							{paginatedSuppliers.map((supplier) => (
-								<TableRow key={supplier.id}>
+							<TableBody>
+								{paginatedSuppliers.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={9} className="h-64 text-center">
+											<div className="flex flex-col items-center justify-center gap-4 py-8">
+												<div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center">
+													<Building2 className="h-10 w-10 text-muted-foreground" />
+												</div>
+												<div className="space-y-2">
+													<h3 className="text-lg font-semibold">No suppliers found</h3>
+													<p className="text-sm text-muted-foreground max-w-md">
+														{searchTerm || statusFilter !== "all" || companyTypeFilter !== "all"
+															? "Try adjusting your search or filters to find what you're looking for."
+															: "Get started by adding your first supplier to the system."}
+													</p>
+												</div>
+												{!searchTerm && statusFilter === "all" && companyTypeFilter === "all" && (
+													<Link href="/suppliers/add">
+														<Button size="lg" className="mt-2">
+															<Plus className="h-4 w-4 mr-2" />
+															Add Your First Supplier
+														</Button>
+													</Link>
+												)}
+											</div>
+										</TableCell>
+									</TableRow>
+								) : (
+									paginatedSuppliers.map((supplier) => (
+										<TableRow key={supplier.id} className="hover:bg-muted/30 transition-colors">
 									<TableCell>
 										<Checkbox
 											checked={selectedSuppliers.includes(supplier.id)}
@@ -579,21 +662,21 @@ export default function SuppliersPage() {
 											}
 										/>
 									</TableCell>
-									<TableCell>
-										<div className="flex items-center gap-2 sm:gap-3">
-											<div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center">
-												<Building2 className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-											</div>
-											<div>
-												<div className="font-medium text-sm sm:text-base truncate max-w-[120px] sm:max-w-[200px]">
-													{supplier.name}
+										<TableCell>
+											<div className="flex items-center gap-3">
+												<div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+													<Building2 className="h-5 w-5 text-white" />
 												</div>
-												<div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-[200px]">
-													{supplier.billingAddress.city}, {supplier.billingAddress.country}
+												<div className="min-w-0">
+													<div className="font-semibold text-sm truncate">
+														{supplier.name}
+													</div>
+													<div className="text-xs text-muted-foreground truncate">
+														{supplier.billingAddress.city}, {supplier.billingAddress.country}
+													</div>
 												</div>
 											</div>
-										</div>
-									</TableCell>
+										</TableCell>
 									<TableCell className="hidden sm:table-cell">
 										<code className="text-xs sm:text-sm bg-muted px-1.5 py-0.5 sm:px-2 sm:py-1 rounded">
 											{supplier.code}
@@ -684,17 +767,19 @@ export default function SuppliersPage() {
 										</DropdownMenu>
 									</TableCell>
 								</TableRow>
-							))}
+							))
+								)}
 						</TableBody>
 					</Table>
+					</div>
 
 					{/* Pagination */}
 					{totalPages > 1 && (
-						<div className="flex items-center justify-between mt-4">
+						<div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t bg-muted/20">
 							<div className="text-sm text-muted-foreground">
-								Showing {startIndex + 1} to{" "}
-								{Math.min(startIndex + itemsPerPage, filteredSuppliers.length)}{" "}
-								of {filteredSuppliers.length} suppliers
+								Showing <span className="font-semibold text-foreground">{startIndex + 1}</span> to{" "}
+								<span className="font-semibold text-foreground">{Math.min(startIndex + itemsPerPage, filteredSuppliers.length)}</span>{" "}
+								of <span className="font-semibold text-foreground">{filteredSuppliers.length}</span> suppliers
 							</div>
 							<div className="flex items-center gap-2">
 								<Button
@@ -702,17 +787,22 @@ export default function SuppliersPage() {
 									size="sm"
 									onClick={() => setCurrentPage(currentPage - 1)}
 									disabled={currentPage === 1}
+									className="h-9 px-4"
 								>
 									Previous
 								</Button>
-								<span className="text-sm px-3 py-1">
-									Page {currentPage} of {totalPages}
-								</span>
+								<div className="flex items-center gap-1">
+									<span className="text-sm px-3 py-1 rounded bg-primary text-primary-foreground font-medium">
+										{currentPage}
+									</span>
+									<span className="text-sm text-muted-foreground">of {totalPages}</span>
+								</div>
 								<Button
 									variant="outline"
 									size="sm"
 									onClick={() => setCurrentPage(currentPage + 1)}
 									disabled={currentPage === totalPages}
+									className="h-9 px-4"
 								>
 									Next
 								</Button>
@@ -721,6 +811,7 @@ export default function SuppliersPage() {
 					)}
 				</CardContent>
 			</Card>
+			</div>
 		</div>
 	);
 }

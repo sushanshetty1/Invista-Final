@@ -171,7 +171,6 @@ const Navbar = () => {
 					href: "/purchase-orders?status=APPROVED",
 				},
 				{ title: "Reorder Suggestions", href: "/purchase-orders?tab=reorder" },
-				{ title: "Goods Receipt", href: "/purchase-orders/goods-receipt" },
 			],
 		},
 		{

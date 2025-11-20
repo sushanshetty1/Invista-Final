@@ -159,10 +159,13 @@ export default function SupplierPerformancePage() {
 
 	// Helper function to render star ratings
 	const renderStars = (rating: number | null) => {
-		if (rating === null) return <span className="text-muted-foreground">N/A</span>;
+		if (rating === null || rating === undefined) return <span className="text-muted-foreground">N/A</span>;
 
-		const fullStars = Math.floor(rating);
-		const hasHalfStar = rating % 1 >= 0.5;
+		const ratingNum = typeof rating === 'number' ? rating : parseFloat(rating);
+		if (Number.isNaN(ratingNum)) return <span className="text-muted-foreground">N/A</span>;
+
+		const fullStars = Math.floor(ratingNum);
+		const hasHalfStar = ratingNum % 1 >= 0.5;
 		const stars = [];
 
 		for (let i = 0; i < fullStars; i++) {
@@ -181,7 +184,7 @@ export default function SupplierPerformancePage() {
 		return (
 			<div className="flex items-center gap-1">
 				{stars}
-				<span className="ml-1 text-sm font-medium">{rating.toFixed(1)}</span>
+				<span className="ml-1 text-sm font-medium">{ratingNum.toFixed(1)}</span>
 			</div>
 		);
 	};
@@ -214,98 +217,117 @@ export default function SupplierPerformancePage() {
 
 	if (isLoading) {
 		return (
-			<div className="py-16 px-6 mx-4 md:mx-8 space-y-6">
-				<div>
-					<Skeleton className="h-8 w-64 mb-2" />
-					<Skeleton className="h-4 w-96" />
+			<div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+				<div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+					<div className="animate-pulse space-y-8">
+						<div className="space-y-2">
+							<Skeleton className="h-10 w-1/3 rounded-lg" />
+							<Skeleton className="h-4 w-1/2 rounded" />
+						</div>
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+							<Skeleton className="h-32 rounded-xl shadow-lg" />
+							<Skeleton className="h-32 rounded-xl shadow-lg" />
+							<Skeleton className="h-32 rounded-xl shadow-lg" />
+							<Skeleton className="h-32 rounded-xl shadow-lg" />
+						</div>
+						<Skeleton className="h-96 rounded-xl shadow-lg" />
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<Skeleton className="h-64 rounded-xl shadow-lg" />
+							<Skeleton className="h-64 rounded-xl shadow-lg" />
+						</div>
+					</div>
 				</div>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-					<Skeleton className="h-32" />
-					<Skeleton className="h-32" />
-					<Skeleton className="h-32" />
-					<Skeleton className="h-32" />
-				</div>
-				<Skeleton className="h-96" />
 			</div>
 		);
 	}
 
 	return (
-		<div className="py-16 px-6 mx-4 md:mx-8 space-y-6">
-			{/* Header */}
-			<div>
-				<h1 className="text-3xl font-bold">Supplier Performance</h1>
-				<p className="text-muted-foreground">
-					Monitor and analyze supplier performance metrics and analytics
-				</p>
-			</div>
+		<div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+			<div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+				{/* Header */}
+				<div className="space-y-1">
+					<h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+						Supplier Performance Analytics
+					</h1>
+					<p className="text-base text-muted-foreground max-w-2xl">
+						Monitor and analyze supplier performance metrics, ratings, and delivery statistics
+					</p>
+				</div>
 
-			{/* Aggregate Stats Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Average Rating</CardTitle>
-						<Star className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{stats.avgRating.toFixed(1)}</div>
-						<p className="text-xs text-muted-foreground">Out of 5.0</p>
-						<Progress value={(stats.avgRating / 5) * 100} className="mt-2" />
-					</CardContent>
-				</Card>
+				{/* Aggregate Stats Cards */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+					<Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-yellow-50 to-white dark:from-yellow-950/20 dark:to-background">
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">Average Rating</CardTitle>
+							<div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+								<Star className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+							</div>
+						</CardHeader>
+							<CardContent>
+								<div className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">{Number(stats.avgRating).toFixed(1)}</div>
+								<p className="text-xs text-muted-foreground mt-1">Out of 5.0 stars</p>
+								<Progress value={(Number(stats.avgRating) / 5) * 100} className="mt-3 h-2" />
+							</CardContent>
+					</Card>
 
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">On-Time Delivery</CardTitle>
-						<Clock className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{stats.avgOnTime.toFixed(1)}%</div>
-						<p className="text-xs text-muted-foreground">Average delivery rate</p>
-						<Progress value={stats.avgOnTime} className="mt-2" />
-					</CardContent>
-				</Card>
+					<Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-semibold text-green-700 dark:text-green-400">On-Time Delivery</CardTitle>
+							<div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+								<Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
+							</div>
+						</CardHeader>
+							<CardContent>
+								<div className="text-3xl font-bold text-green-900 dark:text-green-100">{Number(stats.avgOnTime).toFixed(1)}%</div>
+								<p className="text-xs text-muted-foreground mt-1">Average delivery rate</p>
+								<Progress value={Number(stats.avgOnTime)} className="mt-3 h-2" />
+							</CardContent>
+					</Card>
 
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Quality Rating</CardTitle>
-						<Award className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{stats.avgQuality.toFixed(1)}</div>
-						<p className="text-xs text-muted-foreground">Out of 5.0</p>
-						<Progress value={(stats.avgQuality / 5) * 100} className="mt-2" />
-					</CardContent>
-				</Card>
+					<Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background">
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-semibold text-purple-700 dark:text-purple-400">Quality Rating</CardTitle>
+							<div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+								<Award className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+							</div>
+						</CardHeader>
+							<CardContent>
+								<div className="text-3xl font-bold text-purple-900 dark:text-purple-100">{Number(stats.avgQuality).toFixed(1)}</div>
+								<p className="text-xs text-muted-foreground mt-1">Out of 5.0 stars</p>
+								<Progress value={(Number(stats.avgQuality) / 5) * 100} className="mt-3 h-2" />
+							</CardContent>
+					</Card>
 
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Active Suppliers</CardTitle>
-						<Package className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{stats.totalActive}</div>
-						<p className="text-xs text-muted-foreground">
-							Out of {suppliers.length} total
-						</p>
-						<Progress
-							value={(stats.totalActive / suppliers.length) * 100}
-							className="mt-2"
-						/>
-					</CardContent>
-				</Card>
-			</div>
+					<Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-semibold text-blue-700 dark:text-blue-400">Active Suppliers</CardTitle>
+							<div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+								<Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+							</div>
+						</CardHeader>
+						<CardContent>
+							<div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.totalActive}</div>
+							<p className="text-xs text-muted-foreground mt-1">
+								Out of {suppliers.length} total suppliers
+							</p>
+							<Progress
+								value={suppliers.length > 0 ? (stats.totalActive / suppliers.length) * 100 : 0}
+								className="mt-3 h-2"
+							/>
+						</CardContent>
+					</Card>
+				</div>
 
-			{/* Performance Table */}
-			<Card>
-				<CardHeader>
-					<div className="flex items-center justify-between">
-						<div>
-							<CardTitle>Supplier Performance Metrics</CardTitle>
-							<CardDescription>
-								Detailed performance data for all suppliers
-							</CardDescription>
-						</div>
+				{/* Performance Table */}
+				<Card className="border-none shadow-lg">
+					<CardHeader className="border-b bg-muted/30">
+						<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+							<div>
+								<CardTitle className="text-xl">Supplier Performance Metrics</CardTitle>
+								<CardDescription className="mt-1">
+									Detailed performance data and analytics for all suppliers
+								</CardDescription>
+							</div>
 						<div className="flex gap-2">
 							<Select value={sortBy} onValueChange={setSortBy}>
 								<SelectTrigger className="w-[180px]">
@@ -370,23 +392,23 @@ export default function SupplierPerformancePage() {
 													{renderStars(supplier.rating)}
 													{getTrendIcon(supplier.rating, 4.0)}
 												</div>
-											</TableCell>
-											<TableCell>
-												<div className="flex items-center gap-2">
-													<span className="font-medium">
-														{supplier.onTimeDelivery !== null
-															? `${supplier.onTimeDelivery.toFixed(1)}%`
-															: "N/A"}
-													</span>
-													{getTrendIcon(supplier.onTimeDelivery, 95)}
-												</div>
-												{supplier.onTimeDelivery !== null && (
-													<Progress
-														value={supplier.onTimeDelivery}
-														className="mt-1 h-1"
-													/>
-												)}
-											</TableCell>
+										</TableCell>
+										<TableCell>
+											<div className="flex items-center gap-2">
+												<span className="font-medium">
+													{supplier.onTimeDelivery !== null && supplier.onTimeDelivery !== undefined
+														? `${Number(supplier.onTimeDelivery).toFixed(1)}%`
+														: "N/A"}
+												</span>
+												{getTrendIcon(supplier.onTimeDelivery, 95)}
+											</div>
+											{supplier.onTimeDelivery !== null && supplier.onTimeDelivery !== undefined && (
+												<Progress
+													value={Number(supplier.onTimeDelivery)}
+													className="mt-1 h-1"
+												/>
+											)}
+										</TableCell>
 											<TableCell>
 												<div className="flex items-center gap-2">
 													{renderStars(supplier.qualityRating)}
@@ -431,16 +453,18 @@ export default function SupplierPerformancePage() {
 				</CardContent>
 			</Card>
 
-			{/* Performance Insights */}
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-				<Card>
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<TrendingUp className="h-5 w-5 text-green-500" />
-							Top Performers
-						</CardTitle>
-						<CardDescription>Suppliers with highest ratings</CardDescription>
-					</CardHeader>
+				{/* Performance Insights */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<Card className="border-none shadow-lg">
+						<CardHeader className="border-b bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/20">
+							<CardTitle className="flex items-center gap-2 text-lg">
+								<div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+									<TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+								</div>
+								Top Performers
+							</CardTitle>
+							<CardDescription>Suppliers with highest ratings (≥4.0)</CardDescription>
+						</CardHeader>
 					<CardContent>
 						<div className="space-y-4">
 							{sortedSuppliers
@@ -475,14 +499,16 @@ export default function SupplierPerformancePage() {
 					</CardContent>
 				</Card>
 
-				<Card>
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<TrendingDown className="h-5 w-5 text-red-500" />
-							Needs Improvement
-						</CardTitle>
-						<CardDescription>Suppliers requiring attention</CardDescription>
-					</CardHeader>
+					<Card className="border-none shadow-lg">
+						<CardHeader className="border-b bg-gradient-to-r from-red-50 to-transparent dark:from-red-950/20">
+							<CardTitle className="flex items-center gap-2 text-lg">
+								<div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+									<TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+								</div>
+								Needs Improvement
+							</CardTitle>
+							<CardDescription>Suppliers requiring attention (below 3.0 rating)</CardDescription>
+						</CardHeader>
 					<CardContent>
 						<div className="space-y-4">
 							{sortedSuppliers
@@ -514,8 +540,9 @@ export default function SupplierPerformancePage() {
 								</p>
 							)}
 						</div>
-					</CardContent>
-				</Card>
+						</CardContent>
+					</Card>
+				</div>
 			</div>
 		</div>
 	);
