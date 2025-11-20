@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import DashboardGuard from "@/components/DashboardGuard";
 import {
 	Card,
 	CardContent,
@@ -114,6 +116,7 @@ interface OrderStats {
 }
 
 export default function OrdersPage() {
+	const { user, loading: authLoading } = useAuth();
 	const [orders, setOrders] = useState<Order[]>([]);
 	const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
 	const [pagination, setPagination] = useState({
@@ -141,10 +144,15 @@ export default function OrdersPage() {
 	const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
 	// Load orders and reorder suggestions
 	const loadOrders = useCallback(async () => {
+		if (!user) {
+			return;
+		}
 		setLoading(true);
 		try {
 			// Fetch orders from API
-			const ordersResponse = await fetch("/api/orders");
+			const ordersResponse = await fetch("/api/orders", {
+				credentials: "include",
+			});
 			const ordersData = await ordersResponse.json();
 
 			if (!ordersResponse.ok) {
@@ -152,7 +160,9 @@ export default function OrdersPage() {
 			}
 
 			// Fetch stats from API
-			const statsResponse = await fetch("/api/orders/stats");
+			const statsResponse = await fetch("/api/orders/stats", {
+				credentials: "include",
+			});
 			const statsData = await statsResponse.json();
 
 			if (!statsResponse.ok) {
@@ -182,11 +192,13 @@ export default function OrdersPage() {
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [user]);
 
 	useEffect(() => {
-		loadOrders();
-	}, [loadOrders]);
+		if (user && !authLoading) {
+			loadOrders();
+		}
+	}, [loadOrders, user, authLoading]);
 
 	// Filter orders based on search and status
 	useEffect(() => {
@@ -274,6 +286,7 @@ export default function OrdersPage() {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({ status: newStatus }),
+				credentials: "include",
 			});
 
 			const data = await response.json();
@@ -303,7 +316,7 @@ export default function OrdersPage() {
 		setIsOrderDetailOpen(true);
 	};
 
-	if (loading) {
+	if (authLoading || loading) {
 		return (
 			<div className="flex items-center justify-center h-96">
 				<RefreshCw className="h-8 w-8 animate-spin" />
@@ -311,6 +324,7 @@ export default function OrdersPage() {
 		);
 	}
 	return (
+		<DashboardGuard>
 		<div className="min-h-screen bg-background pt-20">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 				<div className="space-y-6">
@@ -714,5 +728,6 @@ export default function OrdersPage() {
 				</div>
 			</div>
 		</div>
+		</DashboardGuard>
 	);
 }

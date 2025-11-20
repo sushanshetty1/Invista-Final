@@ -110,15 +110,19 @@ export const CreateOrderSchema = z
 	})
 	.refine(
 		(data) => {
-			// If requiredDate is provided, it should be in the future
+			// If requiredDate is provided, it should not be in the past (allow same day)
 			if (data.requiredDate) {
 				const now = new Date();
-				return data.requiredDate > now;
+				// Set to start of today to allow same-day orders
+				const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+				const reqDate = new Date(data.requiredDate);
+				const reqDay = new Date(reqDate.getFullYear(), reqDate.getMonth(), reqDate.getDate());
+				return reqDay >= today;
 			}
 			return true;
 		},
 		{
-			message: "Required date must be in the future",
+			message: "Required date cannot be in the past",
 			path: ["requiredDate"],
 		},
 	);

@@ -49,16 +49,41 @@ export async function GET(
 			return errorResponse("Invalid warehouse ID format", 400);
 		}
 
-		const result = await getWarehouse(id);
+		// Get authenticated user and company
+		const { createClient } = await import("@/lib/supabaseServer");
+		const supabase = await createClient();
 
-		if (!result.success) {
-			return errorResponse(
-				result.error!,
-				result.error === "Warehouse not found" ? 404 : 400,
-			);
+		const {
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
+
+		if (userError || !user) {
+			return errorResponse("Authentication required", 401);
 		}
 
-		return successResponse(result.data, result.message);
+		const { data: companyUser } = await supabase
+			.from("company_users")
+			.select("companyId")
+			.eq("userId", user.id)
+			.single();
+
+		if (!companyUser?.companyId) {
+			return errorResponse("No company associated with user", 403);
+		}
+
+		const { data: warehouse, error: queryError } = await supabase
+			.from("company_locations")
+			.select("*")
+			.eq("id", id)
+			.eq("companyId", companyUser.companyId)
+			.single();
+
+		if (queryError || !warehouse) {
+			return errorResponse("Warehouse not found", 404);
+		}
+
+		return successResponse(warehouse);
 	} catch (error) {
 		return handleError(error);
 	}

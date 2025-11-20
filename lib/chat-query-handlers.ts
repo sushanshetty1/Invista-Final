@@ -1111,6 +1111,7 @@ export async function handleCustomersList(
     const { getCustomers } = await import("@/lib/actions/customers");
     
     const result = await getCustomers({
+      companyId,
       limit: 20,
       offset: 0,
     });
@@ -1188,7 +1189,7 @@ export async function handleCustomerCount(companyId: string): Promise<QueryResul
   try {
     const { getCustomers } = await import("@/lib/actions/customers");
     
-    const result = await getCustomers({});
+    const result = await getCustomers({ companyId });
 
     if (!result.success || !result.data) {
       return {
@@ -1380,7 +1381,7 @@ export async function handleCustomerMetrics(companyId: string): Promise<QueryRes
   try {
     const { getCustomers } = await import("@/lib/actions/customers");
     
-    const result = await getCustomers({});
+    const result = await getCustomers({ companyId });
 
     if (!result.success || !result.data) {
       return {

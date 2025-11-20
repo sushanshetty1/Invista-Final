@@ -20,78 +20,34 @@ export async function authenticate(
 	request: NextRequest,
 ): Promise<AuthenticationResult> {
 	try {
-		// Get token from Authorization header
-		const authHeader = request.headers.get("authorization");
-		if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		// Use server-side Supabase client for cookie-based auth
+		const { createClient } = await import("@/lib/supabaseServer");
+		const supabase = await createClient();
+
+		const {
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
+
+		if (userError || !user) {
 			return {
 				success: false,
-				error: "Missing or invalid authorization header",
+				error: "Authentication required",
 			};
 		}
-		const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-		// Validate JWT token with Supabase
-		try {
-			const { createClient } = await import("@supabase/supabase-js");
-			const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-			const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-			if (!supabaseUrl || !supabaseAnonKey) {
-				throw new Error("Missing Supabase configuration");
-			}
-
-			const supabase = createClient(supabaseUrl, supabaseAnonKey);
-			const { data, error } = await supabase.auth.getUser(token);
-
-			if (error || !data.user) {
-				return { success: false, error: "Invalid or expired token" };
-			}
-
-			// Get user profile from database
-			const { data: profile, error: profileError } = await supabase
-				.from("User")
-				.select("id, email, role, permissions")
-				.eq("id", data.user.id)
-				.single();
-
-			if (profileError || !profile) {
-				// Create default user profile if not exists
-				const defaultProfile = {
-					id: data.user.id,
-					email: data.user.email || "",
-					role: "user",
-					permissions: ["inventory:read"],
-				};
-
-				const { error: insertError } = await supabase
-					.from("User")
-					.insert(defaultProfile);
-
-				if (insertError) {
-					// Handle error silently in production
-				}
-
-				return {
-					success: true,
-					user: defaultProfile,
-				};
-			}
-
-			return {
-				success: true,
-				user: {
-					id: profile.id,
-					email: profile.email,
-					role: profile.role || "user",
-					permissions: Array.isArray(profile.permissions)
-						? profile.permissions
-						: ["inventory:read"],
-				},
-			};
-		} catch {
-			return { success: false, error: "Authentication service unavailable" };
-		}
-	} catch {
+		// Return authenticated user with default permissions
+		return {
+			success: true,
+			user: {
+				id: user.id,
+				email: user.email || "",
+				role: "user",
+				permissions: ["inventory:read", "inventory:write"],
+			},
+		};
+	} catch (error) {
+		console.error("Authentication error:", error);
 		return { success: false, error: "Authentication failed" };
 	}
 }

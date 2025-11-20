@@ -142,7 +142,9 @@ export default function CreateOrderPage() {
 
 	const loadWarehouses = async () => {
 		try {
-			const response = await fetch("/api/warehouses");
+			const response = await fetch("/api/warehouses", {
+				credentials: "include",
+			});
 			const data = await response.json();
 
 			if (response.ok) {
@@ -164,7 +166,9 @@ export default function CreateOrderPage() {
 	};
 	const loadCustomers = async () => {
 		try {
-			const response = await fetch("/api/customers");
+			const response = await fetch("/api/customers", {
+				credentials: "include",
+			});
 			const data = await response.json();
 
 			if (response.ok) {
@@ -232,13 +236,12 @@ export default function CreateOrderPage() {
 				notes: newCustomer.notes || undefined,
 			};
 
-			const response = await fetch("/api/customers", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(payload),
-			});
-
-			const data = await response.json();
+		const response = await fetch("/api/customers", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			credentials: "include",
+			body: JSON.stringify(payload),
+		});			const data = await response.json();
 
 			if (response.ok) {
 				toast.success("Customer created successfully");
@@ -275,7 +278,9 @@ export default function CreateOrderPage() {
 	const loadProducts = async () => {
 		try {
 			setIsLoadingProducts(true);
-			const response = await fetch("/api/products");
+			const response = await fetch("/api/products", {
+				credentials: "include",
+			});
 			const data = await response.json();
 
 			if (response.ok) {
@@ -420,15 +425,14 @@ export default function CreateOrderPage() {
 				})),
 			};
 
-			const response = await fetch("/api/orders", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(orderData),
-			});
-
-			const data = await response.json();
+		const response = await fetch("/api/orders", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			credentials: "include",
+			body: JSON.stringify(orderData),
+		});			const data = await response.json();
 
 			if (!response.ok) {
 				throw new Error(data.error || "Failed to create order");

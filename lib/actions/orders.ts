@@ -2,7 +2,8 @@
 
 import { neonClient } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabaseServer";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { actionError, actionSuccess } from "@/lib/api-utils";
 import {
 	CreateOrderSchema,
@@ -13,6 +14,86 @@ import {
 	type OrderFilterInput,
 } from "@/lib/validations/order";
 import { Prisma } from "../../prisma/generated/neon";
+
+type ActionContext = {
+	userId?: string;
+	companyId?: string;
+};
+
+type ResolvedActionContext = {
+	userId: string;
+	companyId: string;
+};
+
+async function resolveActionContext(
+	context: ActionContext = {},
+): Promise<ResolvedActionContext | { error: string }> {
+	let userId = context.userId;
+
+	if (!userId) {
+		try {
+			const supabase = await createClient();
+			const {
+				data: { user },
+				error: sessionError,
+			} = await supabase.auth.getUser();
+
+			if (sessionError || !user?.id) {
+				return { error: "Authentication required" };
+			}
+
+			userId = user.id;
+		} catch (error) {
+			console.error("[resolveActionContext] Exception during auth:", error);
+			return { error: "Authentication required" };
+		}
+	}
+
+	let companyId = context.companyId;
+
+	if (!companyId) {
+		try {
+			// Create a temporary Supabase client to query with user's auth
+			const supabase = await createClient();
+			
+			// First try to get company from company_users using user's session
+			const { data: companyUser, error: companyError } = await supabase
+				.from("company_users")
+				.select("companyId")
+				.eq("userId", userId)
+				.eq("isActive", true)
+				.single();
+
+			if (companyUser) {
+				companyId = companyUser.companyId;
+			} else {
+				// If not found in company_users, check if user owns a company
+				const { data: ownedCompany, error: ownedError } = await supabase
+					.from("companies")
+					.select("id")
+					.eq("createdBy", userId)
+					.eq("isActive", true)
+					.single();
+
+				if (ownedCompany) {
+					companyId = ownedCompany.id;
+				} else {
+					console.error("[resolveActionContext] No company found:", {
+						userId,
+						companyUserError: companyError?.message,
+						ownedCompanyError: ownedError?.message,
+					});
+					return { error: "User not associated with any company" };
+				}
+			}
+		} catch (error) {
+			console.error("[resolveActionContext] Exception during company lookup:", error);
+			return { error: "User not associated with any company" };
+		}
+	}
+
+	return { userId, companyId };
+}
 
 // Generate unique order number
 async function generateOrderNumber(): Promise<string> {
@@ -138,38 +219,25 @@ async function reserveInventory(
 }
 
 // Create a new order
-export async function createOrder(data: CreateOrderInput) {
+export async function createOrder(
+	data: CreateOrderInput,
+	context?: ActionContext,
+) {
 	try {
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
+		}
+		const { userId, companyId } = resolvedContext;
+
 		// Validate input data
 		const validatedData = CreateOrderSchema.parse(data);
-
-		// Authenticate user
-		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
-
-		if (sessionError || !session) {
-			return actionError("Authentication required");
-		}
-
-		// Get user's company from Supabase
-		const { data: companyUser, error: companyError } = await supabase
-			.from("company_users")
-			.select("companyId")
-			.eq("userId", session.user.id)
-			.eq("isActive", true)
-			.single();
-
-		if (companyError || !companyUser) {
-			return actionError("User not associated with any company");
-		}
 
 		// Validate customer exists and belongs to company
 		const customer = await neonClient.customer.findFirst({
 			where: {
 				id: validatedData.customerId,
-				companyId: companyUser.companyId,
+				companyId,
 			},
 		});
 
@@ -177,16 +245,17 @@ export async function createOrder(data: CreateOrderInput) {
 			return actionError("Customer not found or not accessible");
 		}
 
-		// Validate warehouse exists and belongs to company
-		const warehouse = await neonClient.warehouse.findFirst({
-			where: {
-				id: validatedData.warehouseId,
-				companyId: companyUser.companyId,
-				isActive: true,
-			},
-		});
+		// Validate warehouse exists and belongs to company (warehouses are in Supabase company_locations)
+		const supabase = await createClient();
+		const { data: warehouse, error: warehouseError } = await supabase
+			.from("company_locations")
+			.select("id, name, isActive")
+			.eq("id", validatedData.warehouseId)
+			.eq("companyId", companyId)
+			.eq("isActive", true)
+			.single();
 
-		if (!warehouse) {
+		if (warehouseError || !warehouse) {
 			return actionError("Warehouse not found or not accessible");
 		}
 
@@ -225,7 +294,7 @@ export async function createOrder(data: CreateOrderInput) {
 					orderNumber,
 					customerId: validatedData.customerId,
 					warehouseId: validatedData.warehouseId,
-					companyId: companyUser.companyId,
+					companyId,
 					type: validatedData.type,
 					channel: validatedData.channel,
 					priority: validatedData.priority,
@@ -239,7 +308,7 @@ export async function createOrder(data: CreateOrderInput) {
 					notes: validatedData.notes,
 					internalNotes: validatedData.internalNotes,
 					rushOrder: validatedData.rushOrder,
-					createdBy: session.user.id,
+					createdBy: userId,
 				},
 			});
 
@@ -279,7 +348,7 @@ export async function createOrder(data: CreateOrderInput) {
 			result.id,
 			validatedData.items,
 			validatedData.warehouseId,
-			session.user.id,
+			userId,
 		);
 
 		revalidatePath("/orders");
@@ -294,7 +363,10 @@ export async function createOrder(data: CreateOrderInput) {
 }
 
 // Get all orders with filters and pagination
-export async function getOrders(filters: Partial<OrderFilterInput> = {}) {
+export async function getOrders(
+	filters: Partial<OrderFilterInput> = {},
+	context?: ActionContext,
+) {
 	try {
 		// Set defaults for required fields
 		const validatedFilters = OrderFilterSchema.parse({
@@ -303,31 +375,15 @@ export async function getOrders(filters: Partial<OrderFilterInput> = {}) {
 			...filters,
 		});
 
-		// Authenticate user
-		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
-
-		if (sessionError || !session) {
-			return actionError("Authentication required");
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
 		}
-
-		// Get user's company
-		const { data: companyUser, error: companyError } = await supabase
-			.from("company_users")
-			.select("companyId")
-			.eq("userId", session.user.id)
-			.eq("isActive", true)
-			.single();
-
-		if (companyError || !companyUser) {
-			return actionError("User not associated with any company");
-		}
+		const { companyId } = resolvedContext;
 
 		// Build where clause
 		const where: Prisma.OrderWhereInput = {
-			companyId: companyUser.companyId,
+			companyId,
 		};
 
 		if (validatedFilters.status) {
@@ -487,34 +543,18 @@ export async function getOrders(filters: Partial<OrderFilterInput> = {}) {
 }
 
 // Get order by ID
-export async function getOrderById(id: string) {
+export async function getOrderById(id: string, context?: ActionContext) {
 	try {
-		// Authenticate user
-		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
-
-		if (sessionError || !session) {
-			return actionError("Authentication required");
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
 		}
-
-		// Get user's company
-		const { data: companyUser, error: companyError } = await supabase
-			.from("company_users")
-			.select("companyId")
-			.eq("userId", session.user.id)
-			.eq("isActive", true)
-			.single();
-
-		if (companyError || !companyUser) {
-			return actionError("User not associated with any company");
-		}
+		const { companyId } = resolvedContext;
 
 		const order = await neonClient.order.findFirst({
 			where: {
 				id,
-				companyId: companyUser.companyId,
+				companyId,
 			},
 			include: {
 				customer: true,
@@ -549,38 +589,25 @@ export async function getOrderById(id: string) {
 }
 
 // Update order status with automatic state transitions
-export async function updateOrderStatus(data: UpdateOrderStatusInput & { orderId: string }) {
+export async function updateOrderStatus(
+	data: UpdateOrderStatusInput & { orderId: string },
+	context?: ActionContext,
+) {
 	try {
 		// Validate input data
 		const validatedData = UpdateOrderStatusSchema.parse(data);
 
-		// Authenticate user
-		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
-
-		if (sessionError || !session) {
-			return actionError("Authentication required");
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
 		}
-
-		// Get user's company
-		const { data: companyUser, error: companyError } = await supabase
-			.from("company_users")
-			.select("companyId")
-			.eq("userId", session.user.id)
-			.eq("isActive", true)
-			.single();
-
-		if (companyError || !companyUser) {
-			return actionError("User not associated with any company");
-		}
+		const { userId, companyId } = resolvedContext;
 
 		// Get current order
 		const currentOrder = await neonClient.order.findFirst({
 			where: {
 				id: data.orderId,
-				companyId: companyUser.companyId,
+				companyId,
 			},
 		});
 
@@ -680,7 +707,7 @@ export async function updateOrderStatus(data: UpdateOrderStatusInput & { orderId
 						referenceType: "Order",
 						referenceId: data.orderId,
 						reason: "Order cancellation - inventory release",
-						userId: session.user.id,
+						userId,
 					},
 				});
 			}
@@ -698,32 +725,16 @@ export async function updateOrderStatus(data: UpdateOrderStatusInput & { orderId
 }
 
 // Get order statistics
-export async function getOrderStats() {
+export async function getOrderStats(context?: ActionContext) {
 	try {
-		// Authenticate user
-		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
-
-		if (sessionError || !session) {
-			return actionError("Authentication required");
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
 		}
-
-		// Get user's company
-		const { data: companyUser, error: companyError } = await supabase
-			.from("company_users")
-			.select("companyId")
-			.eq("userId", session.user.id)
-			.eq("isActive", true)
-			.single();
-
-		if (companyError || !companyUser) {
-			return actionError("User not associated with any company");
-		}
+		const { companyId } = resolvedContext;
 
 		const where: Prisma.OrderWhereInput = {
-			companyId: companyUser.companyId,
+			companyId,
 		};
 
 		const [totalOrders, pendingOrders, shippedOrders, deliveredOrders, revenueResult] =
@@ -778,5 +789,339 @@ export async function getOrderStats() {
 	} catch (error) {
 		console.error("Error fetching order statistics:", error);
 		return actionError("Failed to fetch order statistics");
+	}
+}
+
+export async function getOrderAnalytics(context?: ActionContext) {
+	try {
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
+		}
+		const { companyId } = resolvedContext;
+
+		const baseWhere: Prisma.OrderWhereInput = {
+			companyId,
+		};
+
+		const now = new Date();
+		const trendStart = new Date(now);
+		trendStart.setDate(trendStart.getDate() - 30);
+
+		const [
+			totalOrders,
+			pendingOrders,
+			shippedOrders,
+			deliveredOrdersCount,
+			revenueAggregate,
+			recentOrders,
+			topCustomersRaw,
+			upcomingOrders,
+			orderItemAggregate,
+			pendingPaymentCount,
+			deliveredOrdersForTiming,
+			awaitingShipmentCount,
+		] = await Promise.all([
+			neonClient.order.count({ where: baseWhere }),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					status: {
+						in: ["PENDING", "CONFIRMED", "PROCESSING"],
+					},
+				},
+			}),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					status: "SHIPPED",
+				},
+			}),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					status: "DELIVERED",
+				},
+			}),
+			neonClient.order.aggregate({
+				_sum: {
+					totalAmount: true,
+				},
+				where: {
+					...baseWhere,
+					status: {
+						notIn: ["CANCELLED"],
+					},
+				},
+			}),
+			neonClient.order.findMany({
+				where: {
+					...baseWhere,
+					orderDate: {
+						gte: trendStart,
+					},
+					status: {
+						notIn: ["CANCELLED"],
+					},
+				},
+				select: {
+					orderDate: true,
+					totalAmount: true,
+				},
+				orderBy: {
+					orderDate: "asc",
+				},
+			}),
+			neonClient.order.groupBy({
+				by: ["customerId"],
+				where: {
+					...baseWhere,
+					status: {
+						notIn: ["CANCELLED"],
+					},
+				},
+				_sum: {
+					totalAmount: true,
+				},
+				_count: {
+					_all: true,
+				},
+				_max: {
+					orderDate: true,
+				},
+				orderBy: {
+					_sum: {
+						totalAmount: "desc",
+					},
+				},
+				take: 5,
+			}),
+			neonClient.order.findMany({
+				where: {
+					...baseWhere,
+					status: {
+						in: ["CONFIRMED", "PROCESSING", "SHIPPED"],
+					},
+				},
+				select: {
+					id: true,
+					orderNumber: true,
+					orderDate: true,
+					requiredDate: true,
+					promisedDate: true,
+					priority: true,
+					fulfillmentStatus: true,
+					customer: {
+						select: {
+							companyName: true,
+							firstName: true,
+							lastName: true,
+						},
+					},
+					items: {
+						select: {
+							orderedQty: true,
+							remainingQty: true,
+						},
+					},
+				},
+				orderBy: [
+					{ requiredDate: "asc" },
+					{ promisedDate: "asc" },
+					{ orderDate: "asc" },
+				],
+				take: 10,
+			}),
+			neonClient.orderItem.aggregate({
+				_sum: {
+					orderedQty: true,
+					remainingQty: true,
+					shippedQty: true,
+				},
+				where: {
+					order: {
+						companyId,
+					},
+				},
+			}),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					paymentStatus: {
+						in: ["PENDING", "PROCESSING", "PARTIALLY_PAID", "FAILED"],
+					},
+				},
+			}),
+			neonClient.order.findMany({
+				where: {
+					...baseWhere,
+					deliveredDate: {
+						not: null,
+					},
+				},
+				select: {
+					deliveredDate: true,
+					promisedDate: true,
+					requiredDate: true,
+					shippedDate: true,
+				},
+			}),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					status: {
+						in: ["CONFIRMED", "PROCESSING"],
+					},
+				},
+			}),
+		]);
+
+		const totalRevenue = Number(revenueAggregate._sum.totalAmount ?? 0);
+		const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+		const fulfillmentEfficiency =
+			totalOrders > 0 ? (deliveredOrdersCount + shippedOrders) / totalOrders : 0;
+
+		const revenueTrendMap = new Map<string, { revenue: number; orders: number }>();
+		recentOrders.forEach((order) => {
+			const dateKey = order.orderDate.toISOString().slice(0, 10);
+			const current = revenueTrendMap.get(dateKey) || { revenue: 0, orders: 0 };
+			current.revenue += Number(order.totalAmount ?? 0);
+			current.orders += 1;
+			revenueTrendMap.set(dateKey, current);
+		});
+
+		const revenueTrend = Array.from(revenueTrendMap.entries())
+			.sort(([a], [b]) => (a > b ? 1 : -1))
+			.map(([date, values]) => ({
+				date,
+				revenue: values.revenue,
+				orders: values.orders,
+			}));
+
+		const customerIds = topCustomersRaw.map((entry) => entry.customerId);
+		const customers = customerIds.length
+			? await neonClient.customer.findMany({
+					where: {
+						id: {
+							in: customerIds,
+						},
+					},
+					select: {
+						id: true,
+						companyName: true,
+						firstName: true,
+						lastName: true,
+						status: true,
+					},
+				})
+			: [];
+
+		const topCustomers = topCustomersRaw.map((entry) => {
+			const customer = customers.find((c) => c.id === entry.customerId);
+			const displayName =
+				customer?.companyName ||
+				[customer?.firstName, customer?.lastName]
+					.filter(Boolean)
+					.join(" ") ||
+				"Unknown customer";
+
+			return {
+				customerId: entry.customerId,
+				name: displayName,
+				orders: entry._count?._all ?? 0,
+				spend: Number(entry._sum?.totalAmount ?? 0),
+				lastOrder: entry._max?.orderDate?.toISOString() ?? null,
+				status: customer?.status ?? null,
+			};
+		});
+
+		const upcomingFulfillment = upcomingOrders
+			.map((order) => {
+				const items = order.items || [];
+				const totalItems = items.reduce(
+					(acc, item) => acc + (item.orderedQty ?? 0),
+					0,
+				);
+				const remainingItems = items.reduce(
+					(acc, item) => acc + (item.remainingQty ?? 0),
+					0,
+				);
+				const customerName =
+					order.customer?.companyName ||
+					[order.customer?.firstName, order.customer?.lastName]
+						.filter(Boolean)
+						.join(" ") ||
+					"Customer";
+				const eta = order.promisedDate ?? order.requiredDate ?? null;
+
+				return {
+					orderId: order.id,
+					orderNumber: order.orderNumber,
+					customer: customerName,
+					eta: eta ? eta.toISOString() : null,
+					items: totalItems,
+					remainingItems,
+					priority: order.priority,
+					status: order.fulfillmentStatus,
+				};
+			})
+			.sort((a, b) => {
+				if (a.eta && b.eta) return a.eta.localeCompare(b.eta);
+				if (a.eta) return -1;
+				if (b.eta) return 1;
+				return 0;
+			})
+			.slice(0, 5);
+
+		const totalOrderedQty = Number(orderItemAggregate._sum?.orderedQty ?? 0);
+		const totalRemainingQty = Number(orderItemAggregate._sum?.remainingQty ?? 0);
+		const totalShippedQty = Number(orderItemAggregate._sum?.shippedQty ?? 0);
+
+		const backorderRate =
+			totalOrderedQty > 0 ? totalRemainingQty / totalOrderedQty : 0;
+
+		const onTimeDeliveryBase = deliveredOrdersForTiming.length;
+		const onTimeDeliveryCount = deliveredOrdersForTiming.filter((order) => {
+			if (!order.deliveredDate) {
+				return false;
+			}
+			const targetDate =
+				order.promisedDate ?? order.requiredDate ?? order.shippedDate;
+			if (!targetDate) {
+				return true;
+			}
+			return order.deliveredDate <= targetDate;
+		}).length;
+		const onTimeDeliveryRate =
+			onTimeDeliveryBase > 0 ? onTimeDeliveryCount / onTimeDeliveryBase : 0;
+
+		return actionSuccess({
+			stats: {
+				totalOrders,
+				pendingOrders,
+				shippedOrders,
+				deliveredOrders: deliveredOrdersCount,
+				totalRevenue,
+				averageOrderValue,
+				pendingPayments: pendingPaymentCount,
+				fulfillmentEfficiency,
+			},
+			revenueTrend,
+			topCustomers,
+			upcomingFulfillment,
+			operations: {
+				backorderRate,
+				onTimeDeliveryRate,
+				pendingPaymentCount,
+				awaitingShipmentCount,
+				shippedItemsRatio:
+					totalOrderedQty > 0 ? totalShippedQty / totalOrderedQty : 0,
+				totalOrderedQty,
+				totalRemainingQty,
+			},
+		});
+	} catch (error) {
+		console.error("Error fetching order analytics:", error);
+		return actionError("Failed to fetch order analytics");
 	}
 }

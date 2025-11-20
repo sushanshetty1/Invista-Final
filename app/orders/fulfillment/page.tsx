@@ -46,6 +46,8 @@ import {
 	Truck,
 	XCircle,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { DashboardGuard } from "@/components/DashboardGuard";
 
 interface Order {
 	id: string;
@@ -98,6 +100,7 @@ interface ShipmentFormData {
 }
 
 export default function FulfillmentPage() {
+	const { user, loading: authLoading } = useAuth();
 	const [orders, setOrders] = useState<Order[]>([]);
 	const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -120,9 +123,13 @@ export default function FulfillmentPage() {
 
 	// Load orders ready for fulfillment
 	const loadOrders = useCallback(async () => {
+		if (!user) return;
+		
 		setLoading(true);
 		try {
-			const response = await fetch("/api/orders?fulfillmentStatus=UNFULFILLED,PARTIAL&status=CONFIRMED,PROCESSING");
+			const response = await fetch("/api/orders?fulfillmentStatus=UNFULFILLED,PARTIAL&status=CONFIRMED,PROCESSING", {
+				credentials: "include",
+			});
 			if (!response.ok) throw new Error("Failed to fetch orders");
 			
 			const data = await response.json();
@@ -133,7 +140,7 @@ export default function FulfillmentPage() {
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [user]);
 
 	useEffect(() => {
 		loadOrders();
@@ -214,6 +221,7 @@ export default function FulfillmentPage() {
 			const response = await fetch("/api/orders/shipments", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
+				credentials: "include",
 				body: JSON.stringify(shipmentForm),
 			});
 
@@ -236,6 +244,7 @@ export default function FulfillmentPage() {
 		try {
 			const response = await fetch(`/api/orders/${orderId}/fulfill`, {
 				method: "POST",
+				credentials: "include",
 			});
 
 			if (!response.ok) {
@@ -252,7 +261,7 @@ export default function FulfillmentPage() {
 		}
 	};
 
-	if (loading) {
+	if (authLoading || loading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<div className="text-center">
@@ -264,6 +273,7 @@ export default function FulfillmentPage() {
 	}
 
 	return (
+		<DashboardGuard>
 		<div className="space-y-8">
 			<div>
 				<h1 className="text-3xl font-bold tracking-tight">Order Fulfillment</h1>
@@ -535,5 +545,6 @@ export default function FulfillmentPage() {
 				</DialogContent>
 			</Dialog>
 		</div>
+		</DashboardGuard>
 	);
 }

@@ -1,16 +1,19 @@
 import { neonClient } from "@/lib/db";
 
 export interface CustomerFilters {
+	companyId: string;
 	searchTerm?: string;
 	limit?: number;
 	offset?: number;
 }
 
 // Get all customers with filters
-export async function getCustomers(filters: CustomerFilters = {}) {
+export async function getCustomers(filters: CustomerFilters) {
 	try {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const where: any = {};
+		const where: any = {
+			companyId: filters.companyId,
+		};
 
 		if (filters.searchTerm) {
 			where.OR = [

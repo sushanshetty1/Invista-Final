@@ -4,10 +4,38 @@ import {
 	createCustomer,
 	type CreateCustomerInput,
 } from "@/lib/actions/customers";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabaseServer";
 
 export async function GET(request: NextRequest) {
 	try {
+		const supabase = await createClient();
+
+		const {
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
+
+		if (userError || !user) {
+			return NextResponse.json(
+				{ error: "Authentication required" },
+				{ status: 401 },
+			);
+		}
+
+		// Get user's company
+		const { data: companyUser } = await supabase
+			.from("company_users")
+			.select("companyId")
+			.eq("userId", user.id)
+			.single();
+
+		if (!companyUser?.companyId) {
+			return NextResponse.json(
+				{ error: "No company associated with user" },
+				{ status: 403 },
+			);
+		}
+
 		const { searchParams } = new URL(request.url);
 		const search = searchParams.get("search") || undefined;
 		const limit = searchParams.get("limit")
@@ -15,6 +43,7 @@ export async function GET(request: NextRequest) {
 			: undefined;
 
 		const result = await getCustomers({
+			companyId: companyUser.companyId,
 			searchTerm: search,
 			limit,
 		});
@@ -26,8 +55,9 @@ export async function GET(request: NextRequest) {
 		return NextResponse.json({ customers: result.data });
 	} catch (error) {
 		console.error("Error fetching customers:", error);
+		const errorMessage = error instanceof Error ? error.message : "Internal server error";
 		return NextResponse.json(
-			{ error: "Internal server error" },
+			{ error: "Internal server error", details: errorMessage },
 			{ status: 500 },
 		);
 	}
@@ -35,19 +65,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
 	try {
-		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
+		const supabase = await createClient();
 
-		if (sessionError || !session?.user?.id) {
+		const {
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
+
+		if (userError || !user) {
 			return NextResponse.json(
 				{ error: "Authentication required" },
 				{ status: 401 },
 			);
 		}
-
-		const user = session.user;
 
 		// Get user's company
 		const { data: companyUser } = await supabase
