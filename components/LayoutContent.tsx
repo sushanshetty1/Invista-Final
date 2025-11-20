@@ -23,9 +23,10 @@ export function LayoutContent({ children }: LayoutContentProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const pathname = usePathname();
-  const isDashboardSection = /^\/(dashboard|inventory|orders|purchase-orders|audits|reports|suppliers)(\/|$)/.test(pathname);
+  const isDashboardSection = /^\/(dashboard|inventory|orders|purchase-orders|audits|reports|suppliers|rag)(\/|$)/.test(pathname);
   const isProtectedProfile = /^\/(user-profile|company-profile)(\/|$)/.test(pathname);
   const useShell = isDashboardSection || isProtectedProfile;
+  const isRagPage = pathname === '/rag';
 
   // Manage body padding classes (shell layout should have no top padding)
   useEffect(() => {
@@ -77,7 +78,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
         <main className="flex-1 container mx-auto w-full px-4 py-4 md:px-6 lg:px-8">
           {children}
         </main>
-        <Footer />
+        {!isRagPage && <Footer />}
       </div>
       <ScrollDetector />
       <Analytics />

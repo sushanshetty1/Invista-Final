@@ -42,6 +42,15 @@ export async function POST(req: NextRequest) {
   if (!query) return NextResponse.json({ error: "Missing query" }, { status: 400 });
   if (!companyId) return NextResponse.json({ error: "Missing companyId" }, { status: 400 });
 
+  // Check for gibberish/nonsensical input before processing
+  const isGibberish = /^[a-z]{6,}$/.test(query.toLowerCase()) && !query.includes(' ');
+  if (isGibberish || query.length < 3) {
+    return NextResponse.json({ 
+      answer: "I don't understand. Could you please rephrase your question?",
+      sources: [] 
+    });
+  }
+
   await ensureConnected();
 
   // 1) create embedding for the query
@@ -73,21 +82,20 @@ export async function POST(req: NextRequest) {
       "\n";
   }
 
-  const promptTemplate = `You are a professional AI assistant for an inventory management system. Provide clear, well-structured responses.
+  const promptTemplate = `You are a professional AI assistant for an inventory management system.
 
-You have access to the company's business data. When responding:
-- Use proper grammar and formatting
-- Structure your answers with clear paragraphs or bullet points when appropriate
-- Reference specific data from the context (company name, numbers, dates)
-- Be helpful and informative while maintaining professionalism
-- Remember previous conversation context
+CRITICAL RULE: First check if the user's question makes sense.
+- If the input is gibberish, random characters, unclear, or nonsensical (like "shdcsdc", "asdfgh", random typing), respond with ONLY: "I don't understand. Could you please rephrase your question?"
+- DO NOT answer with company data, summaries, or structured responses if the question is unclear
+- DO NOT try to be helpful by providing information the user didn't ask for
+- Only answer with data when the question is clear and specific
 
 CONTEXT:
 {context}{conversationContext}
 
 QUESTION: {question}
 
-Provide a clear, well-formatted response:`;
+Answer:`;
 
   const prompt = promptTemplate
     .replace("{context}", contextText)

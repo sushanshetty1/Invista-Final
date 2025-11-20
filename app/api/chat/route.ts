@@ -89,14 +89,19 @@ async function generateResponse(
   context: string,
   history?: ChatMessage[]
 ) {
-  const promptTemplate = `You are a professional AI assistant for inventory management. Provide clear, well-formatted responses.
+  const promptTemplate = `You are a professional AI assistant for inventory management.
+
+CRITICAL RULE: First check if the user's question makes sense.
+- If the input is gibberish, random characters, unclear, or nonsensical, respond with ONLY: "I don't understand. Could you please rephrase your question?"
+- DO NOT provide structured overviews, summaries, or company data if the question is unclear
+- Only answer with specific data when the question is clear
 
 CONTEXT:
 {context}
 
 QUESTION: {question}
 
-Provide a clear, structured response based on the available data. Use proper formatting and be specific when referencing information.`;
+Answer:`;
 
   const prompt = promptTemplate
     .replace("{context}", context)
@@ -414,6 +419,13 @@ export async function POST(req: NextRequest) {
     
     if (simpleGreetings.includes(lowerMessage)) {
       responseData.answer = "Hi! How can I help you today?";
+      return NextResponse.json(responseData);
+    }
+
+    // Check for gibberish before RAG
+    const isGibberish = /^[a-z]{6,}$/.test(lowerMessage) && !lowerMessage.includes(' ');
+    if (isGibberish || message.trim().length < 3) {
+      responseData.answer = "I don't understand. Could you please rephrase your question?";
       return NextResponse.json(responseData);
     }
 

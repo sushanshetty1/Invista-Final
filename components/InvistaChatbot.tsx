@@ -386,8 +386,8 @@ export default function InvistaChatbot() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen max-w-5xl mx-auto">
-      <div className="flex items-center justify-between p-4 border-b">
+    <div className="flex flex-col h-[calc(100vh-80px)]">
+      <div className="flex items-center justify-between p-4 border-b bg-background sticky top-0 z-10">
         <div>
           <h2 className="text-2xl font-semibold">Invista AI Assistant</h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -411,9 +411,7 @@ export default function InvistaChatbot() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <div className="h-[calc(100vh-240px)] overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && (
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">{messages.length === 0 && (
             <div className="text-center text-muted-foreground py-12">
               <div className="text-lg font-medium mb-4">👋 Hello! I can help you with:</div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mt-6">
@@ -509,9 +507,8 @@ export default function InvistaChatbot() {
           
           <div ref={messagesEndRef} />
         </div>
-      </div>
 
-      <div className="p-4 border-t bg-background">
+      <div className="p-4 border-t bg-background sticky bottom-0">
         {!companyId && (
           <div className="mb-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded">
             ⚠️ Company profile not loaded. Some features may be limited.
@@ -534,9 +531,6 @@ export default function InvistaChatbot() {
           >
             {loading ? '...' : 'Send'}
           </button>
-        </div>
-        <div className="text-xs text-muted-foreground mt-2">
-          💡 Tip: Ask &quot;How do I...&quot; for processes, or &quot;Show me...&quot; for data
         </div>
       </div>
     </div>

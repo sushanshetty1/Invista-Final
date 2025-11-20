@@ -1,4 +1,5 @@
 import InvistaChatbot from "../../components/InvistaChatbot";
+import DashboardGuard from "@/components/DashboardGuard";
 
 export const metadata = {
   title: "Invista AI Assistant",
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <InvistaChatbot />;
+  return (
+    <DashboardGuard>
+      <InvistaChatbot />
+    </DashboardGuard>
+  );
 }
