@@ -39,11 +39,13 @@ export default function RagChat() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ companyId }),
+        credentials: "include",
       });
       if (!res.ok) {
         throw new Error(`Status ${res.status}`);
       }
-      alert("Data refreshed successfully!");
+      const result = await res.json();
+      alert(`Data refreshed successfully! ${result.message || ''}`);
     } catch (err: any) {
       alert(`Refresh failed: ${err?.message}`);
     } finally {
@@ -64,7 +66,13 @@ export default function RagChat() {
       const response = await fetch("/api/rag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: currentQuery, topK: 3, companyId }),
+        body: JSON.stringify({ 
+          query: currentQuery, 
+          topK: 7, 
+          companyId,
+          conversationHistory: messages.slice(-10) // Send last 10 messages for context
+        }),
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -147,8 +155,35 @@ export default function RagChat() {
       <div className="flex-1 min-h-0">
         <div className="h-[60vh] overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
-              Ask me anything about your company data!
+            <div className="text-center py-8">
+              <div className="text-muted-foreground mb-4">
+                <h3 className="text-lg font-semibold mb-2">💬 Your AI Business Assistant</h3>
+                <p className="text-sm mb-4">I have full access to your company data and can have natural conversations with you!</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto text-left">
+                <div className="border rounded p-3 bg-muted/50">
+                  <div className="font-medium text-sm mb-1">📦 Inventory & Products</div>
+                  <div className="text-xs text-muted-foreground">Stock levels, product details, categories, pricing</div>
+                </div>
+                <div className="border rounded p-3 bg-muted/50">
+                  <div className="font-medium text-sm mb-1">🏢 Company Info</div>
+                  <div className="text-xs text-muted-foreground">Profile, locations, warehouses, business details</div>
+                </div>
+                <div className="border rounded p-3 bg-muted/50">
+                  <div className="font-medium text-sm mb-1">👥 Suppliers & Customers</div>
+                  <div className="text-xs text-muted-foreground">Contacts, relationships, ratings, payment terms</div>
+                </div>
+                <div className="border rounded p-3 bg-muted/50">
+                  <div className="font-medium text-sm mb-1">📊 Orders & Analytics</div>
+                  <div className="text-xs text-muted-foreground">Sales data, revenue, trends, order status</div>
+                </div>
+              </div>
+              <div className="mt-6 space-y-2">
+                <p className="text-xs text-muted-foreground font-medium">✨ I can remember our conversation and provide insights!</p>
+                <p className="text-xs text-muted-foreground">
+                  Click "Refresh Data" to sync the latest information from your database
+                </p>
+              </div>
             </div>
           )}
           {messages.map((message, index) => (
@@ -196,7 +231,7 @@ export default function RagChat() {
         <div className="flex gap-2">
           <textarea
             className="flex-1 rounded border p-3 bg-input text-foreground resize-none"
-            placeholder="Ask a question about your company..."
+            placeholder="Ask me anything - I remember our conversation! Try: 'What products are low on stock?' or 'Tell me about our suppliers'"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={handleKeyPress}

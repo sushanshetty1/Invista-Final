@@ -35,8 +35,9 @@ async function ensureConnected() {
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const query = (body?.query ?? "").trim();
-  const topK = Number(body?.topK ?? 3);
+  const topK = Number(body?.topK ?? 7); // Increased for more comprehensive context
   const companyId = body?.companyId;
+  const conversationHistory = body?.conversationHistory || []; // Support conversation memory
 
   if (!query) return NextResponse.json({ error: "Missing query" }, { status: 400 });
   if (!companyId) return NextResponse.json({ error: "Missing companyId" }, { status: 400 });
@@ -64,21 +65,57 @@ export async function POST(req: NextRequest) {
   // 3) assemble prompt using LangChain PromptTemplate + call LLM (LangChain wrapper)
   const contextText = rows.map((r: any, idx: number) => `SOURCE ${idx + 1} (${r.source}#${r.chunk_index}):\n${r.content}`).join("\n\n---\n\n");
 
-  const promptTemplate = `You are a helpful assistant for company data. Answer ONLY based on the provided context. Do not use external knowledge or make assumptions.
+  // Build conversation context
+  let conversationContext = "";
+  if (conversationHistory && conversationHistory.length > 0) {
+    conversationContext = "\n\nPREVIOUS CONVERSATION:\n" + 
+      conversationHistory.slice(-6).map((msg: any) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join("\n") + 
+      "\n";
+  }
 
-CONTEXT:
-{context}
+  const promptTemplate = `You are a knowledgeable and helpful AI assistant for a company's inventory management system. You have access to comprehensive company data and can engage in natural, helpful conversations.
 
-QUESTION: {question}
+You have access to:
+- Company profile and business information
+- Complete products catalog with SKUs, prices, categories, and descriptions
+- Real-time inventory levels and stock information
+- Suppliers and vendor relationships
+- Customer database and relationships
+- Sales orders, order history, and fulfillment status
+- Purchase orders and procurement data
+- Warehouse and location information
+- Business analytics and performance metrics
 
-If the context does not contain information to answer the question, respond with: "I don't have information on that in the company data."
+Your capabilities:
+- Answer questions naturally using the company's data
+- Provide detailed insights and analysis
+- Help with comparisons, summaries, and recommendations
+- Reference previous parts of the conversation
+- Offer suggestions and highlight important information
+- Explain trends and patterns in the data
 
-Answer concisely and cite sources (e.g., SOURCE 1).`;
+IMPORTANT: While you should primarily use the provided context, you can:
+- Make reasonable inferences from the data
+- Provide helpful suggestions and best practices
+- Offer general business insights when relevant
+- Help users understand their data better
 
-  const prompt = promptTemplate.replace("{context}", contextText).replace("{question}", query);
+CONTEXT FROM DATABASE:
+{context}{conversationContext}
+
+CURRENT QUESTION: {question}
+
+Provide a helpful, detailed response. When referencing specific data, cite your sources (e.g., "According to the inventory summary..."). If the exact information isn't in the context but you can make a helpful inference or provide general guidance, do so while being clear about what's from the data vs. general knowledge.
+
+Answer:`;
+
+  const prompt = promptTemplate
+    .replace("{context}", contextText)
+    .replace("{conversationContext}", conversationContext)
+    .replace("{question}", query);
 
   // LangChain LLM wrapper — this uses the LangChain OpenAI LLM behind the scenes
-  const llm = new ChatOpenAI({ openAIApiKey: OPENAI_API_KEY, modelName: LLM_MODEL, streaming: true, temperature: 0 });
+  const llm = new ChatOpenAI({ openAIApiKey: OPENAI_API_KEY, modelName: LLM_MODEL, streaming: true, temperature: 0.3 });
 
   // Create a readable stream for the response
   const stream = new ReadableStream({
