@@ -50,6 +50,7 @@ import {
 interface Category {
 	id: string;
 	name: string;
+	slug: string;
 	description?: string;
 	parentId?: string;
 	parent?: Category;
@@ -87,24 +88,31 @@ export default function CategoriesPage() {
 	useEffect(() => {
 		fetchCategories();
 	}, []);
+
 	const fetchCategories = async () => {
 		try {
 			setLoading(true);
 			const response = await fetch("/api/inventory/categories");
 			if (response.ok) {
 				const data = await response.json();
-				const categoriesData = data.data || data.categories || data || [];
 
-				// Ensure we always set an array
-				if (Array.isArray(categoriesData)) {
-					setCategories(categoriesData);
-				} else {
-					console.warn(
-						"Categories API returned non-array data:",
-						categoriesData,
-					);
-					setCategories([]);
+				// Handle different response structures
+				let categoriesData = [];
+				if (data.data && Array.isArray(data.data.categories)) {
+					// Structure: { data: { categories: [...] } }
+					categoriesData = data.data.categories;
+				} else if (Array.isArray(data.data)) {
+					// Structure: { data: [...] }
+					categoriesData = data.data;
+				} else if (Array.isArray(data.categories)) {
+					// Structure: { categories: [...] }
+					categoriesData = data.categories;
+				} else if (Array.isArray(data)) {
+					// Structure: [...]
+					categoriesData = data;
 				}
+
+				setCategories(categoriesData);
 			} else {
 				console.error("Failed to fetch categories");
 				setCategories([]);
@@ -176,6 +184,7 @@ export default function CategoriesPage() {
 			setSubmitting(false);
 		}
 	};
+
 	const resetForm = () => {
 		setFormData({
 			name: "",
@@ -185,6 +194,7 @@ export default function CategoriesPage() {
 		});
 		setSelectedCategory(null);
 	};
+
 	const openEditDialog = (category: Category) => {
 		setSelectedCategory(category);
 		setFormData({
@@ -227,16 +237,6 @@ export default function CategoriesPage() {
 						Organize your products with categories
 					</p>
 				</div>
-				<Button
-					onClick={() => {
-						resetForm();
-						setIsAddDialogOpen(true);
-					}}
-					className="flex items-center gap-2"
-				>
-					<Plus className="h-4 w-4" />
-					Add Category
-				</Button>
 			</div>
 
 			{/* Stats Cards */}
@@ -318,8 +318,8 @@ export default function CategoriesPage() {
 							<TableRow>
 								<TableHead>Category</TableHead>
 								<TableHead>Description</TableHead>
-								<TableHead>Hierarchy</TableHead>
-								<TableHead>Products</TableHead>
+								<TableHead>Count</TableHead>
+								<TableHead>Slug</TableHead>
 								<TableHead>Status</TableHead>
 								<TableHead>Created</TableHead>
 								<TableHead className="text-right">Actions</TableHead>
@@ -348,12 +348,12 @@ export default function CategoriesPage() {
 											{category.description || "-"}
 										</TableCell>
 										<TableCell>
-											<span className="text-sm text-gray-500">
-												{getCategoryHierarchy(category)}
-											</span>
+											<Badge variant="secondary">{category.productCount}</Badge>
 										</TableCell>
 										<TableCell>
-											<Badge variant="secondary">{category.productCount}</Badge>
+											<span className="text-sm text-gray-500 font-mono">
+												{category.slug}
+											</span>
 										</TableCell>
 										<TableCell>
 											<Badge
