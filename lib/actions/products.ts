@@ -47,7 +47,7 @@ export async function createProduct(
 				.replace(/[^a-z0-9]+/g, "-")
 				.replace(/(^-|-$)/g, "");
 		}		// Prepare the data for Prisma creation
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars yo
 		const { categoryId, brandId, categoryName: _categoryName, brandName: _brandName, ...productData } =
 			validatedData;
 
@@ -61,6 +61,7 @@ export async function createProduct(
 			categoryName: validatedData.categoryName,
 			brandName: validatedData.brandName,
 			// Include categoryId and brandId directly in Product table
+			//hey
 			categoryId: categoryId || null,
 			brandId: brandId || null,
 			weight: productData.weight,
