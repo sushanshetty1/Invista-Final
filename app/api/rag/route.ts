@@ -73,41 +73,21 @@ export async function POST(req: NextRequest) {
       "\n";
   }
 
-  const promptTemplate = `You are a knowledgeable and helpful AI assistant for a company's inventory management system. You have access to comprehensive company data and can engage in natural, helpful conversations.
+  const promptTemplate = `You are a professional AI assistant for an inventory management system. Provide clear, well-structured responses.
 
-You have access to:
-- Company profile and business information
-- Complete products catalog with SKUs, prices, categories, and descriptions
-- Real-time inventory levels and stock information
-- Suppliers and vendor relationships
-- Customer database and relationships
-- Sales orders, order history, and fulfillment status
-- Purchase orders and procurement data
-- Warehouse and location information
-- Business analytics and performance metrics
+You have access to the company's business data. When responding:
+- Use proper grammar and formatting
+- Structure your answers with clear paragraphs or bullet points when appropriate
+- Reference specific data from the context (company name, numbers, dates)
+- Be helpful and informative while maintaining professionalism
+- Remember previous conversation context
 
-Your capabilities:
-- Answer questions naturally using the company's data
-- Provide detailed insights and analysis
-- Help with comparisons, summaries, and recommendations
-- Reference previous parts of the conversation
-- Offer suggestions and highlight important information
-- Explain trends and patterns in the data
-
-IMPORTANT: While you should primarily use the provided context, you can:
-- Make reasonable inferences from the data
-- Provide helpful suggestions and best practices
-- Offer general business insights when relevant
-- Help users understand their data better
-
-CONTEXT FROM DATABASE:
+CONTEXT:
 {context}{conversationContext}
 
-CURRENT QUESTION: {question}
+QUESTION: {question}
 
-Provide a helpful, detailed response. When referencing specific data, cite your sources (e.g., "According to the inventory summary..."). If the exact information isn't in the context but you can make a helpful inference or provide general guidance, do so while being clear about what's from the data vs. general knowledge.
-
-Answer:`;
+Provide a clear, well-formatted response:`;
 
   const prompt = promptTemplate
     .replace("{context}", contextText)
@@ -115,7 +95,7 @@ Answer:`;
     .replace("{question}", query);
 
   // LangChain LLM wrapper — this uses the LangChain OpenAI LLM behind the scenes
-  const llm = new ChatOpenAI({ openAIApiKey: OPENAI_API_KEY, modelName: LLM_MODEL, streaming: true, temperature: 0.3 });
+  const llm = new ChatOpenAI({ openAIApiKey: OPENAI_API_KEY, modelName: LLM_MODEL, streaming: true, temperature: 0.5 });
 
   // Create a readable stream for the response
   const stream = new ReadableStream({

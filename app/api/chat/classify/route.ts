@@ -76,8 +76,8 @@ const INTENT_CLASSIFICATION_PROMPT = `You are an intent classifier for an invent
 - If user commands "DO X", "SHOW me X", "LIST X" (without asking how) → action intent
 
 **KNOWLEDGE & HELP**
-1. knowledge.explainer - User wants to know how something works, processes, policies, SOPs, workflows, or asking for instructions
-   Examples: "How do I create a purchase order?", "What is the reorder process?", "Explain audit workflow", "If I want to list new products what should I do?", "How do I add a supplier?", "Steps to create an order"
+1. knowledge.explainer - User wants to know how something works, processes, policies, SOPs, workflows, asking for instructions, OR asking about company information/identity
+   Examples: "How do I create a purchase order?", "What is the reorder process?", "Explain audit workflow", "If I want to list new products what should I do?", "How do I add a supplier?", "Steps to create an order", "What's my company name?", "Tell me about my company", "Company information", "Company details", "What company am I in?", "Company profile"
 
 **INVENTORY QUERIES**
 2. inventory.lookup - User wants specific product/inventory information

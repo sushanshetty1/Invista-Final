@@ -59,7 +59,7 @@ export const supabaseClient = globalForSupabase.supabaseClient ?? new SupabasePr
 			url: supabaseDatabaseUrl,
 		},
 	},
-	log: process.env.NODE_ENV === "development" ? ["query", "info", "warn", "error"] : ["error"],
+	log: ["error"], // Only log errors, suppress warnings
 });
 
 if (process.env.NODE_ENV !== "production") {

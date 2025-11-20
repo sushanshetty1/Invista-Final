@@ -1,19 +1,17 @@
 import { Client } from "pg";
 import OpenAI from "openai";
 import dotenv from "dotenv";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
 const NEON_DATABASE_URL = process.env.NEON_DATABASE_URL!;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const EMBEDDING_MODEL = process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small";
 const CHUNK_MAX_CHARS = Number(process.env.RAG_CHUNK_MAX_CHARS ?? "1500");
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-const supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function chunkText(text: string, maxChars = CHUNK_MAX_CHARS) {
   const paragraphs = text.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
@@ -37,28 +35,47 @@ async function embedText(text: string) {
 }
 
 async function getCompanyData(companyId: string) {
-  const client = new Client({ connectionString: NEON_DATABASE_URL });
+  const neonClient = new Client({ connectionString: NEON_DATABASE_URL });
+  const supabaseClient = new Client({ connectionString: process.env.SUPABASE_DATABASE_URL! });
   
   try {
-    // Query company profile from Supabase
-    const { data: profile, error: profileError } = await supabase
-      .from('companies')
-      .select('name, description, industry, website, address, email, phone, size, business_type, founded_year, annual_revenue')
-      .eq('id', companyId)
-      .single();
+    console.log(`[RAG Ingest] Starting data fetch for company: ${companyId}`);
+    
+    // Connect to Supabase PostgreSQL directly
+    await supabaseClient.connect();
+    console.log('[RAG Ingest] Connected to Supabase database');
 
-    if (profileError) {
-      throw new Error(`Failed to fetch company profile: ${profileError.message}`);
+    // Query company profile directly from Supabase PostgreSQL
+    const profileQuery = `
+      SELECT name, "displayName", description, industry, website, address, email, phone, size, "businessType"
+      FROM companies 
+      WHERE id = $1
+    `;
+    const profileRes = await supabaseClient.query(profileQuery, [companyId]);
+    const profile = profileRes.rows[0];
+
+    if (!profile) {
+      throw new Error(`Company not found with ID: ${companyId}`);
     }
 
-    // Query company locations/warehouses from Supabase
-    const { data: locations, error: locationsError } = await supabase
-      .from('company_locations')
-      .select('name, type, address, managerName, managerEmail, isActive')
-      .eq('companyId', companyId)
-      .eq('isActive', true);
+    console.log(`[RAG Ingest] Found company: ${profile.name}`);
 
-    await client.connect();
+    // Query company locations/warehouses from Supabase
+    const locationsQuery = `
+      SELECT name, type, address, "managerName", "isActive"
+      FROM company_locations
+      WHERE "companyId" = $1 AND "isActive" = true
+    `;
+    const locationsRes = await supabaseClient.query(locationsQuery, [companyId]);
+    const locations = locationsRes.rows;
+
+    console.log(`[RAG Ingest] Found ${locations.length} active locations`);
+
+    await supabaseClient.end();
+
+    // Connect to Neon for business data
+    await neonClient.connect();
+    console.log('[RAG Ingest] Connected to Neon database');
 
     // Query products from Neon
     const productsQuery = `
@@ -70,8 +87,9 @@ async function getCompanyData(companyId: string) {
       ORDER BY "createdAt" DESC
       LIMIT 50
     `;
-    const productsRes = await client.query(productsQuery, [companyId]);
+    const productsRes = await neonClient.query(productsQuery, [companyId]);
     const products = productsRes.rows;
+    console.log(`[RAG Ingest] Found ${products.length} products`);
 
     // Query inventory summary from Neon
     const inventoryQuery = `
@@ -85,8 +103,9 @@ async function getCompanyData(companyId: string) {
       LEFT JOIN inventory_items ii ON p.id = ii."productId"
       WHERE p."companyId" = $1
     `;
-    const inventoryRes = await client.query(inventoryQuery, [companyId]);
+    const inventoryRes = await neonClient.query(inventoryQuery, [companyId]);
     const inventorySummary = inventoryRes.rows[0];
+    console.log(`[RAG Ingest] Inventory: ${inventorySummary.total_products} products, ${inventorySummary.total_stock} total stock`);
 
     // Query top inventory items from Neon
     const topInventoryQuery = `
@@ -102,7 +121,7 @@ async function getCompanyData(companyId: string) {
       ORDER BY total_quantity DESC
       LIMIT 20
     `;
-    const topInventoryRes = await client.query(topInventoryQuery, [companyId]);
+    const topInventoryRes = await neonClient.query(topInventoryQuery, [companyId]);
     const topInventory = topInventoryRes.rows;
 
     // Query low stock items
@@ -119,8 +138,9 @@ async function getCompanyData(companyId: string) {
       ORDER BY current_stock ASC
       LIMIT 20
     `;
-    const lowStockRes = await client.query(lowStockQuery, [companyId]);
+    const lowStockRes = await neonClient.query(lowStockQuery, [companyId]);
     const lowStockItems = lowStockRes.rows;
+    console.log(`[RAG Ingest] Found ${lowStockItems.length} low stock items`);
 
     // Query suppliers from Neon
     const suppliersQuery = `
@@ -132,8 +152,9 @@ async function getCompanyData(companyId: string) {
       ORDER BY name
       LIMIT 30
     `;
-    const suppliersRes = await client.query(suppliersQuery, [companyId]);
+    const suppliersRes = await neonClient.query(suppliersQuery, [companyId]);
     const suppliers = suppliersRes.rows;
+    console.log(`[RAG Ingest] Found ${suppliers.length} suppliers`);
 
     // Query customers from Neon
     const customersQuery = `
@@ -145,8 +166,9 @@ async function getCompanyData(companyId: string) {
       ORDER BY "createdAt" DESC
       LIMIT 30
     `;
-    const customersRes = await client.query(customersQuery, [companyId]);
+    const customersRes = await neonClient.query(customersQuery, [companyId]);
     const customers = customersRes.rows;
+    console.log(`[RAG Ingest] Found ${customers.length} customers`);
 
     // Query orders summary from Neon
     const ordersQuery = `
@@ -160,8 +182,9 @@ async function getCompanyData(companyId: string) {
       FROM orders 
       WHERE "companyId" = $1
     `;
-    const ordersRes = await client.query(ordersQuery, [companyId]);
+    const ordersRes = await neonClient.query(ordersQuery, [companyId]);
     const ordersSummary = ordersRes.rows[0];
+    console.log(`[RAG Ingest] Orders: ${ordersSummary.total_orders} total, $${ordersSummary.total_revenue} revenue`);
 
     // Query recent orders from Neon
     const recentOrdersQuery = `
@@ -173,23 +196,11 @@ async function getCompanyData(companyId: string) {
       ORDER BY "orderDate" DESC
       LIMIT 20
     `;
-    const recentOrdersRes = await client.query(recentOrdersQuery, [companyId]);
+    const recentOrdersRes = await neonClient.query(recentOrdersQuery, [companyId]);
     const recentOrders = recentOrdersRes.rows;
 
-    // Query purchase orders from Neon
-    const purchaseOrdersQuery = `
-      SELECT 
-        COUNT(*) as total_purchase_orders,
-        COALESCE(SUM("totalAmount"), 0) as total_po_amount,
-        COUNT(CASE WHEN status = 'PENDING' THEN 1 END) as pending_pos,
-        COUNT(CASE WHEN status = 'APPROVED' THEN 1 END) as approved_pos
-      FROM purchase_orders 
-      WHERE "companyId" = $1
-    `;
-    const purchaseOrdersRes = await client.query(purchaseOrdersQuery, [companyId]);
-    const purchaseOrdersSummary = purchaseOrdersRes.rows[0];
-
-    await client.end();
+    await neonClient.end();
+    console.log('[RAG Ingest] Data collection completed successfully');
 
     // Build comprehensive data documents
     const documents: { source: string; content: string }[] = [];
@@ -209,6 +220,7 @@ Business Name: ${companyName}
 
 Company Profile Details:
 - Name: ${companyName}
+- Display Name: ${profile?.displayName || companyName}
 - Description: ${profile?.description || 'N/A'}
 - Industry: ${profile?.industry || 'N/A'}
 - Website: ${profile?.website || 'N/A'}
@@ -216,9 +228,7 @@ Company Profile Details:
 - Phone: ${profile?.phone || 'N/A'}
 - Address: ${JSON.stringify(profile?.address) || 'N/A'}
 - Company Size: ${profile?.size || 'N/A'}
-- Business Type: ${profile?.business_type || 'N/A'}
-- Founded Year: ${profile?.founded_year || 'N/A'}
-- Annual Revenue: ${profile?.annual_revenue || 'N/A'}
+- Business Type: ${profile?.businessType || 'N/A'}
 
 This is ${companyName}, operating in the ${profile?.industry || 'N/A'} industry.
       `.trim()
@@ -229,14 +239,16 @@ This is ${companyName}, operating in the ${profile?.industry || 'N/A'} industry.
       documents.push({
         source: "warehouses-locations",
         content: `
-Company Locations and Warehouses:
+${companyInfo}
+
+Company Locations and Warehouses for ${companyName}:
 Total Active Locations: ${locations.length}
 
 ${locations.map((loc: any) => `
 - Location: ${loc.name}
   Type: ${loc.type || 'N/A'}
   Address: ${JSON.stringify(loc.address) || 'N/A'}
-  Manager: ${loc.managerName || 'N/A'} (${loc.managerEmail || 'N/A'})
+  Manager: ${loc.managerName || 'N/A'}
   Status: ${loc.isActive ? 'Active' : 'Inactive'}
 `).join('\n')}
         `.trim()
@@ -248,7 +260,9 @@ ${locations.map((loc: any) => `
       documents.push({
         source: "products-catalog",
         content: `
-Products Catalog:
+${companyInfo}
+
+Products Catalog for ${companyName}:
 Total Active Products: ${products.length}
 
 ${products.slice(0, 30).map((prod: any) => `
@@ -270,7 +284,9 @@ ${products.slice(0, 30).map((prod: any) => `
     documents.push({
       source: "inventory-summary",
       content: `
-Inventory Summary:
+${companyInfo}
+
+Inventory Summary for ${companyName}:
 Total Products: ${inventorySummary.total_products || 0}
 Total Inventory Items: ${inventorySummary.total_inventory_items || 0}
 Total Stock Quantity: ${inventorySummary.total_stock || 0}
@@ -290,7 +306,9 @@ ${lowStockItems.map((item: any) => `- ${item.name} (${item.sku}): ${item.current
       documents.push({
         source: "suppliers",
         content: `
-Suppliers Directory:
+${companyInfo}
+
+Suppliers Directory for ${companyName}:
 Total Active Suppliers: ${suppliers.length}
 
 ${suppliers.map((sup: any) => `
@@ -313,7 +331,9 @@ ${suppliers.map((sup: any) => `
       documents.push({
         source: "customers",
         content: `
-Customers Directory:
+${companyInfo}
+
+Customers Directory for ${companyName}:
 Total Active Customers: ${customers.length}
 
 ${customers.map((cust: any) => `
@@ -334,7 +354,9 @@ ${customers.map((cust: any) => `
     documents.push({
       source: "orders-analytics",
       content: `
-Orders Analytics:
+${companyInfo}
+
+Orders Analytics for ${companyName}:
 Total Orders: ${ordersSummary.total_orders || 0}
 Total Revenue: $${Number(ordersSummary.total_revenue || 0).toLocaleString()}
 Pending Orders: ${ordersSummary.pending_orders || 0}
@@ -344,12 +366,6 @@ Cancelled Orders: ${ordersSummary.cancelled_orders || 0}
 
 Recent Orders:
 ${recentOrders.map((order: any) => `- Order ${order.orderNumber}: $${order.totalAmount} - ${order.status} (Fulfillment: ${order.fulfillmentStatus}, Payment: ${order.paymentStatus}) - Date: ${new Date(order.orderDate).toLocaleDateString()}`).join('\n')}
-
-Purchase Orders Summary:
-Total Purchase Orders: ${purchaseOrdersSummary.total_purchase_orders || 0}
-Total PO Amount: $${Number(purchaseOrdersSummary.total_po_amount || 0).toLocaleString()}
-Pending POs: ${purchaseOrdersSummary.pending_pos || 0}
-Approved POs: ${purchaseOrdersSummary.approved_pos || 0}
       `.trim()
     });
 
@@ -361,20 +377,29 @@ Approved POs: ${purchaseOrdersSummary.approved_pos || 0}
 }
 
 export async function ingestCompanyData(companyId: string) {
-  const client = new Client({ connectionString: NEON_DATABASE_URL });
+  const ragClient = new Client({ connectionString: NEON_DATABASE_URL });
   
   try {
+    console.log(`[RAG Ingest] Starting ingestion for company: ${companyId}`);
     const documents = await getCompanyData(companyId);
-    await client.connect();
+    
+    console.log(`[RAG Ingest] Generated ${documents.length} documents`);
+    documents.forEach(doc => {
+      console.log(`  - ${doc.source}: ${doc.content.length} characters`);
+    });
+    
+    await ragClient.connect();
 
     // Delete existing data for the company
-    await client.query(`DELETE FROM rag_documents WHERE tenant_id = $1`, [companyId]);
+    console.log(`[RAG Ingest] Deleting existing data for company: ${companyId}`);
+    await ragClient.query(`DELETE FROM rag_documents WHERE tenant_id = $1`, [companyId]);
 
     let totalInserted = 0;
     
     // Process each document separately
     for (const doc of documents) {
       const chunks = chunkText(doc.content, CHUNK_MAX_CHARS);
+      console.log(`[RAG Ingest] Processing ${doc.source}: ${chunks.length} chunks`);
       
       for (let i = 0; i < chunks.length; i++) {
         const content = chunks[i];
@@ -383,17 +408,18 @@ export async function ingestCompanyData(companyId: string) {
 
         const embeddingLiteral = "[" + embedding.join(",") + "]";
         const insertSQL = `INSERT INTO rag_documents (source, chunk_index, content, embedding, tenant_id) VALUES ($1, $2, $3, $4::vector, $5)`;
-        await client.query(insertSQL, [doc.source, i, content, embeddingLiteral, companyId]);
+        await ragClient.query(insertSQL, [doc.source, i, content, embeddingLiteral, companyId]);
         totalInserted++;
       }
     }
 
-    await client.end();
+    await ragClient.end();
+    console.log(`[RAG Ingest] Successfully inserted ${totalInserted} chunks`);
     return { success: true, inserted: totalInserted };
   } catch (error) {
-    console.error("Ingestion error:", error);
+    console.error("[RAG Ingest] Ingestion error:", error);
     try {
-      await client.end();
+      await ragClient.end();
     } catch (e) {
       // Ignore cleanup errors
     }

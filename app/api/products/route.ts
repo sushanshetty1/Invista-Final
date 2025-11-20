@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getProducts, createProduct } from "@/lib/actions/products";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabaseServer";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -37,26 +37,29 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
 	try {
-		// Get current user session from Supabase
+		// Get current user session from server-side Supabase client
+		const supabase = await createClient();
 		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
-		if (sessionError || !session?.user?.id) {
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
+
+		if (userError || !user?.id) {
 			return NextResponse.json(
 				{ error: "Authentication required" },
 				{ status: 401 },
 			);
 		}
 
-		// Get user's company ID
-		const { data: userData } = await supabase
-			.from("users")
+		// Get user's company ID from company_users table (not users table)
+		const { data: companyUser, error: companyError } = await supabase
+			.from("company_users")
 			.select("companyId")
-			.eq("id", session.user.id)
+			.eq("userId", user.id)
+			.eq("isActive", true)
 			.single();
 
-		if (!userData?.companyId) {
+		if (companyError || !companyUser?.companyId) {
 			return NextResponse.json(
 				{ error: "User not associated with a company" },
 				{ status: 400 },
@@ -66,7 +69,7 @@ export async function POST(request: NextRequest) {
 		const body = await request.json();
 		// Map the form data to the expected format for createProduct
 		const productData = {
-			companyId: userData.companyId,
+			companyId: companyUser.companyId,
 			name: body.name,
 			description: body.description || undefined,
 			sku: body.sku,
@@ -102,7 +105,7 @@ export async function POST(request: NextRequest) {
 			tags: body.tags || undefined,
 			leadTimeSupply: body.leadTimeSupply || undefined,
 			shelfLife: body.shelfLife || undefined,
-			createdBy: session.user.id,
+			createdBy: user.id,
 		};
 
 		const result = await createProduct(productData);

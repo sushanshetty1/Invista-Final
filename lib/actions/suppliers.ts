@@ -1,7 +1,7 @@
 "use server";
 
 import { neonClient } from "@/lib/db";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabaseServer";
 import {
 	createSupplierSchema,
 	updateSupplierSchema,
@@ -37,20 +37,22 @@ export async function createSupplier(
 		
 		// If not provided, try to get from session (for direct server action calls)
 		if (!companyId) {
+			const supabase = await createClient();
 			const {
-				data: { session },
-				error: sessionError,
-			} = await supabase.auth.getSession();
-			if (sessionError || !session?.user?.id) {
-				console.error("Authentication error:", sessionError);
+				data: { user },
+				error: userError,
+			} = await supabase.auth.getUser();
+			
+			if (userError || !user?.id) {
+				console.error("Authentication error:", userError);
 				return actionError("Authentication required");
 			}
 
-			// Get user's company from Supabase
+			// Get user's company from company_users table in Supabase
 			const { data: companyUser, error: companyError } = await supabase
 				.from("company_users")
 				.select("companyId")
-				.eq("userId", session.user.id)
+				.eq("userId", user.id)
 				.eq("isActive", true)
 				.single();
 

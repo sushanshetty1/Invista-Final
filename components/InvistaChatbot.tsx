@@ -32,6 +32,8 @@ export default function InvistaChatbot() {
   const { companyProfile } = useCompanyData();
   const companyId = companyProfile?.id;
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +44,28 @@ export default function InvistaChatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  async function refreshData() {
+    if (!companyId) return;
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/rag/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId }),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`Status ${res.status}`);
+      }
+      const result = await res.json();
+      alert(`Data refreshed successfully! ${result.message || ''}`);
+    } catch (err: any) {
+      alert(`Refresh failed: ${err?.message}`);
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   async function sendQuery() {
     if (!query.trim() || !companyId) return;
@@ -211,7 +235,47 @@ export default function InvistaChatbot() {
       }
     }
     
-    return content;
+    // Format markdown-like text to JSX
+    const lines = content.split('\n');
+    const formattedLines = lines.map((line, idx) => {
+      // Headers
+      if (line.startsWith('### ')) {
+        return <h3 key={idx} className="text-lg font-bold mt-4 mb-2">{line.replace('### ', '')}</h3>;
+      }
+      if (line.startsWith('## ')) {
+        return <h2 key={idx} className="text-xl font-bold mt-4 mb-2">{line.replace('## ', '')}</h2>;
+      }
+      if (line.startsWith('# ')) {
+        return <h1 key={idx} className="text-2xl font-bold mt-4 mb-2">{line.replace('# ', '')}</h1>;
+      }
+      
+      // Bold text **text**
+      let formattedLine = line;
+      const boldRegex = /\*\*(.*?)\*\*/g;
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+      
+      while ((match = boldRegex.exec(line)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(line.substring(lastIndex, match.index));
+        }
+        parts.push(<strong key={`${idx}-${match.index}`}>{match[1]}</strong>);
+        lastIndex = match.index + match[0].length;
+      }
+      
+      if (lastIndex < line.length) {
+        parts.push(line.substring(lastIndex));
+      }
+      
+      if (parts.length > 0) {
+        return <div key={idx}>{parts}</div>;
+      }
+      
+      return line ? <div key={idx}>{line}</div> : <br key={idx} />;
+    });
+    
+    return <>{formattedLines}</>;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -309,12 +373,21 @@ export default function InvistaChatbot() {
             Ask about processes, check inventory, or navigate to pages
           </p>
         </div>
-        <button
-          onClick={() => setMessages([])}
-          className="px-3 py-1 text-sm border rounded hover:bg-muted"
-        >
-          Clear Chat
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMessages([])}
+            className="px-3 py-1 text-sm border rounded hover:bg-muted"
+          >
+            Clear Chat
+          </button>
+          <button
+            onClick={refreshData}
+            disabled={refreshing || !companyId}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50 text-sm"
+          >
+            {refreshing ? "Refreshing..." : "Refresh Data"}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 min-h-0">
@@ -361,7 +434,7 @@ export default function InvistaChatbot() {
                   </div>
                 )}
                 
-                <div className="whitespace-pre-wrap">{renderMessageContent(message.content)}</div>
+                <div>{renderMessageContent(message.content)}</div>
                 
                 {message.action?.type === 'navigate' && (
                   <div className="mt-2 pt-2 border-t border-muted-foreground/20 text-sm">

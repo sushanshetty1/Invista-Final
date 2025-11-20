@@ -2,7 +2,7 @@
 
 import { neonClient } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabaseServer";
 import { actionError, actionSuccess } from "@/lib/api-utils";
 import {
 	CreateOrderSchema,
@@ -144,20 +144,21 @@ export async function createOrder(data: CreateOrderInput) {
 		const validatedData = CreateOrderSchema.parse(data);
 
 		// Authenticate user
+		const supabase = await createClient();
 		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
 
-		if (sessionError || !session) {
+		if (userError || !user) {
 			return actionError("Authentication required");
 		}
 
-		// Get user's company from Supabase
+		// Get user's company from company_users table
 		const { data: companyUser, error: companyError } = await supabase
 			.from("company_users")
 			.select("companyId")
-			.eq("userId", session.user.id)
+			.eq("userId", user.id)
 			.eq("isActive", true)
 			.single();
 
@@ -304,12 +305,13 @@ export async function getOrders(filters: Partial<OrderFilterInput> = {}) {
 		});
 
 		// Authenticate user
+		const supabase = await createClient();
 		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
 
-		if (sessionError || !session) {
+		if (userError || !user) {
 			return actionError("Authentication required");
 		}
 
@@ -317,7 +319,7 @@ export async function getOrders(filters: Partial<OrderFilterInput> = {}) {
 		const { data: companyUser, error: companyError } = await supabase
 			.from("company_users")
 			.select("companyId")
-			.eq("userId", session.user.id)
+			.eq("userId", user.id)
 			.eq("isActive", true)
 			.single();
 
@@ -490,12 +492,13 @@ export async function getOrders(filters: Partial<OrderFilterInput> = {}) {
 export async function getOrderById(id: string) {
 	try {
 		// Authenticate user
+		const supabase = await createClient();
 		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
 
-		if (sessionError || !session) {
+		if (userError || !user) {
 			return actionError("Authentication required");
 		}
 
@@ -503,7 +506,7 @@ export async function getOrderById(id: string) {
 		const { data: companyUser, error: companyError } = await supabase
 			.from("company_users")
 			.select("companyId")
-			.eq("userId", session.user.id)
+			.eq("userId", user.id)
 			.eq("isActive", true)
 			.single();
 
@@ -555,12 +558,13 @@ export async function updateOrderStatus(data: UpdateOrderStatusInput & { orderId
 		const validatedData = UpdateOrderStatusSchema.parse(data);
 
 		// Authenticate user
+		const supabase = await createClient();
 		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
 
-		if (sessionError || !session) {
+		if (userError || !user) {
 			return actionError("Authentication required");
 		}
 
@@ -568,7 +572,7 @@ export async function updateOrderStatus(data: UpdateOrderStatusInput & { orderId
 		const { data: companyUser, error: companyError } = await supabase
 			.from("company_users")
 			.select("companyId")
-			.eq("userId", session.user.id)
+			.eq("userId", user.id)
 			.eq("isActive", true)
 			.single();
 
@@ -680,7 +684,7 @@ export async function updateOrderStatus(data: UpdateOrderStatusInput & { orderId
 						referenceType: "Order",
 						referenceId: data.orderId,
 						reason: "Order cancellation - inventory release",
-						userId: session.user.id,
+						userId: user.id,
 					},
 				});
 			}
@@ -701,12 +705,13 @@ export async function updateOrderStatus(data: UpdateOrderStatusInput & { orderId
 export async function getOrderStats() {
 	try {
 		// Authenticate user
+		const supabase = await createClient();
 		const {
-			data: { session },
-			error: sessionError,
-		} = await supabase.auth.getSession();
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser();
 
-		if (sessionError || !session) {
+		if (userError || !user) {
 			return actionError("Authentication required");
 		}
 
@@ -714,7 +719,7 @@ export async function getOrderStats() {
 		const { data: companyUser, error: companyError } = await supabase
 			.from("company_users")
 			.select("companyId")
-			.eq("userId", session.user.id)
+			.eq("userId", user.id)
 			.eq("isActive", true)
 			.single();
 

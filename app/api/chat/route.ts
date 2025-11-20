@@ -89,16 +89,14 @@ async function generateResponse(
   context: string,
   history?: ChatMessage[]
 ) {
-  const promptTemplate = `${PROMPT_TEMPLATE}
+  const promptTemplate = `You are a professional AI assistant for inventory management. Provide clear, well-formatted responses.
 
 CONTEXT:
 {context}
 
 QUESTION: {question}
 
-If the context does not contain information to answer the question, respond with: "I don't have information on that in the company documents."
-
-Answer concisely and cite sources when relevant.`;
+Provide a clear, structured response based on the available data. Use proper formatting and be specific when referencing information.`;
 
   const prompt = promptTemplate
     .replace("{context}", context)
@@ -108,7 +106,7 @@ Answer concisely and cite sources when relevant.`;
     openAIApiKey: OPENAI_API_KEY,
     modelName: LLM_MODEL,
     streaming: LLM_STREAMING,
-    temperature: LLM_TEMPERATURE,
+    temperature: 0.5,
   });
 
   // Include conversation history if provided
@@ -410,14 +408,64 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Fallback
-    responseData.answer = `Hello! I can help you with:
-• Questions about how things work (SOPs, processes, policies)
-• Looking up inventory, orders, and shipments
-• Navigating to different pages
-
-What would you like to know?`;
+    // For any unhandled intent, check if it's a simple greeting first
+    const lowerMessage = message.toLowerCase().trim();
+    const simpleGreetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
     
+    if (simpleGreetings.includes(lowerMessage)) {
+      responseData.answer = "Hi! How can I help you today?";
+      return NextResponse.json(responseData);
+    }
+
+    // For other fallback queries, try RAG
+    const sources = await handleKnowledgeQuery(message, companyId);
+    
+    if (sources && sources.length > 0) {
+      responseData.sources = sources;
+      const contextText = sources
+        .map((r: any, idx: number) => `SOURCE ${idx + 1} (${r.source}#${r.chunk_index}):\n${r.content}`)
+        .join("\n\n---\n\n");
+
+      const { llm, messages } = await generateResponse(message, contextText, history);
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            const sourcesData = JSON.stringify({ sources, intent });
+            controller.enqueue(`data: ${sourcesData}\n\n`);
+
+            let fullAnswer = "";
+            const llmStream = await llm.stream(messages);
+
+            for await (const chunk of llmStream) {
+              if (chunk.content) {
+                fullAnswer += chunk.content;
+                const answerData = JSON.stringify({ answer: fullAnswer, done: false });
+                controller.enqueue(`data: ${answerData}\n\n`);
+              }
+            }
+
+            const finalData = JSON.stringify({ answer: fullAnswer, done: true, intent });
+            controller.enqueue(`data: ${finalData}\n\n`);
+            controller.close();
+          } catch (error) {
+            console.error("Streaming error:", error);
+            controller.error(error);
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    // If no sources available, provide a helpful response
+    responseData.answer = "I can help you with inventory, orders, products, suppliers, customers, and more. What would you like to know?";
     return NextResponse.json(responseData);
   } catch (error) {
     console.error("Chat API error:", error);
