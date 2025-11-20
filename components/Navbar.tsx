@@ -140,7 +140,6 @@ const Navbar = () => {
 				{ title: "Categories", href: "/inventory/categories" },
 				{ title: "Low Stock Alerts", href: "/inventory/alerts" },
 				{ title: "Stock Adjustments", href: "/inventory/adjustments" },
-				{ title: "Reports", href: "/inventory/reports" },
 			],
 		},
 		{
@@ -290,11 +289,10 @@ const Navbar = () => {
 				<button
 					type="button"
 					onClick={() => onToggle(item.href)}
-					className={`relative flex items-center h-9 lg:h-10 px-3 lg:px-4 text-xs lg:text-sm rounded-lg transition-all duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary/20 border group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/10 font-medium ${
-						isOpen
+					className={`relative flex items-center h-9 lg:h-10 px-3 lg:px-4 text-xs lg:text-sm rounded-lg transition-all duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary/20 border group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/10 font-medium ${isOpen
 							? "bg-primary/10 dark:bg-primary/20 border-primary/50 text-primary shadow-lg shadow-primary/20"
 							: "bg-background/60 dark:bg-background/40 border-border/30 dark:border-border/20 hover:bg-accent/60 dark:hover:bg-accent/40"
-					}`}
+						}`}
 				>
 					<item.icon className="h-4 w-4 lg:h-5 lg:w-5 mr-2 lg:mr-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
 					<span className="hidden sm:inline md:hidden lg:inline font-medium">
@@ -304,9 +302,8 @@ const Navbar = () => {
 						{item.title.substring(0, 1)}
 					</span>
 					<ChevronDown
-						className={`h-3 w-3 lg:h-4 lg:w-4 ml-2 lg:ml-3 hidden sm:block flex-shrink-0 transition-all duration-300 ${
-							isOpen ? "rotate-180 text-primary" : "group-hover:rotate-12"
-						}`}
+						className={`h-3 w-3 lg:h-4 lg:w-4 ml-2 lg:ml-3 hidden sm:block flex-shrink-0 transition-all duration-300 ${isOpen ? "rotate-180 text-primary" : "group-hover:rotate-12"
+							}`}
 					/>
 
 					{/* Active indicator */}
@@ -359,11 +356,10 @@ const Navbar = () => {
 			)}{" "}
 			{/* Single Line Futuristic Navbar */}
 			<nav
-				className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isDashboard ? "double-decker-navbar" : "single-deck-navbar"} ${
-					isScrolled
+				className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isDashboard ? "double-decker-navbar" : "single-deck-navbar"} ${isScrolled
 						? "bg-background/95 dark:bg-background/85 backdrop-blur-2xl border-b border-border/80 dark:border-border/40 shadow-2xl shadow-primary/10 dark:shadow-primary/20"
 						: "bg-background/80 dark:bg-background/70 backdrop-blur-xl border-b border-border/40 dark:border-border/20"
-				}`}
+					}`}
 			>
 				{/* Animated aurora background effect */}
 				<div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-cyan-500/10 opacity-0 hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
@@ -729,11 +725,10 @@ const Navbar = () => {
 
 				{/* Enhanced Mobile Menu */}
 				<div
-					className={`lg:hidden absolute top-full left-0 right-0 border-t border-border/60 dark:border-border/40 bg-background/95 dark:bg-background/90 backdrop-blur-2xl transition-all duration-500 ease-in-out z-40 mobile-menu-scroll ${
-						isOpen
+					className={`lg:hidden absolute top-full left-0 right-0 border-t border-border/60 dark:border-border/40 bg-background/95 dark:bg-background/90 backdrop-blur-2xl transition-all duration-500 ease-in-out z-40 mobile-menu-scroll ${isOpen
 							? "max-h-[85vh] opacity-100 visible overflow-y-auto"
 							: "max-h-0 opacity-0 invisible overflow-hidden"
-					}`}
+						}`}
 				>
 					<div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-purple-500/5 pointer-events-none" />
 

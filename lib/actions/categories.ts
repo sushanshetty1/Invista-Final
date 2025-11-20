@@ -66,16 +66,36 @@ export async function getCategories(params: {
 			orderBy.updatedAt = sortOrder;
 		}
 
-		// Execute queries
-		const [categories, total] = await Promise.all([
+		// Execute queries with parent and children relationships
+		const [rawCategories, total] = await Promise.all([
 			neonClient.category.findMany({
 				where,
 				orderBy,
 				skip,
 				take: limit,
+				include: {
+					parent: true,
+					children: true,
+				},
 			}),
 			neonClient.category.count({ where }),
 		]);
+
+		// Calculate product count for each category
+		const categories = await Promise.all(
+			rawCategories.map(async (category) => {
+				const productCount = await neonClient.product.count({
+					where: { categoryId: category.id },
+				});
+
+				return {
+					...category,
+					productCount,
+					// Map isActive to status for frontend compatibility
+					status: category.isActive ? ("ACTIVE" as const) : ("INACTIVE" as const),
+				};
+			})
+		);
 
 		const totalPages = Math.ceil(total / limit);
 
