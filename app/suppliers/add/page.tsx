@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { useForm } from "react-hook-form";
-import { ArrowLeft, Building2, Save, X } from "lucide-react";
+import { ArrowLeft, Building2, Save, X, TestTube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -70,7 +70,7 @@ export default function AddSupplierPage() {
 	const [newCertification, setNewCertification] = useState("");
 
 	const form = useForm({
-		resolver: zodResolver(createSupplierSchema),
+		resolver: zodResolver(createSupplierSchema.omit({ createdBy: true })),
 		defaultValues: {
 			name: "",
 			code: "",
@@ -108,7 +108,6 @@ export default function AddSupplierPage() {
 			status: "ACTIVE",
 			certifications: [],
 			notes: "",
-			createdBy: "", // This will be filled from the auth context
 		},
 	});
 
@@ -145,12 +144,61 @@ export default function AddSupplierPage() {
 		form.setValue("certifications", updated);
 	};
 
+	const fillTestData = () => {
+		const testData = {
+			name: "TechSupply Pro",
+			code: `SUP-${Date.now().toString().slice(-6)}`,
+			email: "orders@techsupplypro.com",
+			phone: "+1-555-0123",
+			website: "https://techsupplypro.com",
+			companyType: "CORPORATION" as const,
+			taxId: "12-3456789",
+			vatNumber: "US123456789",
+			registrationNumber: "REG-2024-001",
+			billingAddress: {
+				street: "123 Technology Avenue",
+				city: "San Francisco",
+				state: "California",
+				country: "United States",
+				zipCode: "94105",
+			},
+			shippingAddress: {
+				street: "123 Technology Avenue",
+				city: "San Francisco",
+				state: "California",
+				country: "United States",
+				zipCode: "94105",
+			},
+			contactName: "John Smith",
+			contactEmail: "john.smith@techsupplypro.com",
+			contactPhone: "+1-555-0124",
+			contactTitle: "Sales Manager",
+			paymentTerms: "NET30",
+			creditLimit: 50000,
+			currency: "USD",
+			rating: 4,
+			onTimeDelivery: 95,
+			qualityRating: 4,
+			status: "ACTIVE" as const,
+			notes: "Reliable supplier for electronics components - Test data",
+		};
+
+		// Set form values
+		Object.entries(testData).forEach(([key, value]) => {
+			form.setValue(key as keyof typeof testData, value);
+		});
+
+		// Set certifications
+		const testCertifications = ["ISO 9001", "CE Marking", "RoHS Compliant"];
+		setCertifications(testCertifications);
+		form.setValue("certifications", testCertifications);
+
+		toast.success("Test data filled successfully");
+	};
+
 	const onSubmit = async (data: z.infer<typeof createSupplierSchema>) => {
 		try {
 			setIsSubmitting(true);
-			
-			// Get user ID from auth context (you'll need to implement this)
-			const userId = "current-user-id"; // Replace with actual user ID from auth
 			
 			const response = await fetch("/api/suppliers", {
 				method: "POST",
@@ -159,7 +207,6 @@ export default function AddSupplierPage() {
 				},
 				body: JSON.stringify({
 					...data,
-					createdBy: userId,
 					certifications,
 				}),
 			});
@@ -182,18 +229,29 @@ export default function AddSupplierPage() {
 	return (
 		<div className="py-16 px-6 mx-4 md:mx-8 space-y-6">
 			{/* Header */}
-			<div className="flex items-center gap-4">
-				<Link href="/suppliers">
-					<Button variant="outline" size="icon">
-						<ArrowLeft className="h-4 w-4" />
-					</Button>
-				</Link>
-				<div>
-					<h1 className="text-3xl font-bold">Add New Supplier</h1>
-					<p className="text-muted-foreground">
-						Create a new supplier profile with contact and business information
-					</p>
+			<div className="flex items-center justify-between gap-4">
+				<div className="flex items-center gap-4">
+					<Link href="/suppliers">
+						<Button variant="outline" size="icon">
+							<ArrowLeft className="h-4 w-4" />
+						</Button>
+					</Link>
+					<div>
+						<h1 className="text-3xl font-bold">Add New Supplier</h1>
+						<p className="text-muted-foreground">
+							Create a new supplier profile with contact and business information
+						</p>
+					</div>
 				</div>
+				<Button
+					type="button"
+					variant="outline"
+					onClick={fillTestData}
+					title="Fill with test data"
+				>
+					<TestTube className="h-4 w-4 mr-2" />
+					Test Data
+				</Button>
 			</div>
 
 			<Form {...form}>

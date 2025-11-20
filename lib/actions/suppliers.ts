@@ -31,7 +31,7 @@ export async function createSupplier(
 ): Promise<ActionResponse> {
 	try {
 		// Extract companyId and userId if provided (from API route)
-		const { companyId: providedCompanyId, userId: providedUserId, ...inputData } = input;
+		const { companyId: providedCompanyId, userId: _providedUserId, ...inputData } = input;
 		
 		let companyId = providedCompanyId;
 		
@@ -184,12 +184,24 @@ export async function getSuppliers(
 ): Promise<ActionResponse> {
 	try {
 		const validatedQuery = supplierQuerySchema.parse(input);
-		const { page, limit, search, status, companyType, sortBy, sortOrder } =
+		const { page, limit, search, companyId, status, companyType, sortBy, sortOrder } =
 			validatedQuery;
 
 		const skip = (page - 1) * limit; // Build where clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const where: any = {};
+		const where: {
+			OR?: Array<{
+				name?: { contains: string; mode: "insensitive" };
+				code?: { contains: string; mode: "insensitive" };
+				email?: { contains: string; mode: "insensitive" };
+				contactName?: { contains: string; mode: "insensitive" };
+			}>;
+			companyId?: string;
+			status?: string;
+			companyType?: string;
+		} = {};
+
+		// Filter by company ID if provided
+		if (companyId) where.companyId = companyId;
 
 		if (search) {
 			where.OR = [
@@ -202,8 +214,13 @@ export async function getSuppliers(
 
 		if (status) where.status = status;
 		if (companyType) where.companyType = companyType; // Build order clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const orderBy: any = {};
+		const orderBy: {
+			name?: "asc" | "desc";
+			code?: "asc" | "desc";
+			rating?: "asc" | "desc";
+			createdAt?: "asc" | "desc";
+			updatedAt?: "asc" | "desc";
+		} = {};
 		if (sortBy === "name") {
 			orderBy.name = sortOrder;
 		} else if (sortBy === "code") {
