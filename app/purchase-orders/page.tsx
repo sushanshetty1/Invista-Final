@@ -150,6 +150,7 @@ export default function PurchaseOrdersPage() {
 	useEffect(() => {
 		loadPurchaseOrders();
 		loadReorderSuggestions();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	const loadPurchaseOrders = async () => {
 		setLoading(true);
@@ -422,11 +423,11 @@ export default function PurchaseOrdersPage() {
 								</CardTitle>
 								<DollarSign className="h-4 w-4 text-muted-foreground" />
 							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									${stats.totalValue.toFixed(2)}
-								</div>
-							</CardContent>
+						<CardContent>
+							<div className="text-2xl font-bold">
+								${Number(stats.totalValue).toFixed(2)}
+							</div>
+						</CardContent>
 						</Card>
 
 						<Card>
@@ -436,11 +437,11 @@ export default function PurchaseOrdersPage() {
 								</CardTitle>
 								<BarChart3 className="h-4 w-4 text-muted-foreground" />
 							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									${stats.avgOrderValue.toFixed(2)}
-								</div>
-							</CardContent>
+						<CardContent>
+							<div className="text-2xl font-bold">
+								${Number(stats.avgOrderValue).toFixed(2)}
+							</div>
+						</CardContent>
 						</Card>
 					</div>
 
@@ -539,10 +540,10 @@ export default function PurchaseOrdersPage() {
 														</TableCell>
 														<TableCell>
 															{getStatusBadge(order.status)}
-														</TableCell>
-														<TableCell>
-															{order.currency} {order.totalAmount.toFixed(2)}
-														</TableCell>
+															</TableCell>
+															<TableCell>
+																{order.currency} {Number(order.totalAmount).toFixed(2)}
+															</TableCell>
 														<TableCell>
 															{format(
 																new Date(order.orderDate),
@@ -659,9 +660,9 @@ export default function PurchaseOrdersPage() {
 															<TableCell>
 																{suggestion.preferredSupplier}
 															</TableCell>
-															<TableCell>
-																USD {suggestion.estimatedCost.toFixed(2)}
-															</TableCell>
+														<TableCell>
+															USD {Number(suggestion.estimatedCost).toFixed(2)}
+														</TableCell>
 															<TableCell className="text-right">
 																<Button
 																	size="sm"
@@ -686,7 +687,7 @@ export default function PurchaseOrdersPage() {
 
 					{/* Purchase Order Detail Dialog */}
 					<Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
-						<DialogContent className="max-w-4xl">
+						<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
 							<DialogHeader>
 								<DialogTitle>
 									Purchase Order Details - {selectedOrder?.orderNumber}
@@ -712,7 +713,7 @@ export default function PurchaseOrdersPage() {
 													<span className="text-muted-foreground">Total:</span>
 													<span className="font-medium">
 														{selectedOrder.currency}{" "}
-														{selectedOrder.totalAmount.toFixed(2)}
+														{Number(selectedOrder.totalAmount).toFixed(2)}
 													</span>
 												</div>
 												<div className="flex justify-between">
@@ -753,12 +754,13 @@ export default function PurchaseOrdersPage() {
 										</Card>
 									</div>
 
-									{/* Order Items */}
-									<Card>
-										<CardHeader>
-											<CardTitle className="text-lg">Order Items</CardTitle>
-										</CardHeader>
-										<CardContent>
+								{/* Order Items */}
+								<Card>
+									<CardHeader>
+										<CardTitle className="text-lg">Order Items</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<div className="overflow-x-auto">
 											<Table>
 												<TableHeader>
 													<TableRow>
@@ -784,23 +786,22 @@ export default function PurchaseOrdersPage() {
 															<TableCell>{item.receivedQty}</TableCell>
 															<TableCell>
 																{selectedOrder.currency}{" "}
-																{item.unitCost.toFixed(2)}
+																{Number(item.unitCost).toFixed(2)}
 															</TableCell>
 															<TableCell>
 																{selectedOrder.currency}{" "}
-																{item.totalCost.toFixed(2)}
+																{Number(item.totalCost).toFixed(2)}
 															</TableCell>
 															<TableCell>
 																{getStatusBadge(item.status)}
 															</TableCell>
 														</TableRow>
-													))}
-												</TableBody>
-											</Table>
-										</CardContent>
-									</Card>
-
-									{/* Action Buttons */}
+											))}
+										</TableBody>
+									</Table>
+										</div>
+								</CardContent>
+							</Card>									{/* Action Buttons */}
 									<div className="flex justify-end space-x-2">
 										{selectedOrder.status === "PENDING_APPROVAL" && (
 											<Button onClick={() => approveOrder(selectedOrder.id)}>
@@ -834,7 +835,7 @@ export default function PurchaseOrdersPage() {
 						open={isGoodsReceiptOpen}
 						onOpenChange={setIsGoodsReceiptOpen}
 					>
-						<DialogContent className="max-w-3xl">
+						<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
 							<DialogHeader>
 								<DialogTitle>
 									Goods Receipt - {selectedOrder?.orderNumber}
@@ -848,8 +849,9 @@ export default function PurchaseOrdersPage() {
 											<CardDescription>
 												Update received quantities and perform quality checks
 											</CardDescription>
-										</CardHeader>
-										<CardContent>
+									</CardHeader>
+									<CardContent>
+										<div className="overflow-x-auto">
 											<Table>
 												<TableHeader>
 													<TableRow>
@@ -905,18 +907,17 @@ export default function PurchaseOrdersPage() {
 													))}
 												</TableBody>
 											</Table>
+										</div>
 
-											<div className="mt-4">
-												<label className="text-sm font-medium">
-													Receipt Notes
-												</label>
-												<Textarea
-													placeholder="Add any notes about the receipt, quality issues, or discrepancies..."
-													className="mt-1"
-												/>
-											</div>
-
-											<div className="flex justify-end space-x-2 mt-6">
+										<div className="mt-4">
+											<span className="text-sm font-medium block mb-1">
+												Receipt Notes
+											</span>
+											<Textarea
+												placeholder="Add any notes about the receipt, quality issues, or discrepancies..."
+												className="mt-1"
+											/>
+										</div>											<div className="flex justify-end space-x-2 mt-6">
 												<Button
 													variant="outline"
 													onClick={() => setIsGoodsReceiptOpen(false)}

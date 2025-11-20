@@ -96,7 +96,6 @@ const navItems: InternalNavItem[] = [
       { title: "Pending Approval", href: "/purchase-orders?status=PENDING_APPROVAL" },
       { title: "Awaiting Delivery", href: "/purchase-orders?status=APPROVED" },
       { title: "Reorder Suggestions", href: "/purchase-orders?tab=reorder" },
-      { title: "Goods Receipt", href: "/purchase-orders/goods-receipt" },
     ],
   },
   {
