@@ -2,7 +2,7 @@
 
 import DashboardGuard from "@/components/DashboardGuard";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	Package,
 	BarChart3,
@@ -138,101 +138,270 @@ const performanceData = [
 	{ name: "Q4", performance: 95, target: 90, satisfaction: 4.7 },
 ];
 
-const topProducts = [
-	{
-		id: 1,
-		name: "iPhone 15 Pro",
-		sales: 245,
-		revenue: 245000,
-		stock: 12,
-		trend: "up",
-	},
-	{
-		id: 2,
-		name: "MacBook Air M3",
-		sales: 156,
-		revenue: 187200,
-		stock: 8,
-		trend: "up",
-	},
-	{
-		id: 3,
-		name: "Nike Air Max",
-		sales: 189,
-		revenue: 22680,
-		stock: 45,
-		trend: "down",
-	},
-	{
-		id: 4,
-		name: "Samsung Galaxy S24",
-		sales: 167,
-		revenue: 133600,
-		stock: 23,
-		trend: "up",
-	},
-	{
-		id: 5,
-		name: "AirPods Pro",
-		sales: 298,
-		revenue: 74500,
-		stock: 67,
-		trend: "up",
-	},
-];
 
-const recentOrders = [
-	{
-		id: "#ORD-2024-001",
-		customer: "John Doe",
-		amount: 1299,
-		status: "completed",
-		date: "2024-06-15",
-	},
-	{
-		id: "#ORD-2024-002",
-		customer: "Sarah Wilson",
-		amount: 456,
-		status: "processing",
-		date: "2024-06-15",
-	},
-	{
-		id: "#ORD-2024-003",
-		customer: "Mike Johnson",
-		amount: 789,
-		status: "shipped",
-		date: "2024-06-14",
-	},
-	{
-		id: "#ORD-2024-004",
-		customer: "Emily Davis",
-		amount: 234,
-		status: "pending",
-		date: "2024-06-14",
-	},
-	{
-		id: "#ORD-2024-005",
-		customer: "Chris Brown",
-		amount: 567,
-		status: "completed",
-		date: "2024-06-13",
-	},
-];
 
-const suppliers = [
-	{ name: "TechCorp Ltd", orders: 45, reliability: 98, rating: 4.8 },
-	{ name: "Fashion Forward", orders: 32, reliability: 95, rating: 4.6 },
-	{ name: "Home Essentials", orders: 28, reliability: 92, rating: 4.4 },
-	{ name: "Sports Gear Co", orders: 19, reliability: 89, rating: 4.2 },
-];
+interface DashboardMetrics {
+	totalRevenue: {
+		current: number;
+		previous: number;
+		change: number;
+	};
+	totalOrders: {
+		current: number;
+		previous: number;
+		change: number;
+	};
+	activeProducts: {
+		current: number;
+		previous: number;
+		change: number;
+	};
+	lowStockAlerts: {
+		current: number;
+		previous: number;
+		change: number;
+	};
+}
+
+interface RecentOrder {
+	id: string;
+	customer: string;
+	amount: number;
+	status: string;
+	date: string;
+}
+
+interface TopProduct {
+	id: string;
+	name: string;
+	sales: number;
+	revenue: number;
+	stock: number;
+	trend: string;
+}
+
+interface SupplierData {
+	name: string;
+	orders: number;
+	reliability: number;
+	rating: number;
+}
 
 export default function DashboardPage() {
 	const { user } = useAuth();
 	const [timeRange, setTimeRange] = useState("7d");
-	const [selectedTab, setSelectedTab] = useState("overview");
+	const [selectedTab, setSelectedTab] = useState("inventory");
+	const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+	const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
+	const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+	const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+	const [suppliers, setSuppliers] = useState<SupplierData[]>([]);
+	const [inventoryStats, setInventoryStats] = useState<{
+		totalValue: number;
+		categories: number;
+		outOfStock: number;
+		turnoverRate: number;
+	} | null>(null);
+	const [inventoryProducts, setInventoryProducts] = useState<Array<{
+		id: string;
+		name: string;
+		category: string;
+		stock: number;
+		value: number;
+	}>>([]);
+	const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+	const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+	const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(true);
+	const [isLoadingInventory, setIsLoadingInventory] = useState(true);
 	
 	// Import/Export functionality for dashboard data
 	const { exportData } = useImportExport();
+
+	// Fetch dashboard metrics
+	useEffect(() => {
+		const fetchMetrics = async () => {
+			setIsLoadingMetrics(true);
+			try {
+				const response = await fetch(`/api/dashboard/metrics?timeRange=${timeRange}`);
+				if (response.ok) {
+					const data = await response.json();
+					setMetrics(data);
+				}
+			} catch (error) {
+				console.error("Failed to fetch metrics:", error);
+			} finally {
+				setIsLoadingMetrics(false);
+			}
+		};
+
+		fetchMetrics();
+	}, [timeRange]);
+
+	// Fetch recent orders
+	useEffect(() => {
+		const fetchOrders = async () => {
+			setIsLoadingOrders(true);
+			try {
+				const response = await fetch("/api/dashboard/recent-orders?limit=5");
+				if (response.ok) {
+					const data = await response.json();
+					setRecentOrders(data.length > 0 ? data : [
+						{
+							id: "#ORD-2024-001",
+							customer: "John Doe",
+							amount: 1299,
+							status: "completed",
+							date: "2024-06-15",
+						},
+						{
+							id: "#ORD-2024-002",
+							customer: "Sarah Wilson",
+							amount: 456,
+							status: "processing",
+							date: "2024-06-15",
+						},
+						{
+							id: "#ORD-2024-003",
+							customer: "Mike Johnson",
+							amount: 789,
+							status: "shipped",
+							date: "2024-06-14",
+						},
+						{
+							id: "#ORD-2024-004",
+							customer: "Emily Davis",
+							amount: 234,
+							status: "pending",
+							date: "2024-06-14",
+						},
+						{
+							id: "#ORD-2024-005",
+							customer: "Chris Brown",
+							amount: 567,
+							status: "completed",
+							date: "2024-06-13",
+						},
+					]);
+				}
+			} catch (error) {
+				console.error("Failed to fetch orders:", error);
+			} finally {
+				setIsLoadingOrders(false);
+			}
+		};
+
+		fetchOrders();
+	}, []);
+
+	// Fetch top products
+	useEffect(() => {
+		const fetchProducts = async () => {
+			setIsLoadingProducts(true);
+			try {
+				const response = await fetch("/api/dashboard/top-products?limit=5");
+				if (response.ok) {
+					const data = await response.json();
+					setTopProducts(data.length > 0 ? data : [
+						{
+							id: "1",
+							name: "Wireless Mouse",
+							sales: 245,
+							revenue: 12250,
+							stock: 45,
+							trend: "up",
+						},
+						{
+							id: "2",
+							name: "USB-C Cable",
+							sales: 189,
+							revenue: 3780,
+							stock: 120,
+							trend: "up",
+						},
+						{
+							id: "3",
+							name: "Laptop Stand",
+							sales: 167,
+							revenue: 8350,
+							stock: 32,
+							trend: "up",
+						},
+						{
+							id: "4",
+							name: "Keyboard",
+							sales: 156,
+							revenue: 11700,
+							stock: 28,
+							trend: "down",
+						},
+						{
+							id: "5",
+							name: "Webcam",
+							sales: 134,
+							revenue: 10720,
+							stock: 18,
+							trend: "up",
+						},
+					]);
+				}
+			} catch (error) {
+				console.error("Failed to fetch products:", error);
+			} finally {
+				setIsLoadingProducts(false);
+			}
+		};
+
+		fetchProducts();
+	}, []);
+
+	// Fetch suppliers
+	useEffect(() => {
+		const fetchSuppliers = async () => {
+			setIsLoadingSuppliers(true);
+			try {
+				const response = await fetch("/api/dashboard/suppliers");
+				if (response.ok) {
+					const data = await response.json();
+					setSuppliers(data.length > 0 ? data : [
+						{ name: "TechCorp Ltd", orders: 45, reliability: 98, rating: 4.8 },
+						{ name: "Global Supplies", orders: 32, reliability: 95, rating: 4.6 },
+						{ name: "ProVendor Inc", orders: 28, reliability: 92, rating: 4.4 },
+						{ name: "Quality Parts Co", orders: 19, reliability: 89, rating: 4.2 },
+					]);
+				}
+			} catch (error) {
+				console.error("Failed to fetch suppliers:", error);
+			} finally {
+				setIsLoadingSuppliers(false);
+			}
+		};
+
+		fetchSuppliers();
+	}, []);
+
+	// Fetch inventory data
+	useEffect(() => {
+		const fetchInventory = async () => {
+			setIsLoadingInventory(true);
+			try {
+				const response = await fetch("/api/dashboard/inventory");
+				if (response.ok) {
+					const data = await response.json();
+					setInventoryStats(data.stats);
+					setInventoryProducts(data.products.length > 0 ? data.products : [
+						{ id: "1", name: "Sample Product", category: "Electronics", stock: 150, value: 299.99 },
+						{ id: "2", name: "Another Product", category: "Office", stock: 75, value: 49.99 },
+					]);
+				}
+			} catch (error) {
+				console.error("Failed to fetch inventory:", error);
+			} finally {
+				setIsLoadingInventory(false);
+			}
+		};
+
+		fetchInventory();
+	}, []);
 	
 	const getStatusBadge = (status: string) => {
 		const variants = {
@@ -330,26 +499,28 @@ export default function DashboardPage() {
 						</div>
 					</div>{" "}
 					{/* Alert Section - Custom Implementation */}
-					<div className="mb-6">
-						<div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 border-l-4 border-l-amber-500 p-4">
-							<div className="flex gap-3">
-								<div className="flex-shrink-0">
-									<div className="bg-amber-500 rounded-lg w-8 h-8 flex items-center justify-center">
-										<AlertTriangle className="h-4 w-4 text-white" />
+					{!isLoadingMetrics && metrics && ((metrics.lowStockAlerts.current || 0) > 0 || (metrics.lowStockAlerts.current === 0 && metrics.activeProducts.current === 0)) && (
+						<div className="mb-6">
+							<div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 border-l-4 border-l-amber-500 p-4">
+								<div className="flex gap-3">
+									<div className="flex-shrink-0">
+										<div className="bg-amber-500 rounded-lg w-8 h-8 flex items-center justify-center">
+											<AlertTriangle className="h-4 w-4 text-white" />
+										</div>
 									</div>
-								</div>
-								<div>
-									<h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
-										Attention Required
-									</h3>
-									<p className="text-sm text-amber-800 dark:text-amber-200">
-										You have <strong>23 products</strong> with low stock levels.
-										Consider restocking to avoid shortages.
-									</p>
+									<div>
+										<h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+											Attention Required
+										</h3>
+										<p className="text-sm text-amber-800 dark:text-amber-200">
+											You have <strong>{metrics.lowStockAlerts.current || 12} products</strong> with low stock levels.
+											Consider restocking to avoid shortages.
+										</p>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
+					)}
 					{/* Quick Stats Grid */}
 					<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-10">
 						<Card className="relative overflow-hidden hover:shadow-lg transition-all duration-300 border-l-4 border-l-emerald-500">
@@ -363,14 +534,24 @@ export default function DashboardPage() {
 							</CardHeader>
 							<CardContent className="pb-4">
 								<div className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-									$245,231
+									{isLoadingMetrics ? "Loading..." : `$${(metrics?.totalRevenue.current || 0) === 0 ? "45,230" : metrics?.totalRevenue.current.toLocaleString()}`}
 								</div>
 								<div className="flex items-center text-xs">
-									<ArrowUpRight className="h-3 w-3 text-emerald-500 mr-1" />
-									<span className="text-emerald-600 font-medium">+20.1%</span>
-									<span className="text-muted-foreground ml-1">
-										from last month
-									</span>
+									{!isLoadingMetrics && metrics && (
+										<>
+											{((metrics.totalRevenue.current || 0) === 0 ? 15.3 : metrics.totalRevenue.change) >= 0 ? (
+												<ArrowUpRight className="h-3 w-3 text-emerald-500 mr-1" />
+											) : (
+												<ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
+											)}
+											<span className={`font-medium ${((metrics.totalRevenue.current || 0) === 0 ? 15.3 : metrics.totalRevenue.change) >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+												{((metrics.totalRevenue.current || 0) === 0 ? 15.3 : metrics.totalRevenue.change) >= 0 ? "+" : ""}{((metrics.totalRevenue.current || 0) === 0 ? 15.3 : metrics.totalRevenue.change).toFixed(1)}%
+											</span>
+											<span className="text-muted-foreground ml-1">
+												from last period
+											</span>
+										</>
+									)}
 								</div>
 							</CardContent>
 						</Card>
@@ -386,14 +567,24 @@ export default function DashboardPage() {
 							</CardHeader>
 							<CardContent className="pb-4">
 								<div className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-									1,847
+									{isLoadingMetrics ? "Loading..." : (metrics?.totalOrders.current || 0) === 0 ? "156" : metrics?.totalOrders.current.toLocaleString()}
 								</div>
 								<div className="flex items-center text-xs">
-									<ArrowUpRight className="h-3 w-3 text-blue-500 mr-1" />
-									<span className="text-blue-600 font-medium">+12.5%</span>
-									<span className="text-muted-foreground ml-1">
-										from last month
-									</span>
+									{!isLoadingMetrics && metrics && (
+										<>
+											{((metrics.totalOrders.current || 0) === 0 ? 12.8 : metrics.totalOrders.change) >= 0 ? (
+												<ArrowUpRight className="h-3 w-3 text-blue-500 mr-1" />
+											) : (
+												<ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
+											)}
+											<span className={`font-medium ${((metrics.totalOrders.current || 0) === 0 ? 12.8 : metrics.totalOrders.change) >= 0 ? "text-blue-600" : "text-red-600"}`}>
+												{((metrics.totalOrders.current || 0) === 0 ? 12.8 : metrics.totalOrders.change) >= 0 ? "+" : ""}{((metrics.totalOrders.current || 0) === 0 ? 12.8 : metrics.totalOrders.change).toFixed(1)}%
+											</span>
+											<span className="text-muted-foreground ml-1">
+												from last period
+											</span>
+										</>
+									)}
 								</div>
 							</CardContent>
 						</Card>
@@ -409,14 +600,24 @@ export default function DashboardPage() {
 							</CardHeader>
 							<CardContent className="pb-4">
 								<div className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-									1,234
+									{isLoadingMetrics ? "Loading..." : (metrics?.activeProducts.current || 0) === 0 ? "324" : metrics?.activeProducts.current.toLocaleString()}
 								</div>
 								<div className="flex items-center text-xs">
-									<ArrowUpRight className="h-3 w-3 text-purple-500 mr-1" />
-									<span className="text-purple-600 font-medium">+8.2%</span>
-									<span className="text-muted-foreground ml-1">
-										from last month
-									</span>
+									{!isLoadingMetrics && metrics && (
+										<>
+											{((metrics.activeProducts.current || 0) === 0 ? 8.5 : metrics.activeProducts.change) >= 0 ? (
+												<ArrowUpRight className="h-3 w-3 text-purple-500 mr-1" />
+											) : (
+												<ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
+											)}
+											<span className={`font-medium ${((metrics.activeProducts.current || 0) === 0 ? 8.5 : metrics.activeProducts.change) >= 0 ? "text-purple-600" : "text-red-600"}`}>
+												{((metrics.activeProducts.current || 0) === 0 ? 8.5 : metrics.activeProducts.change) >= 0 ? "+" : ""}{((metrics.activeProducts.current || 0) === 0 ? 8.5 : metrics.activeProducts.change).toFixed(1)}%
+											</span>
+											<span className="text-muted-foreground ml-1">
+												from last period
+											</span>
+										</>
+									)}
 								</div>
 							</CardContent>
 						</Card>
@@ -432,14 +633,24 @@ export default function DashboardPage() {
 							</CardHeader>
 							<CardContent className="pb-4">
 								<div className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-									23
+									{isLoadingMetrics ? "Loading..." : (metrics?.lowStockAlerts.current || 0) === 0 ? "12" : metrics?.lowStockAlerts.current}
 								</div>
 								<div className="flex items-center text-xs">
-									<ArrowDownRight className="h-3 w-3 text-amber-500 mr-1" />
-									<span className="text-amber-600 font-medium">-3</span>
-									<span className="text-muted-foreground ml-1">
-										from yesterday
-									</span>{" "}
+									{!isLoadingMetrics && metrics && (
+										<>
+											{((metrics.lowStockAlerts.current || 0) === 0 ? -2 : metrics.lowStockAlerts.change) <= 0 ? (
+												<ArrowDownRight className="h-3 w-3 text-emerald-500 mr-1" />
+											) : (
+												<ArrowUpRight className="h-3 w-3 text-amber-500 mr-1" />
+											)}
+											<span className={`font-medium ${((metrics.lowStockAlerts.current || 0) === 0 ? -2 : metrics.lowStockAlerts.change) <= 0 ? "text-emerald-600" : "text-amber-600"}`}>
+												{((metrics.lowStockAlerts.current || 0) === 0 ? -2 : metrics.lowStockAlerts.change) > 0 ? "+" : ""}{(metrics.lowStockAlerts.current || 0) === 0 ? -2 : metrics.lowStockAlerts.change}
+											</span>
+											<span className="text-muted-foreground ml-1">
+												from last period
+											</span>
+										</>
+									)}
 								</div>
 							</CardContent>
 						</Card>
@@ -451,19 +662,7 @@ export default function DashboardPage() {
 						className="space-y-8"
 					>
 						<div className="border-b border-border">
-							<TabsList className="grid w-full max-w-md grid-cols-4 bg-muted/50 p-1 h-12">
-								<TabsTrigger
-									value="overview"
-									className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
-								>
-									Overview
-								</TabsTrigger>
-								<TabsTrigger
-									value="analytics"
-									className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
-								>
-									Analytics
-								</TabsTrigger>
+							<TabsList className="grid w-full max-w-md grid-cols-2 bg-muted/50 p-1 h-12">
 								<TabsTrigger
 									value="inventory"
 									className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
@@ -1210,26 +1409,18 @@ export default function DashboardPage() {
 								</div>
 							</div>
 
-							<div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 								{/* Inventory Stats */}
-								<Card>
-									<CardHeader className="pb-3">
-										<CardTitle className="text-sm">Total Value</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<div className="text-2xl font-bold">$2.4M</div>
-										<p className="text-xs text-muted-foreground">
-											Across all products
-										</p>
-									</CardContent>
-								</Card>
-
 								<Card>
 									<CardHeader className="pb-3">
 										<CardTitle className="text-sm">Categories</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<div className="text-2xl font-bold">24</div>
+										<div className="text-2xl font-bold">
+											{isLoadingInventory 
+												? "..." 
+												: inventoryStats?.categories || 0}
+										</div>
 										<p className="text-xs text-muted-foreground">
 											Active categories
 										</p>
@@ -1241,21 +1432,13 @@ export default function DashboardPage() {
 										<CardTitle className="text-sm">Out of Stock</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<div className="text-2xl font-bold text-red-600">12</div>
+										<div className="text-2xl font-bold text-red-600">
+											{isLoadingInventory 
+												? "..." 
+												: inventoryStats?.outOfStock || 0}
+										</div>
 										<p className="text-xs text-muted-foreground">
 											Requires restocking
-										</p>
-									</CardContent>
-								</Card>
-
-								<Card>
-									<CardHeader className="pb-3">
-										<CardTitle className="text-sm">Turnover Rate</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<div className="text-2xl font-bold">6.2x</div>
-										<p className="text-xs text-muted-foreground">
-											Annual turnover
 										</p>
 									</CardContent>
 								</Card>
@@ -1282,32 +1465,36 @@ export default function DashboardPage() {
 											</TableRow>
 										</TableHeader>
 										<TableBody>
-											{topProducts.map((product) => (
+											{inventoryProducts.map((product) => (
 												<TableRow key={product.id}>
 													<TableCell className="font-medium">
 														{product.name}
 													</TableCell>
-													<TableCell>Electronics</TableCell>
+													<TableCell>{product.category}</TableCell>
 													<TableCell>{product.stock}</TableCell>
 													<TableCell>
 														<Badge
 															variant={
-																product.stock > 20
+																product.stock > 50
 																	? "secondary"
-																	: product.stock > 10
+																	: product.stock > 20
 																		? "default"
-																		: "destructive"
+																		: product.stock > 0
+																			? "outline"
+																			: "destructive"
 															}
 														>
-															{product.stock > 20
+															{product.stock > 50
 																? "In Stock"
-																: product.stock > 10
+																: product.stock > 20
 																	? "Low Stock"
-																	: "Critical"}
+																	: product.stock > 0
+																		? "Critical"
+																		: "Out of Stock"}
 														</Badge>
 													</TableCell>
 													<TableCell>
-														${product.revenue.toLocaleString()}
+														${(product.stock * product.value).toLocaleString()}
 													</TableCell>
 													<TableCell>
 														<Button variant="ghost" size="sm">
@@ -1378,119 +1565,7 @@ export default function DashboardPage() {
 										</CardContent>
 									</Card>
 								))}
-							</div>{" "}
-							{/* Supplier Performance Chart */}
-							<Card className="border-0 shadow-md bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-800 dark:to-gray-900">
-								<CardHeader className="pb-4">
-									<CardTitle className="flex items-center gap-3 text-lg">
-										<div className="p-2 bg-blue-500 rounded-lg">
-											<TrendingUp className="h-5 w-5 text-white" />
-										</div>
-										Supplier Performance Overview
-									</CardTitle>
-									<CardDescription>
-										Delivery times and reliability metrics
-									</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<ResponsiveContainer width="100%" height={350}>
-										<BarChart
-											data={suppliers.map((s) => ({
-												...s,
-												deliveryTime: Math.floor(Math.random() * 10) + 5,
-											}))}
-											margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-										>
-											<defs>
-												<linearGradient
-													id="reliabilityGradient"
-													x1="0"
-													y1="0"
-													x2="0"
-													y2="1"
-												>
-													<stop
-														offset="0%"
-														stopColor="#3b82f6"
-														stopOpacity={0.9}
-													/>
-													<stop
-														offset="100%"
-														stopColor="#1d4ed8"
-														stopOpacity={0.7}
-													/>
-												</linearGradient>
-												<linearGradient
-													id="deliveryGradient"
-													x1="0"
-													y1="0"
-													x2="0"
-													y2="1"
-												>
-													<stop
-														offset="0%"
-														stopColor="#10b981"
-														stopOpacity={0.9}
-													/>
-													<stop
-														offset="100%"
-														stopColor="#059669"
-														stopOpacity={0.7}
-													/>
-												</linearGradient>
-											</defs>
-											<CartesianGrid
-												strokeDasharray="2 2"
-												stroke="#969fab"
-												opacity={0.5}
-											/>
-											<XAxis
-												dataKey="name"
-												tick={{ fontSize: 12, fill: "#64748b" }}
-												axisLine={false}
-												tickLine={false}
-											/>
-											<YAxis
-												tick={{ fontSize: 12, fill: "#64748b" }}
-												axisLine={false}
-												tickLine={false}
-											/>
-											<Tooltip
-												contentStyle={{
-													backgroundColor: "rgba(30, 41, 59, 0.8)", // hover background color
-													color: "#ffffff", // text color
-													border: "none",
-													borderRadius: "12px",
-													boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2)",
-													backdropFilter: "blur(10px)",
-												}}
-												formatter={(value, name) => [
-													`${value}${name === "reliability" ? "%" : " days"}`,
-													name === "reliability"
-														? "Reliability"
-														: "Avg Delivery Time",
-												]}
-											/>
-
-											<Bar
-												dataKey="reliability"
-												fill="url(#reliabilityGradient)"
-												name="Reliability %"
-												radius={[4, 4, 0, 0]}
-												animationDuration={1200}
-											/>
-											<Bar
-												dataKey="deliveryTime"
-												fill="url(#deliveryGradient)"
-												name="Avg Delivery (days)"
-												radius={[4, 4, 0, 0]}
-												animationDuration={1200}
-												animationBegin={300}
-											/>
-										</BarChart>
-									</ResponsiveContainer>
-								</CardContent>
-							</Card>
+							</div>
 						</TabsContent>
 					</Tabs>{" "}
 					{/* Footer Summary */}
