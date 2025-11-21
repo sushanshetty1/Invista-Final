@@ -4,11 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3,
   Building2,
   ChevronDown,
   ChevronLeft,
-  FileText,
   LayoutDashboard,
   LogOut,
   MessageSquare,
@@ -49,12 +47,6 @@ const navItems: InternalNavItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    items: [
-      { title: "Overview", href: "/dashboard" },
-      { title: "Analytics", href: "/dashboard/analytics" },
-      { title: "Notifications", href: "/dashboard/notifications" },
-      { title: "Settings", href: "/dashboard/settings" },
-    ],
   },
   {
     id: "inventory",
@@ -62,13 +54,8 @@ const navItems: InternalNavItem[] = [
     href: "/inventory",
     icon: Package,
     items: [
-      { title: "Overview", href: "/inventory" },
       { title: "Products", href: "/inventory/products" },
-      { title: "Stock Management", href: "/inventory/stock" },
       { title: "Categories", href: "/inventory/categories" },
-      { title: "Low Stock Alerts", href: "/inventory/alerts" },
-      { title: "Stock Adjustments", href: "/inventory/adjustments" },
-      { title: "Reports", href: "/inventory/reports" },
     ],
   },
   {
@@ -99,18 +86,6 @@ const navItems: InternalNavItem[] = [
     ],
   },
   {
-    id: "audits",
-    title: "Audits",
-    href: "/audits",
-    icon: FileText,
-    items: [
-      { title: "Overview", href: "/audits" },
-      { title: "Cycle Counting", href: "/audits/cycle-counting" },
-      { title: "Compliance Reports", href: "/audits/compliance" },
-      { title: "Audit History", href: "/audits/history" },
-    ],
-  },
-  {
     id: "suppliers",
     title: "Suppliers",
     href: "/suppliers",
@@ -120,19 +95,6 @@ const navItems: InternalNavItem[] = [
       { title: "Add Supplier", href: "/suppliers/add" },
       { title: "Supplier Products", href: "/suppliers/products" },
       { title: "Performance", href: "/suppliers/performance" },
-    ],
-  },
-  {
-    id: "reports",
-    title: "Reports",
-    href: "/reports",
-    icon: BarChart3,
-    items: [
-      { title: "Overview", href: "/reports" },
-      { title: "Inventory Reports", href: "/reports/inventory" },
-      { title: "Sales Reports", href: "/reports/sales" },
-      { title: "Financial Reports", href: "/reports/financial" },
-      { title: "Custom Reports", href: "/reports/custom" },
     ],
   },
   {
