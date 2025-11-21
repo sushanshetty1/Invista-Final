@@ -147,8 +147,8 @@ const generateUniqueId = () => {
 	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
 		const r = (Math.random() * 16) | 0;
 		const v = c == "x" ? r : (r & 0x3) | 0x8;
-	return v.toString(16);
-});
+		return v.toString(16);
+	});
 };
 
 // Function to generate unique categoryId by checking existing ones in database
@@ -667,6 +667,13 @@ const ProductFormDialog = React.memo(function ProductFormDialog({
 			setError(null);
 
 			try {
+				// Validation: Ensure maxStockLevel > reorderPoint
+				if (data.reorderPoint && data.maxStockLevel && data.reorderPoint >= data.maxStockLevel) {
+					setError("Maximum stock level must be greater than reorder point");
+					setLoading(false);
+					return;
+				}
+
 				const url = product
 					? `/api/inventory/products/${product.id}`
 					: "/api/inventory/products";

@@ -613,9 +613,9 @@ export default function ProductsPage() {
 									<TableCell>{getStockStatus(product)}</TableCell>
 									<TableCell className="hidden sm:table-cell">
 										<div className="text-xs sm:text-sm">
-											<div>{product.availableStock}</div>
+											<div></div>{product.reorderPoint || 0}
 											<div className="text-muted-foreground">
-												of {product.totalStock}
+												of {product.maxStockLevel || 0}
 											</div>
 										</div>
 									</TableCell>
