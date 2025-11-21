@@ -352,21 +352,21 @@ export default function PurchaseOrdersPage() {
 		);
 	}
 	return (
-		<div className="min-h-screen bg-background pt-20">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-				<div className="space-y-6">
+		<div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+			<div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 py-8 lg:py-10">
+				<div className="space-y-8">
 					{/* Header */}
-					<div className="flex items-center justify-between">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 						<div>
-							<h1 className="text-3xl font-bold tracking-tight">
+							<h1 className="text-3xl font-bold tracking-tight mb-2">
 								Purchase Orders
 							</h1>
-							<p className="text-muted-foreground">
+							<p className="text-sm text-muted-foreground">
 								Manage purchase orders, supplier relationships, and inventory
 								procurement
 							</p>
 						</div>
-						<Button asChild>
+						<Button asChild size="lg" className="shadow-md hover:shadow-lg transition-shadow">
 							<Link href="/purchase-orders/create">
 								<Plus className="mr-2 h-4 w-4" />
 								New Purchase Order
@@ -375,104 +375,134 @@ export default function PurchaseOrdersPage() {
 					</div>
 
 					{/* Stats Cards */}
-					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
+					<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+						<Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+								<CardTitle className="text-sm font-medium text-muted-foreground">
 									Total Orders
 								</CardTitle>
-								<ShoppingCart className="h-4 w-4 text-muted-foreground" />
+								<div className="p-2 bg-primary/10 rounded-lg">
+									<ShoppingCart className="h-4 w-4 text-primary" />
+								</div>
 							</CardHeader>
 							<CardContent>
-								<div className="text-2xl font-bold">{stats.totalOrders}</div>
+								<div className="text-3xl font-bold">{stats.totalOrders}</div>
+								<p className="text-xs text-muted-foreground mt-1">All time orders</p>
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
+						<Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+								<CardTitle className="text-sm font-medium text-muted-foreground">
 									Pending Approval
 								</CardTitle>
-								<Clock className="h-4 w-4 text-muted-foreground" />
+								<div className="p-2 bg-amber-500/10 rounded-lg">
+									<Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+								</div>
 							</CardHeader>
 							<CardContent>
-								<div className="text-2xl font-bold">
+								<div className="text-3xl font-bold">
 									{stats.pendingApproval}
 								</div>
+								<p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
+						<Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+								<CardTitle className="text-sm font-medium text-muted-foreground">
 									Awaiting Delivery
 								</CardTitle>
-								<Truck className="h-4 w-4 text-muted-foreground" />
+								<div className="p-2 bg-blue-500/10 rounded-lg">
+									<Truck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+								</div>
 							</CardHeader>
 							<CardContent>
-								<div className="text-2xl font-bold">
+								<div className="text-3xl font-bold">
 									{stats.awaitingDelivery}
 								</div>
+								<p className="text-xs text-muted-foreground mt-1">In transit</p>
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
+						<Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+								<CardTitle className="text-sm font-medium text-muted-foreground">
 									Total Value
 								</CardTitle>
-								<DollarSign className="h-4 w-4 text-muted-foreground" />
+								<div className="p-2 bg-green-500/10 rounded-lg">
+									<DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+								</div>
 							</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">
+							<div className="text-3xl font-bold">
 								${Number(stats.totalValue).toFixed(2)}
 							</div>
+							<p className="text-xs text-muted-foreground mt-1">Total spent</p>
 						</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
+						<Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+								<CardTitle className="text-sm font-medium text-muted-foreground">
 									Average Order
 								</CardTitle>
-								<BarChart3 className="h-4 w-4 text-muted-foreground" />
+								<div className="p-2 bg-purple-500/10 rounded-lg">
+									<BarChart3 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+								</div>
 							</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">
+							<div className="text-3xl font-bold">
 								${Number(stats.avgOrderValue).toFixed(2)}
 							</div>
+							<p className="text-xs text-muted-foreground mt-1">Per order</p>
 						</CardContent>
 						</Card>
 					</div>
 
 					{/* Main Content Tabs */}
-					<Tabs value={activeTab} onValueChange={setActiveTab}>
-						<TabsList>
-							<TabsTrigger value="orders">Purchase Orders</TabsTrigger>
-							<TabsTrigger value="reorder" className="gap-2">
+					<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+						<TabsList className="bg-muted/50 p-1">
+							<TabsTrigger value="orders" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+								<FileText className="h-4 w-4 mr-2" />
+								Purchase Orders
+							</TabsTrigger>
+							<TabsTrigger value="reorder" className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
 								<AlertTriangle className="h-4 w-4" />
-								Reorder Suggestions ({reorderSuggestions.length})
+								Reorder Suggestions
+								{reorderSuggestions.length > 0 && (
+									<span className="ml-1 px-2 py-0.5 bg-amber-500/20 text-amber-900 dark:text-amber-100 rounded-full text-xs font-medium">
+										{reorderSuggestions.length}
+									</span>
+								)}
 							</TabsTrigger>
 						</TabsList>
 
-						<TabsContent value="orders" className="space-y-4">
-							<Card>
-								<CardHeader>
-									<CardTitle>Purchase Orders</CardTitle>
-									<CardDescription>
-										View and manage all purchase orders
-									</CardDescription>
+						<TabsContent value="orders" className="space-y-5 mt-0">
+							<Card className="border-border/50 shadow-sm">
+								<CardHeader className="pb-4">
+									<div className="flex items-center justify-between">
+										<div>
+											<CardTitle className="text-xl">Purchase Orders</CardTitle>
+											<CardDescription className="mt-1">
+												View and manage all purchase orders
+											</CardDescription>
+										</div>
+										<Badge variant="secondary" className="text-sm px-3 py-1">
+											{filteredOrders.length} {filteredOrders.length === 1 ? 'order' : 'orders'}
+										</Badge>
+									</div>
 								</CardHeader>
-								<CardContent>
-									<div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 mb-6">
+								<CardContent className="pt-0">
+									<div className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3 mb-6">
 										<div className="flex-1">
 											<div className="relative">
-												<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+												<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 												<Input
 													placeholder="Search purchase orders..."
 													value={searchTerm}
 													onChange={(e) => setSearchTerm(e.target.value)}
-													className="pl-8"
+													className="pl-9 h-10"
 												/>
 											</div>
 										</div>
@@ -480,7 +510,7 @@ export default function PurchaseOrdersPage() {
 											value={statusFilter}
 											onValueChange={setStatusFilter}
 										>
-											<SelectTrigger className="w-[200px]">
+											<SelectTrigger className="w-[220px] h-10">
 												<Filter className="mr-2 h-4 w-4" />
 												<SelectValue placeholder="Filter by status" />
 											</SelectTrigger>
@@ -508,93 +538,111 @@ export default function PurchaseOrdersPage() {
 									</div>
 
 									{/* Purchase Orders Table */}
-									<div className="rounded-md border">
+									<div className="rounded-lg border border-border/50 overflow-hidden bg-card/50">
 										<Table>
 											<TableHeader>
-												<TableRow>
-													<TableHead>PO Number</TableHead>
-													<TableHead>Supplier</TableHead>
-													<TableHead>Status</TableHead>
-													<TableHead>Total</TableHead>
-													<TableHead>Order Date</TableHead>
-													<TableHead>Expected Date</TableHead>
-													<TableHead>Approved By</TableHead>
-													<TableHead className="text-right">Actions</TableHead>
+												<TableRow className="bg-muted/50 hover:bg-muted/50">
+													<TableHead className="font-semibold">PO Number</TableHead>
+													<TableHead className="font-semibold">Supplier</TableHead>
+													<TableHead className="font-semibold">Status</TableHead>
+													<TableHead className="font-semibold">Total</TableHead>
+													<TableHead className="font-semibold">Order Date</TableHead>
+													<TableHead className="font-semibold">Expected Date</TableHead>
+													<TableHead className="font-semibold">Approved By</TableHead>
+													<TableHead className="text-right font-semibold">Actions</TableHead>
 												</TableRow>
 											</TableHeader>
 											<TableBody>
-												{filteredOrders.map((order) => (
-													<TableRow key={order.id}>
-														<TableCell className="font-medium">
-															{order.orderNumber}
-														</TableCell>
-														<TableCell>
-															<div>
-																<div className="font-medium">
-																	{order.supplier.name}
-																</div>
-																<div className="text-sm text-muted-foreground">
-																	{order.supplier.email}
-																</div>
-															</div>
-														</TableCell>
-														<TableCell>
-															{getStatusBadge(order.status)}
-															</TableCell>
-															<TableCell>
-																{order.currency} {Number(order.totalAmount).toFixed(2)}
-															</TableCell>
-														<TableCell>
-															{format(
-																new Date(order.orderDate),
-																"MMM dd, yyyy",
-															)}
-														</TableCell>
-														<TableCell>
-															{order.expectedDate
-																? format(
-																		new Date(order.expectedDate),
-																		"MMM dd, yyyy",
-																	)
-																: "-"}
-														</TableCell>
-														<TableCell>{order.approvedBy || "-"}</TableCell>
-														<TableCell className="text-right">
-															<div className="flex items-center justify-end gap-2">
-																<Button
-																	variant="ghost"
-																	size="sm"
-																	onClick={() => viewOrderDetails(order)}
-																>
-																	<Eye className="h-4 w-4" />
-																</Button>
-																{order.status === "PENDING_APPROVAL" && (
-																	<Button
-																		variant="ghost"
-																		size="sm"
-																		onClick={() => approveOrder(order.id)}
-																	>
-																		<CheckCircle className="h-4 w-4" />
-																	</Button>
-																)}
-																{[
-																	"APPROVED",
-																	"SENT",
-																	"ACKNOWLEDGED",
-																	"PARTIALLY_RECEIVED",
-																].includes(order.status) && (
-																	<Button
-																		variant="ghost"
-																		size="sm"
-																		onClick={() => receiveGoods(order)}
-																	>
-																		<Package className="h-4 w-4" />
-																	</Button>
-																)}
+												{filteredOrders.length === 0 ? (
+													<TableRow>
+														<TableCell colSpan={8} className="h-32 text-center">
+															<div className="flex flex-col items-center justify-center text-muted-foreground">
+																<Package className="h-10 w-10 mb-3 opacity-50" />
+																<p className="font-medium">No purchase orders found</p>
+																<p className="text-sm">Try adjusting your search or filters</p>
 															</div>
 														</TableCell>
 													</TableRow>
-												))}
+												) : (
+													filteredOrders.map((order) => (
+														<TableRow key={order.id} className="hover:bg-muted/30 transition-colors">
+															<TableCell className="font-mono text-sm font-medium">
+																{order.orderNumber}
+															</TableCell>
+															<TableCell>
+																<div>
+																	<div className="font-medium">
+																		{order.supplier.name}
+																	</div>
+																	<div className="text-xs text-muted-foreground">
+																		{order.supplier.email}
+																	</div>
+																</div>
+															</TableCell>
+															<TableCell>
+																{getStatusBadge(order.status)}
+															</TableCell>
+															<TableCell className="font-semibold">
+																{order.currency} {Number(order.totalAmount).toFixed(2)}
+															</TableCell>
+															<TableCell className="text-sm">
+																{format(
+																	new Date(order.orderDate),
+																	"MMM dd, yyyy",
+																)}
+															</TableCell>
+															<TableCell className="text-sm">
+																{order.expectedDate
+																	? format(
+																			new Date(order.expectedDate),
+																			"MMM dd, yyyy",
+																		)
+																	: <span className="text-muted-foreground">-</span>}
+															</TableCell>
+															<TableCell className="text-sm">{order.approvedBy || <span className="text-muted-foreground">-</span>}</TableCell>
+															<TableCell className="text-right">
+																<div className="flex items-center justify-end gap-1">
+																	<Button
+																		variant="ghost"
+																		size="sm"
+																		onClick={() => viewOrderDetails(order)}
+																		className="h-8 w-8 p-0"
+																		title="View details"
+																	>
+																		<Eye className="h-4 w-4" />
+																	</Button>
+																	{order.status === "PENDING_APPROVAL" && (
+																		<Button
+																			variant="ghost"
+																			size="sm"
+																			onClick={() => approveOrder(order.id)}
+																			className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
+																			title="Approve order"
+																		>
+																			<CheckCircle className="h-4 w-4" />
+																		</Button>
+																	)}
+																	{[
+																		"APPROVED",
+																		"SENT",
+																		"ACKNOWLEDGED",
+																		"PARTIALLY_RECEIVED",
+																	].includes(order.status) && (
+																		<Button
+																			variant="ghost"
+																			size="sm"
+																			onClick={() => receiveGoods(order)}
+																			className="h-8 w-8 p-0"
+																			title="Receive goods"
+																		>
+																			<Package className="h-4 w-4" />
+																		</Button>
+																	)}
+																</div>
+															</TableCell>
+														</TableRow>
+													))
+												)}
 											</TableBody>
 										</Table>
 									</div>
@@ -602,75 +650,96 @@ export default function PurchaseOrdersPage() {
 							</Card>
 						</TabsContent>
 
-						<TabsContent value="reorder" className="space-y-4">
-							<Card>
-								<CardHeader>
-									<CardTitle className="flex items-center gap-2">
-										<Zap className="h-5 w-5" />
-										Automated Reorder Suggestions
-									</CardTitle>
-									<CardDescription>
-										Products that are below reorder point and need restocking
-									</CardDescription>
+						<TabsContent value="reorder" className="space-y-5 mt-0">
+							<Card className="border-border/50 shadow-sm">
+								<CardHeader className="pb-4">
+									<div className="flex items-center justify-between">
+										<div className="flex items-center gap-3">
+											<div className="p-2 bg-amber-500/10 rounded-lg">
+												<Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+											</div>
+											<div>
+												<CardTitle className="text-xl">Automated Reorder Suggestions</CardTitle>
+												<CardDescription className="mt-1">
+													Products that are below reorder point and need restocking
+												</CardDescription>
+											</div>
+										</div>
+										{reorderSuggestions.length > 0 && (
+											<Badge variant="secondary" className="bg-amber-500/20 text-amber-900 dark:text-amber-100 text-sm px-3 py-1">
+												{reorderSuggestions.length} items
+											</Badge>
+										)}
+									</div>
 								</CardHeader>
-								<CardContent>
+								<CardContent className="pt-0">
 									{reorderSuggestions.length === 0 ? (
-										<div className="text-center py-8">
-											<Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-											<h3 className="text-lg font-medium">
-												No reorder suggestions
-											</h3>
-											<p className="text-muted-foreground">
-												All products are adequately stocked
-											</p>
+										<div className="text-center py-12 bg-muted/20 rounded-lg border-2 border-dashed border-border">
+											<div className="flex flex-col items-center">
+												<div className="p-4 bg-green-500/10 rounded-full mb-4">
+													<CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
+												</div>
+												<h3 className="text-lg font-semibold mb-2">
+													All Stock Levels Good
+												</h3>
+												<p className="text-sm text-muted-foreground max-w-md">
+													All products are adequately stocked. New suggestions will appear when items drop below their reorder point.
+												</p>
+											</div>
 										</div>
 									) : (
-										<div className="rounded-md border">
+										<div className="rounded-lg border border-border/50 overflow-hidden bg-card/50">
 											<Table>
 												<TableHeader>
-													<TableRow>
-														<TableHead>Product</TableHead>
-														<TableHead>SKU</TableHead>
-														<TableHead>Current Stock</TableHead>
-														<TableHead>Reorder Point</TableHead>
-														<TableHead>Suggested Qty</TableHead>
-														<TableHead>Preferred Supplier</TableHead>
-														<TableHead>Estimated Cost</TableHead>
-														<TableHead className="text-right">
+													<TableRow className="bg-muted/50 hover:bg-muted/50">
+														<TableHead className="font-semibold">Product</TableHead>
+														<TableHead className="font-semibold">SKU</TableHead>
+														<TableHead className="font-semibold">Current Stock</TableHead>
+														<TableHead className="font-semibold">Reorder Point</TableHead>
+														<TableHead className="font-semibold">Suggested Qty</TableHead>
+														<TableHead className="font-semibold">Preferred Supplier</TableHead>
+														<TableHead className="font-semibold">Estimated Cost</TableHead>
+														<TableHead className="text-right font-semibold">
 															Actions
 														</TableHead>
 													</TableRow>
 												</TableHeader>
 												<TableBody>
 													{reorderSuggestions.map((suggestion) => (
-														<TableRow key={suggestion.productId}>
+														<TableRow key={suggestion.productId} className="hover:bg-muted/30 transition-colors">
 															<TableCell className="font-medium">
 																{suggestion.productName}
 															</TableCell>
-															<TableCell>{suggestion.productSku}</TableCell>
+															<TableCell className="font-mono text-sm">{suggestion.productSku}</TableCell>
 															<TableCell>
-																<span className="text-red-600 font-medium">
-																	{suggestion.currentStock}
+																<div className="flex items-center gap-2">
+																	<AlertTriangle className="h-4 w-4 text-red-600" />
+																	<span className="text-red-600 dark:text-red-400 font-semibold">
+																		{suggestion.currentStock}
+																	</span>
+																</div>
+															</TableCell>
+															<TableCell className="font-medium">{suggestion.reorderPoint}</TableCell>
+															<TableCell>
+																<span className="font-semibold text-green-600 dark:text-green-400">
+																	{suggestion.suggestedQty}
 																</span>
 															</TableCell>
-															<TableCell>{suggestion.reorderPoint}</TableCell>
-															<TableCell className="font-medium">
-																{suggestion.suggestedQty}
-															</TableCell>
-															<TableCell>
+															<TableCell className="text-sm">
 																{suggestion.preferredSupplier}
 															</TableCell>
-														<TableCell>
-															USD {Number(suggestion.estimatedCost).toFixed(2)}
-														</TableCell>
+															<TableCell className="font-semibold">
+																USD {Number(suggestion.estimatedCost).toFixed(2)}
+															</TableCell>
 															<TableCell className="text-right">
 																<Button
 																	size="sm"
 																	onClick={() =>
 																		createReorderFromSuggestion(suggestion)
 																	}
+																	className="shadow-sm hover:shadow-md transition-shadow"
 																>
-																	<Plus className="h-4 w-4 mr-1" />
+																	<Plus className="h-4 w-4 mr-1.5" />
 																	Create PO
 																</Button>
 															</TableCell>
