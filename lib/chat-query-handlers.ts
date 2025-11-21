@@ -613,9 +613,11 @@ export async function handleReorderSuggestions(companyId: string): Promise<Query
       };
     }
 
-    const suggestions = result.data as any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const suggestions = result.data as any;
+    const suggestionList = Array.isArray(suggestions) ? suggestions : suggestions.suggestions || [];
     
-    if (suggestions.length === 0) {
+    if (suggestionList.length === 0) {
       return {
         success: true,
         data: [],
@@ -623,11 +625,11 @@ export async function handleReorderSuggestions(companyId: string): Promise<Query
       };
     }
 
-    const formatted = formatReorderSuggestions(suggestions);
+    const formatted = formatReorderSuggestions(suggestionList);
     
     return {
       success: true,
-      data: suggestions,
+      data: suggestionList,
       formatted,
     };
   } catch (error) {
