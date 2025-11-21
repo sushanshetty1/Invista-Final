@@ -118,6 +118,7 @@ const navItems: InternalNavItem[] = [
     items: [
       { title: "All Suppliers", href: "/suppliers" },
       { title: "Add Supplier", href: "/suppliers/add" },
+      { title: "Supplier Products", href: "/suppliers/products" },
       { title: "Performance", href: "/suppliers/performance" },
     ],
   },

@@ -60,6 +60,20 @@ interface Product {
 		availableQuantity: number;
 		reorderPoint: number;
 	};
+	suppliers?: Array<{
+		id: string;
+		supplierId: string;
+		supplierSku?: string;
+		unitCost: number;
+		currency: string;
+		leadTimeDays?: number;
+		isPreferred: boolean;
+		supplier: {
+			id: string;
+			name: string;
+			code: string;
+		};
+	}>;
 }
 
 export default function CreatePurchaseOrderPage() {
@@ -74,12 +88,20 @@ export default function CreatePurchaseOrderPage() {
 	const [notes, setNotes] = useState("");
 	const [isProductSelectOpen, setIsProductSelectOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [productSuppliers, setProductSuppliers] = useState<Record<string, Product["suppliers"]>>({});
 
 	useEffect(() => {
 		loadSuppliers();
 		loadProducts();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
+
+	useEffect(() => {
+		if (selectedSupplierId) {
+			loadSupplierProducts();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [selectedSupplierId]);
 
 	const loadSuppliers = async () => {
 		try {
@@ -107,6 +129,58 @@ export default function CreatePurchaseOrderPage() {
 		}
 	};
 
+	const loadSupplierProducts = async () => {
+		if (!selectedSupplierId) return;
+
+		try {
+			const response = await fetch(`/api/product-suppliers?supplierId=${selectedSupplierId}`);
+			const data = await response.json();
+
+			if (response.ok) {
+				const suppliersMap: Record<string, Product["suppliers"]> = {};
+				data.productSuppliers?.forEach((ps: {
+					productId: string;
+					id: string;
+					supplierId: string;
+					supplierSku?: string;
+					unitCost: number;
+					currency: string;
+					leadTimeDays?: number;
+					isPreferred: boolean;
+					supplier: { id: string; name: string; code: string };
+				}) => {
+					if (!suppliersMap[ps.productId]) {
+						suppliersMap[ps.productId] = [];
+					}
+					const productSuppliers = suppliersMap[ps.productId];
+					if (productSuppliers) {
+						productSuppliers.push({
+							id: ps.id,
+							supplierId: ps.supplierId,
+							supplierSku: ps.supplierSku,
+							unitCost: ps.unitCost,
+							currency: ps.currency,
+							leadTimeDays: ps.leadTimeDays,
+							isPreferred: ps.isPreferred,
+							supplier: ps.supplier,
+						});
+					}
+				});
+
+				// Update products with supplier info
+				setProducts((prevProducts) =>
+					prevProducts.map((product) => ({
+						...product,
+						suppliers: suppliersMap[product.id] || [],
+					}))
+				);
+				setProductSuppliers(suppliersMap);
+			}
+		} catch (error) {
+			console.error("Error loading supplier products:", error);
+		}
+	};
+
 	const addProduct = (product: Product) => {
 		const existingItem = orderItems.find(
 			(item) => item.productId === product.id,
@@ -125,14 +199,20 @@ export default function CreatePurchaseOrderPage() {
 				),
 			);
 		} else {
+			// Find supplier info for selected supplier
+			const supplierInfo = product.suppliers?.find(
+				(s) => s.supplierId === selectedSupplierId
+			);
+
 			const newItem: PurchaseOrderItem = {
 				productId: product.id,
 				productName: product.name,
 				productSku: product.sku,
+				supplierSku: supplierInfo?.supplierSku,
 				quantity: product.inventory?.reorderPoint || 10,
-				unitCost: product.costPrice || 0,
+				unitCost: supplierInfo?.unitCost || product.costPrice || 0,
 				totalCost:
-					(product.inventory?.reorderPoint || 10) * (product.costPrice || 0),
+					(product.inventory?.reorderPoint || 10) * (supplierInfo?.unitCost || product.costPrice || 0),
 			};
 			setOrderItems((prev) => [...prev, newItem]);
 		}
