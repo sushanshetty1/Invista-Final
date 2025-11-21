@@ -6,6 +6,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import type { IntentType } from "./classify/route";
 import { handleLiveDataQuery } from "@/lib/chat-query-handlers";
 import { findNavigationIntent } from "@/lib/navigation-map";
+import { classifyIntent } from "@/lib/chat-classifier";
 
 const NEON_DATABASE_URL = process.env.NEON_DATABASE_URL as string;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string;
@@ -237,21 +238,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing companyId" }, { status: 400 });
     }
 
-    // Step 1: Classify intent
-    const classifyResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/chat/classify`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      }
-    );
-
-    if (!classifyResponse.ok) {
-      throw new Error("Failed to classify intent");
+    // Step 1: Classify intent using direct function call (avoids internal fetch issues in production)
+    let classification;
+    try {
+      classification = await classifyIntent(message);
+    } catch (classifyError) {
+      console.error("Classification error:", classifyError);
+      // Fallback to basic classification
+      classification = {
+        intent: "fallback" as IntentType,
+        confidence: 0.3,
+        parameters: {},
+      };
     }
-
-    const classification = await classifyResponse.json();
+    
     const intent: IntentType = classification.intent;
     const parameters = classification.parameters || {};
 

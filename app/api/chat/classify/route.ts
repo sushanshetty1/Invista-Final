@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string;
-const INTENT_MODEL = process.env.CHATBOT_INTENT_MODEL ?? "gpt-4o-mini";
-
-if (!OPENAI_API_KEY) {
-  console.warn("Intent classifier: missing OPENAI_API_KEY env var");
-}
-
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+import { classifyIntent } from "@/lib/chat-classifier";
 
 export type IntentType =
   | "knowledge.explainer"
@@ -251,108 +242,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Use OpenAI to classify intent
-    const prompt = INTENT_CLASSIFICATION_PROMPT.replace("{{MESSAGE}}", message);
-
-    const response = await openai.chat.completions.create({
-      model: INTENT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content: "You are a precise intent classifier. Respond only with valid JSON.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.1,
-      max_tokens: 200,
-    });
-
-    const content = response.choices[0]?.message?.content?.trim();
-    
-    if (!content) {
-      return NextResponse.json({
-        intent: "fallback" as IntentType,
-        confidence: 0.5,
-        parameters: {},
-      });
-    }
-
-    // Parse the JSON response
-    try {
-      const classification = JSON.parse(content) as IntentClassification;
-      
-      // Validate intent
-      const validIntents: IntentType[] = [
-        "knowledge.explainer",
-        // Inventory
-        "inventory.lookup",
-        "inventory.lowstock",
-        "inventory.movements",
-        "inventory.alerts",
-        // Products
-        "products.list",
-        "products.search",
-        "products.details",
-        "products.count",
-        // Orders
-        "orders.status",
-        "orders.recent",
-        "orders.details",
-        "orders.count",
-        // Purchase orders
-        "purchaseorders.list",
-        "purchaseorders.status",
-        "purchaseorders.stats",
-        "purchaseorders.reorder",
-        // Audits
-        "audits.recent",
-        "audits.status",
-        "audits.stats",
-        "audits.discrepancies",
-        // Suppliers
-        "suppliers.list",
-        "suppliers.details",
-        "suppliers.count",
-        // Warehouses
-        "warehouses.list",
-        "warehouses.details",
-        "warehouses.stock",
-        // Customers
-        "customers.list",
-        "customers.details",
-        "customers.count",
-        // Categories & Brands
-        "categories.list",
-        "brands.list",
-        // Analytics
-        "analytics.overview",
-        "analytics.revenue",
-        "analytics.customers",
-        "analytics.products",
-        "analytics.orders",
-        "analytics.inventory",
-        // Navigation
-        "navigation.page",
-        "fallback",
-      ];
-
-      if (!validIntents.includes(classification.intent)) {
-        classification.intent = "fallback";
-        classification.confidence = 0.5;
-      }
-
-      return NextResponse.json(classification);
-    } catch (parseError) {
-      console.error("Failed to parse intent classification:", parseError);
-      return NextResponse.json({
-        intent: "fallback" as IntentType,
-        confidence: 0.3,
-        parameters: {},
-      });
-    }
+    // Use shared classification function
+    const classification = await classifyIntent(message);
+    return NextResponse.json(classification);
   } catch (error) {
     console.error("Intent classification error:", error);
     return NextResponse.json(
