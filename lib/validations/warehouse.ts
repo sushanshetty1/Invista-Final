@@ -22,14 +22,14 @@ export const baseWarehouseSchema = z.object({
 	description: z.string().optional(),
 	type: z
 		.enum([
-			"STANDARD",
+			"WAREHOUSE",
 			"DISTRIBUTION_CENTER",
 			"RETAIL_STORE",
 			"FULFILLMENT_CENTER",
 			"CROSS_DOCK",
 			"COLD_STORAGE",
 		])
-		.default("STANDARD"),
+		.default("WAREHOUSE"),
 	address: addressSchema,
 	contactName: z.string().optional(),
 	contactEmail: z.string().email().optional(),
@@ -52,9 +52,10 @@ export const warehouseQuerySchema = z.object({
 	page: z.number().int().min(1).default(1),
 	limit: z.number().int().min(1).max(100).default(20),
 	search: z.string().optional(),
+	companyId: z.string().optional(),
 	type: z
 		.enum([
-			"STANDARD",
+			"WAREHOUSE",
 			"DISTRIBUTION_CENTER",
 			"RETAIL_STORE",
 			"FULFILLMENT_CENTER",

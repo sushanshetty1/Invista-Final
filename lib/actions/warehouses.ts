@@ -157,16 +157,9 @@ export async function createWarehouse(
 				type,
 				address,
 				managerName: contactName,
-				managerEmail: contactEmail,
-				managerPhone: contactPhone,
+				email: contactEmail,
+				phone: contactPhone,
 				isActive,
-			},
-			include: {
-				_count: {
-					select: {
-						inventoryItems: true,
-					},
-				},
 			},
 		});
 

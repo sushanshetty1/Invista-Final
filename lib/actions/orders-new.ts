@@ -240,7 +240,7 @@ export async function createOrder(data: CreateOrderInput) {
 					notes: validatedData.notes,
 					internalNotes: validatedData.internalNotes,
 					rushOrder: validatedData.rushOrder,
-					createdBy: session.user.id,
+					createdBy: user.id,
 				},
 			});
 
@@ -280,7 +280,7 @@ export async function createOrder(data: CreateOrderInput) {
 			result.id,
 			validatedData.items,
 			validatedData.warehouseId,
-			session.user.id,
+			user.id,
 		);
 
 		revalidatePath("/orders");

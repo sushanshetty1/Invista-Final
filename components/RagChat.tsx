@@ -181,7 +181,7 @@ export default function RagChat() {
               <div className="mt-6 space-y-2">
                 <p className="text-xs text-muted-foreground font-medium">✨ I can remember our conversation and provide insights!</p>
                 <p className="text-xs text-muted-foreground">
-                  Click "Refresh Data" to sync the latest information from your database
+                  Click &quot;Refresh Data&quot; to sync the latest information from your database
                 </p>
               </div>
             </div>

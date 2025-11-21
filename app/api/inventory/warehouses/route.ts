@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 			search: searchParams.get("search") || undefined,
 			type:
 				(searchParams.get("type") as
-					| "STANDARD"
+					| "WAREHOUSE"
 					| "DISTRIBUTION_CENTER"
 					| "RETAIL_STORE"
 					| "FULFILLMENT_CENTER"

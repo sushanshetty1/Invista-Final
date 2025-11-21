@@ -36,7 +36,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { toast } from "sonner";
-import { createSupplierSchema } from "@/lib/validations/supplier";
+import { baseSupplierSchema } from "@/lib/validations/supplier";
 
 const companyTypes = [
 	{ value: "CORPORATION", label: "Corporation" },
@@ -70,7 +70,7 @@ export default function AddSupplierPage() {
 	const [newCertification, setNewCertification] = useState("");
 
 	const form = useForm({
-		resolver: zodResolver(createSupplierSchema.omit({ createdBy: true })),
+		resolver: zodResolver(baseSupplierSchema),
 		defaultValues: {
 			name: "",
 			code: "",
@@ -196,7 +196,7 @@ export default function AddSupplierPage() {
 		toast.success("Test data filled successfully");
 	};
 
-	const onSubmit = async (data: z.infer<typeof createSupplierSchema>) => {
+	const onSubmit = async (data: z.infer<typeof baseSupplierSchema>) => {
 		try {
 			setIsSubmitting(true);
 			

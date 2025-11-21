@@ -64,6 +64,10 @@ export async function createSupplier(
 			companyId = companyUser.companyId;
 		}
 
+		if (!companyId) {
+			return actionError("User not associated with any company");
+		}
+
 		const validatedData = createSupplierSchema.parse(inputData);
 
 		const supplier = await neonClient.supplier.create({
@@ -189,23 +193,13 @@ export async function getSuppliers(
 		const { page, limit, search, companyId, status, companyType, sortBy, sortOrder } =
 			validatedQuery;
 
-		const skip = (page - 1) * limit; // Build where clause
-		const where: {
-			OR?: Array<{
-				name?: { contains: string; mode: "insensitive" };
-				code?: { contains: string; mode: "insensitive" };
-				email?: { contains: string; mode: "insensitive" };
-				contactName?: { contains: string; mode: "insensitive" };
-			}>;
-			companyId?: string;
-			status?: string;
-			companyType?: string;
-		} = {};
+	const skip = (page - 1) * limit; // Build where clause
+	const where: any = {};
 
-		// Filter by company ID if provided
-		if (companyId) where.companyId = companyId;
+	// Filter by company ID if provided
+	if (companyId) where.companyId = companyId;
 
-		if (search) {
+	if (search) {
 			where.OR = [
 				{ name: { contains: search, mode: "insensitive" } },
 				{ code: { contains: search, mode: "insensitive" } },

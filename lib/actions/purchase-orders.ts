@@ -196,33 +196,16 @@ export async function getPurchaseOrders(filters: PurchaseOrderFilters = {}) {
 			}
 		}
 
-		if (filters.searchTerm) {
-			const searchConditions = [
-				{ orderNumber: { contains: filters.searchTerm, mode: "insensitive" } },
-			];
-			
-			// If supplier filter exists, merge it with search
-			if (filters.companyId) {
-				searchConditions.push({
-					supplier: {
-						AND: [
-							{ companyId: filters.companyId },
-							{ name: { contains: filters.searchTerm, mode: "insensitive" } },
-						],
-					},
-				});
-			} else {
-				searchConditions.push({
-					supplier: {
-						name: { contains: filters.searchTerm, mode: "insensitive" },
-					},
-				});
+	if (filters.searchTerm) {
+		where.OR = [
+			{ orderNumber: { contains: filters.searchTerm, mode: "insensitive" as const } },
+			{ 
+				supplier: {
+					name: { contains: filters.searchTerm, mode: "insensitive" as const }
+				}
 			}
-			
-			where.OR = searchConditions;
-		}
-
-		const purchaseOrders = await neonClient.purchaseOrder.findMany({
+		];
+	}		const purchaseOrders = await neonClient.purchaseOrder.findMany({
 			where,
 			include: {
 				supplier: true,

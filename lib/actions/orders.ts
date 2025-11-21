@@ -92,6 +92,10 @@ async function resolveActionContext(
 		}
 	}
 
+	if (!companyId) {
+		return { error: "User not associated with any company" };
+	}
+
 	return { userId, companyId };
 }
 

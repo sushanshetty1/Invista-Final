@@ -191,10 +191,10 @@ export default function SupplierPerformancePage() {
 
 	// Get status badge color
 	const getStatusBadge = (status: string) => {
-		const statusMap: { [key: string]: "default" | "success" | "warning" | "destructive" } = {
-			ACTIVE: "success",
-			INACTIVE: "default",
-			PENDING_APPROVAL: "warning",
+		const statusMap: { [key: string]: "default" | "destructive" | "outline" | "secondary" } = {
+			ACTIVE: "default",
+			INACTIVE: "secondary",
+			PENDING_APPROVAL: "outline",
 			SUSPENDED: "destructive",
 			BLACKLISTED: "destructive",
 		};
