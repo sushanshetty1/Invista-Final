@@ -1029,7 +1029,7 @@ export async function handleWarehousesList(
       
       // If no warehouses in Neon, count total inventory items without warehouse assignment
       if (neonWarehouses.length === 0) {
-        console.log("[handleWarehousesList] No Neon warehouses found, checking for orphaned inventory items");
+        console.log("[handleWarehousesList] No Neon warehouses found, checking for products/inventory");
         
         // Check total products for this company
         const totalProducts = await neonClient.product.count({
@@ -1039,24 +1039,10 @@ export async function handleWarehousesList(
         });
         console.log("[handleWarehousesList] Total products in Neon:", totalProducts);
         
-        const totalInventoryItems = await neonClient.inventoryItem.count({
-          where: {
-            product: {
-              companyId: companyId,
-            },
-          },
-        });
-        console.log("[handleWarehousesList] Total inventory items in Neon:", totalInventoryItems);
-        
-        // Assign all inventory to the first Supabase warehouse as a fallback
-        // Show product count if no inventory items exist
-        if (totalInventoryItems > 0 && warehouses.length > 0) {
-          inventoryCounts[warehouses[0].id] = totalInventoryItems;
-          console.log(`[handleWarehousesList] Assigned ${totalInventoryItems} orphaned items to ${warehouses[0].name}`);
-        } else if (totalProducts > 0 && warehouses.length > 0) {
-          // Products exist but no inventory items - show product count instead
+        // Since products contain stock info directly, show product count as "items"
+        if (totalProducts > 0 && warehouses.length > 0) {
           inventoryCounts[warehouses[0].id] = totalProducts;
-          console.log(`[handleWarehousesList] No inventory items, showing ${totalProducts} products instead`);
+          console.log(`[handleWarehousesList] Showing ${totalProducts} products as warehouse items`);
         }
       } else {
         // Map by locationId if available
@@ -1117,25 +1103,61 @@ export async function handleWarehouseDetails(
 ): Promise<QueryResult> {
   try {
     const warehouseId = String(parameters.warehouseId || parameters.id || "");
+    const warehouseName = String(parameters.warehouseName || parameters.name || parameters.query || "");
     
-    if (!warehouseId) {
+    if (!warehouseId && !warehouseName) {
       return {
         success: false,
-        error: "Warehouse ID required",
+        error: "Warehouse ID or name required",
       };
     }
 
-    const { getWarehouse } = await import("@/lib/actions/warehouses");
-    const result = await getWarehouse(warehouseId);
-
-    if (!result.success || !result.data) {
-      return {
-        success: false,
-        error: result.error || "Warehouse not found",
-      };
+    const { getWarehouses, getWarehouse } = await import("@/lib/actions/warehouses");
+    
+    let warehouse;
+    
+    // If we have an ID, fetch directly
+    if (warehouseId) {
+      const result = await getWarehouse(warehouseId);
+      if (!result.success || !result.data) {
+        return {
+          success: false,
+          error: result.error || "Warehouse not found",
+        };
+      }
+      warehouse = result.data;
+    } else {
+      // Search by name
+      const result = await getWarehouses({
+        page: 1,
+        limit: 100,
+        companyId,
+      });
+      
+      if (!result.success || !result.data) {
+        return {
+          success: false,
+          error: "Failed to search warehouses",
+        };
+      }
+      
+      const warehouses = (result.data as any).locations || [];
+      const lowerName = warehouseName.toLowerCase();
+      
+      // Find warehouse by name (case-insensitive, partial match)
+      warehouse = warehouses.find((w: any) => 
+        w.name?.toLowerCase().includes(lowerName) ||
+        w.code?.toLowerCase().includes(lowerName)
+      );
+      
+      if (!warehouse) {
+        return {
+          success: false,
+          error: `Warehouse "${warehouseName}" not found`,
+        };
+      }
     }
 
-    const warehouse = result.data;
     const formatted = formatWarehouseDetails(warehouse);
     
     return {
@@ -1756,20 +1778,26 @@ function formatProductsList(products: any[], pagination?: any): string {
   
   const productsData = products.slice(0, 15).map((product: any) => {
     const price = product.sellingPrice || product.price || 0;
-    // Use totalStock or availableStock from the product directly
-    const stock = product.totalStock || product.availableStock || 
-                  product.inventoryItems?.reduce((sum: number, item: any) => 
-                    sum + (item.quantity || item.availableQuantity || 0), 0) || 0;
+    
+    // Use reorderPoint as stock display (matching products page logic)
+    const stock = product.reorderPoint || 0;
+    const minStock = product.minStockLevel || 0;
+    
+    // Out of stock condition from products page: reorderPoint < minStockLevel
+    const isOutOfStock = stock < minStock;
+    
+    console.log(`[formatProductsList] Product ${product.name}: reorderPoint=${stock}, minStockLevel=${minStock}, isOutOfStock=${isOutOfStock}`);
     
     return {
       name: product.name,
       sku: product.sku,
       price: parseFloat(price),
       stock: stock,
-      reorderPoint: product.reorderPoint || product.minStockLevel || 10,
+      reorderPoint: minStock,
       status: product.status,
       category: product.categoryName || product.category?.name || null,
       brand: product.brandName || product.brand?.name || null,
+      isOutOfStock: isOutOfStock,
     };
   });
   
@@ -1874,15 +1902,27 @@ function formatReorderSuggestions(suggestions: any[]): string {
 }
 
 function formatSuppliersList(suppliers: any[], pagination?: any): string {
-  const lines = suppliers.slice(0, 15).map((supplier: any) => {
-    return `• **${supplier.name}** (${supplier.code})
-  📞 ${supplier.contactPhone || "N/A"} | ✉️ ${supplier.email || "N/A"}
-  Status: ${supplier.status || "UNKNOWN"}`;
+  const total = pagination?.total || suppliers.length;
+  const showing = Math.min(15, suppliers.length);
+  
+  const suppliersData = suppliers.slice(0, 15).map((supplier: any) => ({
+    name: supplier.name || "Unknown Supplier",
+    code: supplier.code || "N/A",
+    phone: supplier.contactPhone || "N/A",
+    email: supplier.email || "N/A",
+    status: supplier.status || "UNKNOWN",
+    contactName: supplier.contactName || "N/A",
+    rating: supplier.rating || 0,
+    productsCount: supplier.products?.length || 0,
+  }));
+
+  const jsonData = JSON.stringify({
+    suppliers: suppliersData,
+    showing,
+    total,
   });
 
-  const total = pagination?.total || suppliers.length;
-  const header = `🏢 **Suppliers** (showing ${Math.min(15, suppliers.length)} of ${total}):\n\n`;
-  return header + lines.join("\n\n");
+  return `__SUPPLIER_CARDS__${jsonData}__END_SUPPLIER_CARDS__`;
 }
 
 function formatSupplierDetails(supplier: any): string {

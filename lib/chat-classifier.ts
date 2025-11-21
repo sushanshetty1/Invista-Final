@@ -296,8 +296,13 @@ Extract and include in parameters:
 
 **WAREHOUSES**
 25. warehouses.list - Display warehouses
+    Patterns: "show warehouses", "list locations", "my warehouses"
 26. warehouses.details - Warehouse information
+    Patterns: "warehouse details", "[name] warehouse", "info about [name]", "show [name]"
+    Extract: {"warehouseName": "...", "name": "..."}
 27. warehouses.stock - Warehouse inventory
+    Patterns: "warehouse stock", "what's in [name]", "[name] inventory"
+    Extract: {"warehouseName": "..."}
 
 **CUSTOMERS**
 28. customers.list - Display customers

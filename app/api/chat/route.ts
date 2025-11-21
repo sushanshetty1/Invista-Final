@@ -35,6 +35,23 @@ async function ensureConnected() {
   }
 }
 
+async function getCompanyInfoDirect(companyId: string) {
+  const supabaseClient = new Client({ connectionString: process.env.SUPABASE_DATABASE_URL! });
+  try {
+    await supabaseClient.connect();
+    const result = await supabaseClient.query(
+      `SELECT name, "displayName", description, industry, website, address, email, phone FROM companies WHERE id = $1`,
+      [companyId]
+    );
+    await supabaseClient.end();
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("Error fetching company info:", error);
+    try { await supabaseClient.end(); } catch (e) {}
+    return null;
+  }
+}
+
 type ChatMessage = {
   role: "user" | "assistant" | "system";
   content: string;
@@ -376,7 +393,21 @@ export async function POST(req: NextRequest) {
       const sources = await handleKnowledgeQuery(message, companyId);
 
       if (!sources || sources.length === 0) {
-        responseData.answer = "I don't have any documentation on that topic yet. You can upload relevant documents to the knowledge base, or try asking me to perform the action directly (e.g., 'list products' instead of 'how do I list products').";
+        // Check if query is about company info - fetch directly from database
+        const lowerMsg = message.toLowerCase();
+        if (lowerMsg.includes('company') && (lowerMsg.includes('name') || lowerMsg.includes('what') || lowerMsg.includes('who'))) {
+          const companyInfo = await getCompanyInfoDirect(companyId);
+          if (companyInfo) {
+            responseData.answer = `**Company Name:** ${companyInfo.name}\n\n`;
+            if (companyInfo.displayName) responseData.answer += `**Display Name:** ${companyInfo.displayName}\n`;
+            if (companyInfo.industry) responseData.answer += `**Industry:** ${companyInfo.industry}\n`;
+            if (companyInfo.description) responseData.answer += `**Description:** ${companyInfo.description}\n`;
+            responseData.answer += `\n*Note: Knowledge base is being synced. Full documentation will be available shortly.*`;
+            return NextResponse.json(responseData);
+          }
+        }
+        
+        responseData.answer = "I'm currently syncing the knowledge base. Please wait a moment and try again, or ask me to perform a specific action (e.g., 'list products', 'show orders').";
         return NextResponse.json(responseData);
       }
 
@@ -495,7 +526,7 @@ export async function POST(req: NextRequest) {
     }
 
     // If no sources available, provide a helpful response
-    responseData.answer = "I can help you with inventory, orders, products, suppliers, customers, and more. What would you like to know?";
+    responseData.answer = "I'm here to help! You can ask me about your inventory, products, orders, suppliers, customers, warehouses, or business operations. What would you like to know?";
     return NextResponse.json(responseData);
   } catch (error) {
     console.error("Chat API error:", error);

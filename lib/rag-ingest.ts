@@ -390,11 +390,9 @@ export async function ingestCompanyData(companyId: string) {
     
     await ragClient.connect();
 
-    // Delete existing data for the company
-    console.log(`[RAG Ingest] Deleting existing data for company: ${companyId}`);
-    await ragClient.query(`DELETE FROM rag_documents WHERE tenant_id = $1`, [companyId]);
-
     let totalInserted = 0;
+    let totalUpdated = 0;
+    let totalSkipped = 0;
     
     // Process each document separately
     for (const doc of documents) {
@@ -403,19 +401,66 @@ export async function ingestCompanyData(companyId: string) {
       
       for (let i = 0; i < chunks.length; i++) {
         const content = chunks[i];
-        const embedding = await embedText(content);
-        if (!embedding || embedding.length === 0) continue;
+        
+        // Check if this exact chunk already exists
+        const existingCheck = await ragClient.query(
+          `SELECT id, content FROM rag_documents WHERE tenant_id = $1 AND source = $2 AND chunk_index = $3`,
+          [companyId, doc.source, i]
+        );
+        
+        if (existingCheck.rows.length > 0) {
+          const existing = existingCheck.rows[0];
+          
+          // Only update if content has changed
+          if (existing.content === content) {
+            totalSkipped++;
+            continue;
+          }
+          
+          // Update existing document
+          const embedding = await embedText(content);
+          if (!embedding || embedding.length === 0) continue;
+          
+          const embeddingLiteral = "[" + embedding.join(",") + "]";
+          await ragClient.query(
+            `UPDATE rag_documents SET content = $1, embedding = $2::vector, updated_at = NOW() WHERE id = $3`,
+            [content, embeddingLiteral, existing.id]
+          );
+          totalUpdated++;
+        } else {
+          // Insert new document
+          const embedding = await embedText(content);
+          if (!embedding || embedding.length === 0) continue;
 
-        const embeddingLiteral = "[" + embedding.join(",") + "]";
-        const insertSQL = `INSERT INTO rag_documents (source, chunk_index, content, embedding, tenant_id) VALUES ($1, $2, $3, $4::vector, $5)`;
-        await ragClient.query(insertSQL, [doc.source, i, content, embeddingLiteral, companyId]);
-        totalInserted++;
+          const embeddingLiteral = "[" + embedding.join(",") + "]";
+          await ragClient.query(
+            `INSERT INTO rag_documents (source, chunk_index, content, embedding, tenant_id) VALUES ($1, $2, $3, $4::vector, $5)`,
+            [doc.source, i, content, embeddingLiteral, companyId]
+          );
+          totalInserted++;
+        }
       }
+      
+      // Delete any extra chunks that no longer exist for this source
+      const currentChunkCount = chunks.length;
+      await ragClient.query(
+        `DELETE FROM rag_documents WHERE tenant_id = $1 AND source = $2 AND chunk_index >= $3`,
+        [companyId, doc.source, currentChunkCount]
+      );
+    }
+    
+    // Delete any sources that are no longer in the documents array
+    const currentSources = documents.map(d => d.source);
+    if (currentSources.length > 0) {
+      await ragClient.query(
+        `DELETE FROM rag_documents WHERE tenant_id = $1 AND source NOT IN (${currentSources.map((_, i) => `$${i + 2}`).join(',')})`,
+        [companyId, ...currentSources]
+      );
     }
 
     await ragClient.end();
-    console.log(`[RAG Ingest] Successfully inserted ${totalInserted} chunks`);
-    return { success: true, inserted: totalInserted };
+    console.log(`[RAG Ingest] Sync complete - Inserted: ${totalInserted}, Updated: ${totalUpdated}, Skipped: ${totalSkipped}`);
+    return { success: true, inserted: totalInserted, updated: totalUpdated, skipped: totalSkipped };
   } catch (error) {
     console.error("[RAG Ingest] Ingestion error:", error);
     try {

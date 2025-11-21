@@ -14,7 +14,12 @@ export async function POST(req: NextRequest) {
   const result = await ingestCompanyData(companyId);
 
   if (result.success) {
-    return NextResponse.json({ message: `Ingested ${result.inserted} chunks for company ${companyId}` });
+    const stats = [];
+    if (result.inserted) stats.push(`Inserted: ${result.inserted}`);
+    if (result.updated) stats.push(`Updated: ${result.updated}`);
+    if (result.skipped) stats.push(`Skipped: ${result.skipped}`);
+    const message = stats.length > 0 ? stats.join(', ') : 'Sync completed';
+    return NextResponse.json({ message, ...result });
   } else {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }

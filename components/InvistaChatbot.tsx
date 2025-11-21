@@ -61,6 +61,38 @@ export default function InvistaChatbot() {
     scrollToBottom();
   }, [messages]);
 
+  // Auto-sync RAG data on component mount
+  useEffect(() => {
+    if (companyId) {
+      checkAndSyncData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId]);
+
+  async function checkAndSyncData() {
+    if (!companyId) return;
+    
+    // Check if RAG data exists
+    try {
+      const checkRes = await fetch(`/api/rag/check?companyId=${companyId}`);
+      const { hasData } = await checkRes.json();
+      
+      if (!hasData) {
+        // Silently sync data in background
+        setRefreshing(true);
+        await fetch("/api/rag/ingest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ companyId }),
+          credentials: "include",
+        });
+        setRefreshing(false);
+      }
+    } catch (err) {
+      console.error("[InvistaChatbot] Auto-sync check failed:", err);
+    }
+  }
+
   async function refreshData() {
     if (!companyId) return;
     setRefreshing(true);
@@ -216,6 +248,101 @@ export default function InvistaChatbot() {
     console.log("[renderMessageContent] Rendering content:", content.substring(0, 200));
     console.log("[renderMessageContent] Contains __PRODUCT_CARDS__:", content.includes('__PRODUCT_CARDS__'));
     
+    // Check if content contains supplier cards data
+    if (content.includes('__SUPPLIER_CARDS__')) {
+      const match = content.match(/__SUPPLIER_CARDS__(.+?)__END_SUPPLIER_CARDS__/);
+      if (match) {
+        try {
+          const data = JSON.parse(match[1]);
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b">
+                <Package className="w-4 h-4 text-primary" />
+                <span>Suppliers: {data.showing} of {data.total}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto pr-2">
+                {data.suppliers.map((supplier: {
+                  name: string;
+                  code: string;
+                  phone: string;
+                  email: string;
+                  status: string;
+                  contactName: string;
+                  rating: number;
+                  productsCount: number;
+                }, supplierIndex: number) => {
+                  const getStatusConfig = (status: string) => {
+                    return status === "ACTIVE"
+                      ? { icon: CheckCircle, color: "text-green-600", bg: "bg-green-100 dark:bg-green-950" }
+                      : { icon: XCircle, color: "text-gray-600", bg: "bg-gray-100 dark:bg-gray-800" };
+                  };
+                  
+                  const statusConfig = getStatusConfig(supplier.status);
+                  const StatusIcon = statusConfig.icon;
+                  
+                  return (
+                    <div key={`supplier-${supplierIndex}`} className="border border-border rounded-xl p-4 bg-card hover:shadow-lg hover:border-primary/30 transition-all duration-200">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-sm">{supplier.name}</h4>
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${statusConfig.bg}`}>
+                              <StatusIcon className={`w-3 h-3 ${statusConfig.color}`} />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span>Code:</span>
+                            <code className="bg-muted px-1.5 py-0.5 rounded font-mono">{supplier.code}</code>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 text-xs text-muted-foreground">
+                        <div className="flex items-start gap-2">
+                          <span className="font-medium min-w-[60px]">Contact:</span>
+                          <span className="flex-1">{supplier.contactName}</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="font-medium min-w-[60px]">Phone:</span>
+                          <span className="flex-1">{supplier.phone}</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="font-medium min-w-[60px]">Email:</span>
+                          <span className="flex-1">{supplier.email}</span>
+                        </div>
+                        {supplier.rating > 0 && (
+                          <div className="flex items-start gap-2">
+                            <span className="font-medium min-w-[60px]">Rating:</span>
+                            <span className="flex-1">{"⭐".repeat(Math.round(supplier.rating))}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Package className="w-4 h-4 text-primary" />
+                          <span className="font-medium">{supplier.productsCount}</span>
+                          <span className="text-muted-foreground">products supplied</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {data.total > 15 && (
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-4 p-3 bg-muted/30 rounded-lg">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{data.total - 15} more suppliers available.</span>
+                </div>
+              )}
+            </div>
+          );
+        } catch (e) {
+          return content.replace(/__SUPPLIER_CARDS__.+?__END_SUPPLIER_CARDS__/, '');
+        }
+      }
+    }
+    
     // Check if content contains warehouse cards data
     if (content.includes('__WAREHOUSE_CARDS__')) {
       const match = content.match(/__WAREHOUSE_CARDS__(.+?)__END_WAREHOUSE_CARDS__/);
@@ -323,6 +450,7 @@ export default function InvistaChatbot() {
                   status: string;
                   category?: string;
                   brand?: string;
+                  isOutOfStock?: boolean;
                 }, productIndex: number) => {
                   const getStatusConfig = (status: string) => {
                     switch(status) {
@@ -341,13 +469,11 @@ export default function InvistaChatbot() {
                   const StatusIcon = statusConfig.icon;
                   
                   const getStockStatus = () => {
-                    if (product.stock === 0) {
+                    // Use isOutOfStock flag from backend (reorderPoint < minStockLevel logic)
+                    if (product.isOutOfStock) {
                       return { text: "Out of Stock", color: "text-red-600", bg: "bg-red-50 dark:bg-red-950", icon: XCircle };
                     }
-                    if (product.stock < product.reorderPoint) {
-                      return { text: `Low Stock (${product.stock})`, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950", icon: AlertTriangle };
-                    }
-                    return { text: `In Stock (${product.stock})`, color: "text-green-600", bg: "bg-green-50 dark:bg-green-950", icon: CheckCircle };
+                    return { text: "In Stock", color: "text-green-600", bg: "bg-green-50 dark:bg-green-950", icon: CheckCircle };
                   };
                   
                   const stockStatus = getStockStatus();
@@ -692,8 +818,8 @@ export default function InvistaChatbot() {
                 ? 'bg-primary text-primary-foreground shadow-md px-4 py-2.5'
                 : 'bg-card border border-border shadow-sm px-4 py-3'
             }`}>
-              {/* Intent Badge for Assistant */}
-              {message.role === 'assistant' && message.intent && (
+              {/* Intent Badge for Assistant - hide for fallback */}
+              {message.role === 'assistant' && message.intent && message.intent !== 'fallback' && (
                 <div className="mb-2 flex items-center gap-2">
                   {getIntentBadge(message.intent)}
                 </div>
