@@ -1132,6 +1132,8 @@ export async function handleWarehouseDetails(
         page: 1,
         limit: 100,
         companyId,
+        sortBy: "name",
+        sortOrder: "asc",
       });
       
       if (!result.success || !result.data) {
