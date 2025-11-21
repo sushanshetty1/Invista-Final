@@ -160,6 +160,10 @@ export default function InvistaChatbot() {
         // Handle non-streaming responses (for live data queries and navigation)
         const data = await response.json();
         
+        console.log("[InvistaChatbot] Received data:", JSON.stringify(data, null, 2).substring(0, 1000));
+        console.log("[InvistaChatbot] Answer field:", data.answer);
+        console.log("[InvistaChatbot] Answer length:", data.answer?.length);
+        
         const assistantMessage: Message = {
           role: 'assistant',
           content: data.answer || "No response",
@@ -167,6 +171,8 @@ export default function InvistaChatbot() {
           intent: data.intent,
           action: data.action,
         };
+
+        console.log("[InvistaChatbot] Created message with content length:", assistantMessage.content?.length);
 
         setMessages(prev => [...prev, assistantMessage]);
 
@@ -207,6 +213,94 @@ export default function InvistaChatbot() {
   }
 
   const renderMessageContent = (content: string) => {
+    console.log("[renderMessageContent] Rendering content:", content.substring(0, 200));
+    console.log("[renderMessageContent] Contains __PRODUCT_CARDS__:", content.includes('__PRODUCT_CARDS__'));
+    
+    // Check if content contains warehouse cards data
+    if (content.includes('__WAREHOUSE_CARDS__')) {
+      const match = content.match(/__WAREHOUSE_CARDS__(.+?)__END_WAREHOUSE_CARDS__/);
+      if (match) {
+        try {
+          const data = JSON.parse(match[1]);
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b">
+                <Package className="w-4 h-4 text-primary" />
+                <span>Warehouses: {data.showing} of {data.total}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto pr-2">
+                {data.warehouses.map((warehouse: {
+                  name: string;
+                  code: string;
+                  type: string;
+                  address: string;
+                  status: string;
+                  itemCount: number;
+                }, warehouseIndex: number) => {
+                  const getStatusConfig = (status: string) => {
+                    return status === "ACTIVE"
+                      ? { icon: CheckCircle, color: "text-green-600", bg: "bg-green-100 dark:bg-green-950" }
+                      : { icon: XCircle, color: "text-gray-600", bg: "bg-gray-100 dark:bg-gray-800" };
+                  };
+                  
+                  const statusConfig = getStatusConfig(warehouse.status);
+                  const StatusIcon = statusConfig.icon;
+                  
+                  return (
+                    <div key={`warehouse-${warehouseIndex}`} className="border border-border rounded-xl p-4 bg-card hover:shadow-lg hover:border-primary/30 transition-all duration-200">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-sm">{warehouse.name}</h4>
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${statusConfig.bg}`}>
+                              <StatusIcon className={`w-3 h-3 ${statusConfig.color}`} />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span>Code:</span>
+                            <code className="bg-muted px-1.5 py-0.5 rounded font-mono">{warehouse.code}</code>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 text-xs text-muted-foreground">
+                        <div className="flex items-start gap-2">
+                          <span className="font-medium min-w-[60px]">Type:</span>
+                          <span className="bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full text-[10px] font-medium">
+                            {warehouse.type}
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="font-medium min-w-[60px]">Location:</span>
+                          <span className="flex-1">{warehouse.address}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Package className="w-4 h-4 text-primary" />
+                          <span className="font-medium">{warehouse.itemCount}</span>
+                          <span className="text-muted-foreground">inventory items</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {data.total > 15 && (
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-4 p-3 bg-muted/30 rounded-lg">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{data.total - 15} more warehouses available.</span>
+                </div>
+              )}
+            </div>
+          );
+        } catch (e) {
+          return content.replace(/__WAREHOUSE_CARDS__.+?__END_WAREHOUSE_CARDS__/, '');
+        }
+      }
+    }
+    
     // Check if content contains product cards data
     if (content.includes('__PRODUCT_CARDS__')) {
       const match = content.match(/__PRODUCT_CARDS__(.+?)__END_PRODUCT_CARDS__/);

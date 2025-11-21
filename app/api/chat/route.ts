@@ -12,7 +12,7 @@ const NEON_DATABASE_URL = process.env.NEON_DATABASE_URL as string;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string;
 const EMBEDDING_MODEL = process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small";
 const LLM_MODEL = process.env.OPENAI_LLM_MODEL ?? "gpt-4o-mini";
-const DEFAULT_TOP_K = Number(process.env.RAG_DEFAULT_TOP_K ?? "3");
+const DEFAULT_TOP_K = Number(process.env.RAG_DEFAULT_TOP_K ?? "10");
 const LLM_TEMPERATURE = Number(process.env.RAG_LLM_TEMPERATURE ?? "0");
 const LLM_STREAMING = process.env.RAG_LLM_STREAMING === "true";
 const PROMPT_TEMPLATE = process.env.RAG_PROMPT_TEMPLATE ?? 
@@ -56,27 +56,37 @@ async function handleKnowledgeQuery(
 ) {
   await ensureConnected();
 
-  // 1) Create embedding for the query
-  const embResp = await openai.embeddings.create({ model: EMBEDDING_MODEL, input: query });
+  // Expand query with synonyms and related terms for better semantic search
+  const expandedQuery = `${query} (related: business information, company details, operations, processes, inventory management, data)`;
+
+  // 1) Create embedding for the expanded query
+  const embResp = await openai.embeddings.create({ model: EMBEDDING_MODEL, input: expandedQuery });
   const qEmbedding = embResp.data[0].embedding as number[];
   const embLiteral = "[" + qEmbedding.join(",") + "]";
 
-  // 2) Nearest neighbor search in pgvector
+  // 2) Nearest neighbor search in pgvector - retrieve more results
   const sql = `
-    SELECT id, source, chunk_index, content, metadata
+    SELECT id, source, chunk_index, content, metadata,
+           1 - (embedding <-> '${embLiteral}'::vector) as similarity
     FROM rag_documents
     WHERE tenant_id = $2
     ORDER BY embedding <-> '${embLiteral}'::vector
     LIMIT $1
   `;
-  const res = await client.query(sql, [topK, companyId]);
+  const res = await client.query(sql, [topK * 2, companyId]);
 
-  const rows = res.rows.map((r: any) => ({
+  // Filter by similarity threshold and limit results
+  const filteredRows = res.rows
+    .filter((r: any) => r.similarity > 0.3)
+    .slice(0, topK);
+
+  const rows = filteredRows.map((r: any) => ({
     id: r.id,
     source: r.source,
     chunk_index: r.chunk_index,
     content: r.content,
     metadata: r.metadata,
+    similarity: r.similarity,
   }));
 
   return rows;
@@ -90,19 +100,23 @@ async function generateResponse(
   context: string,
   history?: ChatMessage[]
 ) {
-  const promptTemplate = `You are a professional AI assistant for inventory management.
+  const promptTemplate = `You are an intelligent AI assistant for inventory management and business operations with freedom to explore and synthesize information.
 
-CRITICAL RULE: First check if the user's question makes sense.
-- If the input is gibberish, random characters, unclear, or nonsensical, respond with ONLY: "I don't understand. Could you please rephrase your question?"
-- DO NOT provide structured overviews, summaries, or company data if the question is unclear
-- Only answer with specific data when the question is clear
+YOUR CAPABILITIES:
+- Analyze and synthesize information from multiple sources
+- Connect related concepts and data points
+- Provide comprehensive answers by exploring the full context
+- Infer reasonable conclusions when direct information is available
+- For simple questions ("company name", "my business"), extract and present key information directly
+- For complex questions, explore all relevant context and provide detailed insights
+- Cross-reference information across sources for accuracy
 
-CONTEXT:
+CONTEXT (multiple sources - explore thoroughly):
 {context}
 
 QUESTION: {question}
 
-Answer:`;
+Provide a comprehensive answer by exploring the context. If multiple sources mention related information, synthesize them cohesively.`;
 
   const prompt = promptTemplate
     .replace("{context}", context)
@@ -112,7 +126,7 @@ Answer:`;
     openAIApiKey: OPENAI_API_KEY,
     modelName: LLM_MODEL,
     streaming: LLM_STREAMING,
-    temperature: 0.5,
+    temperature: 0.7,
   });
 
   // Include conversation history if provided
@@ -333,11 +347,15 @@ export async function POST(req: NextRequest) {
     ];
 
     if (liveDataIntents.includes(intent)) {
+      console.log("[Chat API] Handling live data query:", intent, "with companyId:", companyId);
       const queryResult = await handleLiveDataQuery(intent, parameters, companyId);
+
+      console.log("[Chat API] Query result:", JSON.stringify(queryResult, null, 2).substring(0, 500));
 
       if (queryResult.success) {
         responseData.answer = queryResult.formatted || "Query executed successfully.";
         responseData.data = queryResult.data;
+        console.log("[Chat API] Returning response with answer length:", responseData.answer?.length);
         return NextResponse.json(responseData);
       } else {
         responseData.answer = `Sorry, I encountered an error: ${queryResult.error}`;

@@ -172,6 +172,8 @@ export async function handleProductsList(
       sortOrder: "asc",
     });
 
+    console.log("[handleProductsList] getProducts result:", JSON.stringify(result, null, 2));
+
     if (!result.success || !result.data) {
       return {
         success: false,
@@ -182,7 +184,11 @@ export async function handleProductsList(
     const products = (result.data as any).products || [];
     const pagination = (result.data as any).pagination;
     
+    console.log("[handleProductsList] Found products:", products.length);
+    
     const formatted = formatProductsList(products, pagination);
+    
+    console.log("[handleProductsList] Formatted response length:", formatted.length);
     
     return {
       success: true,
@@ -190,6 +196,7 @@ export async function handleProductsList(
       formatted,
     };
   } catch (error) {
+    console.error("[handleProductsList] Error:", error);
     return {
       success: false,
       error: `Error fetching products: ${(error as Error).message}`,
@@ -973,6 +980,7 @@ export async function handleWarehousesList(
 ): Promise<QueryResult> {
   try {
     const { getWarehouses } = await import("@/lib/actions/warehouses");
+    const { neonClient } = await import("@/lib/db");
     
     const result = await getWarehouses({
       page: 1,
@@ -991,11 +999,105 @@ export async function handleWarehousesList(
     const warehouses = (result.data as any).warehouses || [];
     const pagination = (result.data as any).pagination;
     
-    const formatted = formatWarehousesList(warehouses, pagination);
+    console.log("[handleWarehousesList] CompanyLocations from Supabase:", warehouses.map((w: any) => ({ id: w.id, name: w.name })));
+    
+    // Get inventory counts from Neon database
+    // Try multiple approaches: by locationId and by companyId
+    let inventoryCounts: Record<string, number> = {};
+    
+    try {
+      // First, get all Neon warehouses for this company
+      const neonWarehouses = await neonClient.warehouse.findMany({
+        where: {
+          companyId: companyId,
+        },
+        include: {
+          _count: {
+            select: {
+              inventoryItems: true,
+            },
+          },
+        },
+      });
+      
+      console.log("[handleWarehousesList] Neon Warehouses:", neonWarehouses.map((w: any) => ({ 
+        id: w.id, 
+        name: w.name, 
+        locationId: w.locationId,
+        itemCount: w._count?.inventoryItems 
+      })));
+      
+      // If no warehouses in Neon, count total inventory items without warehouse assignment
+      if (neonWarehouses.length === 0) {
+        console.log("[handleWarehousesList] No Neon warehouses found, checking for orphaned inventory items");
+        
+        // Check total products for this company
+        const totalProducts = await neonClient.product.count({
+          where: {
+            companyId: companyId,
+          },
+        });
+        console.log("[handleWarehousesList] Total products in Neon:", totalProducts);
+        
+        const totalInventoryItems = await neonClient.inventoryItem.count({
+          where: {
+            product: {
+              companyId: companyId,
+            },
+          },
+        });
+        console.log("[handleWarehousesList] Total inventory items in Neon:", totalInventoryItems);
+        
+        // Assign all inventory to the first Supabase warehouse as a fallback
+        // Show product count if no inventory items exist
+        if (totalInventoryItems > 0 && warehouses.length > 0) {
+          inventoryCounts[warehouses[0].id] = totalInventoryItems;
+          console.log(`[handleWarehousesList] Assigned ${totalInventoryItems} orphaned items to ${warehouses[0].name}`);
+        } else if (totalProducts > 0 && warehouses.length > 0) {
+          // Products exist but no inventory items - show product count instead
+          inventoryCounts[warehouses[0].id] = totalProducts;
+          console.log(`[handleWarehousesList] No inventory items, showing ${totalProducts} products instead`);
+        }
+      } else {
+        // Map by locationId if available
+        neonWarehouses.forEach((warehouse: any) => {
+          if (warehouse.locationId && warehouse._count?.inventoryItems) {
+            inventoryCounts[warehouse.locationId] = warehouse._count.inventoryItems;
+          }
+        });
+        
+        // If no locationId match, try matching by name or code
+        if (Object.keys(inventoryCounts).length === 0 && neonWarehouses.length > 0) {
+          console.log("[handleWarehousesList] No locationId matches, trying name/code matching");
+          warehouses.forEach((supabaseWarehouse: any) => {
+            const match = neonWarehouses.find((neonWh: any) => 
+              neonWh.name === supabaseWarehouse.name || 
+              neonWh.code === supabaseWarehouse.code
+            );
+            if (match) {
+              inventoryCounts[supabaseWarehouse.id] = match._count?.inventoryItems || 0;
+              console.log(`[handleWarehousesList] Matched ${supabaseWarehouse.name} with ${match.name}: ${match._count?.inventoryItems} items`);
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error("[handleWarehousesList] Error fetching inventory counts:", error);
+    }
+    
+    // Merge inventory counts with warehouse data
+    const warehousesWithCounts = warehouses.map((warehouse: any) => ({
+      ...warehouse,
+      _count: {
+        inventoryItems: inventoryCounts[warehouse.id] || 0,
+      },
+    }));
+    
+    const formatted = formatWarehousesList(warehousesWithCounts, pagination);
     
     return {
       success: true,
-      data: { warehouses, pagination },
+      data: { warehouses: warehousesWithCounts, pagination },
       formatted,
     };
   } catch (error) {
@@ -1654,23 +1756,29 @@ function formatProductsList(products: any[], pagination?: any): string {
   
   const productsData = products.slice(0, 15).map((product: any) => {
     const price = product.sellingPrice || product.price || 0;
-    const stock = product.inventoryItems?.reduce((sum: number, item: any) => 
-      sum + (item.quantity || item.availableQuantity || 0), 0) || 0;
+    // Use totalStock or availableStock from the product directly
+    const stock = product.totalStock || product.availableStock || 
+                  product.inventoryItems?.reduce((sum: number, item: any) => 
+                    sum + (item.quantity || item.availableQuantity || 0), 0) || 0;
     
     return {
       name: product.name,
       sku: product.sku,
-      price: Number(price).toFixed(2),
+      price: parseFloat(price),
       stock: stock,
-      reorderPoint: product.reorderPoint || 10,
+      reorderPoint: product.reorderPoint || product.minStockLevel || 10,
       status: product.status,
-      category: product.categoryName || null,
-      brand: product.brandName || null,
+      category: product.categoryName || product.category?.name || null,
+      brand: product.brandName || product.brand?.name || null,
     };
   });
   
+  console.log("[formatProductsList] Formatted products data:", JSON.stringify(productsData, null, 2));
+  
   // Return as special JSON marker that UI can detect and render as cards
-  return `__PRODUCT_CARDS__${JSON.stringify({ products: productsData, total, showing })}__END_PRODUCT_CARDS__`;
+  const result = `__PRODUCT_CARDS__${JSON.stringify({ products: productsData, total, showing })}__END_PRODUCT_CARDS__`;
+  console.log("[formatProductsList] Final result:", result);
+  return result;
 }
 
 function formatProductDetails(product: any): string {
@@ -1796,15 +1904,44 @@ function formatSupplierDetails(supplier: any): string {
 }
 
 function formatWarehousesList(warehouses: any[], pagination?: any): string {
-  const lines = warehouses.slice(0, 15).map((warehouse: any) => {
-    return `• **${warehouse.name}** (${warehouse.code})
-  📍 ${warehouse.address || "N/A"}
-  Status: ${warehouse.isActive ? "✅ Active" : "❌ Inactive"}`;
-  });
+  if (warehouses.length === 0) {
+    return "🏭 No warehouses found.";
+  }
 
   const total = pagination?.total || warehouses.length;
-  const header = `🏭 **Warehouses** (showing ${Math.min(15, warehouses.length)} of ${total}):\n\n`;
-  return header + lines.join("\n\n");
+  const showing = Math.min(15, warehouses.length);
+  
+  const warehousesData = warehouses.slice(0, 15).map((warehouse: any) => {
+    // Format address object into string
+    let addressStr = "Address not specified";
+    if (warehouse.address) {
+      if (typeof warehouse.address === 'string') {
+        addressStr = warehouse.address;
+      } else if (typeof warehouse.address === 'object') {
+        const addr = warehouse.address;
+        const parts = [
+          addr.street,
+          addr.city,
+          addr.state,
+          addr.zip,
+          addr.country
+        ].filter(Boolean);
+        addressStr = parts.join(', ') || "Address not specified";
+      }
+    }
+    
+    return {
+      name: warehouse.name,
+      code: warehouse.code,
+      type: warehouse.type || "WAREHOUSE",
+      address: addressStr,
+      status: warehouse.isActive ? "ACTIVE" : "INACTIVE",
+      itemCount: warehouse._count?.inventoryItems || 0,
+    };
+  });
+  
+  // Return as special JSON marker for UI card rendering
+  return `__WAREHOUSE_CARDS__${JSON.stringify({ warehouses: warehousesData, total, showing })}__END_WAREHOUSE_CARDS__`;
 }
 
 function formatWarehouseDetails(warehouse: any): string {
