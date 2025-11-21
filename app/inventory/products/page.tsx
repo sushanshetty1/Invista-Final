@@ -312,19 +312,23 @@ export default function ProductsPage() {
 		}
 	};
 	return (
-		<div className="py-16 px-6 mx-4 md:mx-8 space-y-6">
-			{/* Header */}
-			<div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between sm:items-center">
-				<div>
-					<h1 className="text-3xl font-bold">Products Management</h1>
-					<p className="text-sm sm:text-base text-muted-foreground">
-						Manage your product catalog, inventory, and variants
-					</p>
-				</div>
-				<div className="flex gap-2 mt-2 sm:mt-0">
+		<div className="min-h-screen">
+			<div className="py-8 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-6">
+				{/* Header */}
+				<div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-start">
+				<div className="space-y-1">
+					<h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+						Products Management
+					</h1>
+						<p className="text-sm sm:text-base text-muted-foreground">
+							Manage your product catalog, inventory, and variants
+						</p>
+					</div>
+					<div className="flex flex-wrap gap-2">
 					<Button
 						variant="outline"
 						onClick={() => setShowCategoryManager(true)}
+						className="shadow-sm hover:shadow-md transition-shadow"
 					>
 						<Package className="h-4 w-4 mr-2" />
 						Categories
@@ -364,6 +368,7 @@ export default function ProductsPage() {
 							setSelectedProduct(null);
 							setShowProductForm(true);
 						}}
+						className="shadow-sm hover:shadow-md transition-all"
 					>
 						<Plus className="h-4 w-4 mr-2" />
 						Add Product
@@ -371,51 +376,59 @@ export default function ProductsPage() {
 				</div>
 			</div>{" "}
 			{/* Stats Cards */}
-			<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-				<Card>
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+				<Card className="shadow-sm hover:shadow-md transition-shadow">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 						<CardTitle className="text-sm font-medium">
 							Total Products
 						</CardTitle>
-						<Package className="h-4 w-4 text-muted-foreground" />
+						<div className="p-2 bg-primary/10 rounded-lg">
+							<Package className="h-4 w-4 text-primary" />
+						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold">{products.length}</div>
-						<p className="text-xs text-muted-foreground">
+						<div className="text-2xl font-bold text-foreground">
+							{products.length}
+						</div>
+						<p className="text-xs text-muted-foreground mt-1">
 							+2.1% from last month
 						</p>
 					</CardContent>
 				</Card>
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2 sm:p-4">
-						<CardTitle className="text-xs sm:text-sm font-medium">
+				<Card className="shadow-sm hover:shadow-md transition-shadow">
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">
 							Active Products
 						</CardTitle>
-						<Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+						<div className="p-2 bg-primary/10 rounded-lg">
+							<Package className="h-4 w-4 text-primary" />
+						</div>
 					</CardHeader>
-					<CardContent className="p-2 sm:p-4 pt-0">
-						<div className="text-lg sm:text-xl md:text-2xl font-bold">
+					<CardContent>
+						<div className="text-2xl font-bold text-foreground">
 							{products.filter((p) => p.status === "ACTIVE").length}
 						</div>
-						<p className="text-xs text-muted-foreground">
-							{(
+						<p className="text-xs text-muted-foreground mt-1">
+							{products.length > 0 ? (
 								(products.filter((p) => p.status === "ACTIVE").length /
 									products.length) *
 								100
-							).toFixed(1)}
+							).toFixed(1) : 0}
 							% of total
 						</p>
 					</CardContent>
 				</Card>
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2 sm:p-4">
-						<CardTitle className="text-xs sm:text-sm font-medium">
+				<Card className="shadow-sm hover:shadow-md transition-shadow">
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">
 							Out of Stock
 						</CardTitle>
-						<Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+						<div className="p-2 bg-destructive/10 rounded-lg">
+							<Package className="h-4 w-4 text-destructive" />
+						</div>
 					</CardHeader>
-					<CardContent className="p-2 sm:p-4 pt-0">
-						<div className="text-lg sm:text-xl md:text-2xl font-bold text-red-600">
+					<CardContent>
+						<div className="text-2xl font-bold text-foreground">
 							{
 								products.filter(
 									(p) => p.reorderPoint && p.minStockLevel &&
@@ -423,14 +436,14 @@ export default function ProductsPage() {
 								).length
 							}
 						</div>
-						<p className="text-xs text-muted-foreground">Need restocking</p>
+						<p className="text-xs text-muted-foreground mt-1">Need restocking</p>
 					</CardContent>
 				</Card>
 			</div>{" "}
 			{/* Search and Filters */}
-			<Card>
+			<Card className="shadow-sm">
 				<CardContent className="pt-6">
-					<div className="flex gap-4 mb-4">
+					<div className="flex flex-col sm:flex-row gap-4 mb-4">
 						<div className="flex-1">
 							<div className="relative">
 								<Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -438,13 +451,14 @@ export default function ProductsPage() {
 									placeholder="Search products by name, SKU, or barcode..."
 									value={searchTerm}
 									onChange={(e) => setSearchTerm(e.target.value)}
-									className="pl-10"
+									className="pl-10 h-10 shadow-sm"
 								/>
 							</div>
 						</div>
 						<Button
 							variant="outline"
 							onClick={() => setShowFilters(!showFilters)}
+							className="h-10 shadow-sm hover:shadow-md transition-shadow"
 						>
 							<Filter className="h-4 w-4 mr-2" />
 							Filters
@@ -510,8 +524,8 @@ export default function ProductsPage() {
 			</Card>
 			{/* Bulk Actions */}
 			{selectedProducts.length > 0 && (
-				<Card>
-					<CardContent className="p-3 sm:p-6">
+				<Card className="shadow-sm bg-muted/50">
+					<CardContent className="p-4">
 						<div className="flex items-center justify-between">
 							<span className="text-xs sm:text-sm text-muted-foreground">
 								{selectedProducts.length} product(s) selected
@@ -528,14 +542,15 @@ export default function ProductsPage() {
 				</Card>
 			)}{" "}
 			{/* Products Table */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Products ({filteredProducts.length})</CardTitle>
+			<Card className="shadow-sm">
+				<CardHeader className="border-b">
+					<CardTitle className="text-xl">Products ({filteredProducts.length})</CardTitle>
 					<CardDescription>
 						Manage your product catalog and inventory levels
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="overflow-x-auto">
+				<CardContent className="p-0">
+					<div className="overflow-x-auto">
 					<Table>
 						<TableHeader>
 							<TableRow>
@@ -563,7 +578,7 @@ export default function ProductsPage() {
 						</TableHeader>
 						<TableBody>
 							{paginatedProducts.map((product) => (
-								<TableRow key={product.id}>
+								<TableRow key={product.id} className="hover:bg-muted/50 transition-colors">
 									<TableCell>
 										<Checkbox
 											checked={selectedProducts.includes(product.id)}
@@ -674,10 +689,11 @@ export default function ProductsPage() {
 								</TableRow>
 							))}
 						</TableBody>
-					</Table>{" "}
+					</Table>
+					</div>
 					{/* Pagination */}
 					{totalPages > 1 && (
-						<div className="flex items-center justify-between mt-4">
+						<div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t">
 							<div className="text-sm text-muted-foreground">
 								Showing {startIndex + 1} to{" "}
 								{Math.min(startIndex + itemsPerPage, filteredProducts.length)}{" "}
@@ -883,6 +899,7 @@ export default function ProductsPage() {
 					)}
 				</DialogContent>
 			</Dialog>
+			</div>
 		</div>
 	);
 }
