@@ -241,30 +241,38 @@ export default function CreatePurchaseOrderPage() {
 	};
 
 	return (
-		<div className="space-y-6">
-			{/* Header */}
-			<div className="flex items-center gap-4">
-				<Button variant="outline" size="sm" onClick={() => router.back()}>
-					<ArrowLeft className="h-4 w-4 mr-2" />
-					Back
-				</Button>
-				<div>
-					<h1 className="text-3xl font-bold">Create Purchase Order</h1>
-					<p className="text-muted-foreground">
-						Create a new purchase order for inventory restocking
-					</p>
+		<div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+			<div className="container mx-auto max-w-[1600px] px-6 sm:px-8 lg:px-10 py-8 space-y-6">
+				{/* Header */}
+				<div className="flex items-center gap-4">
+					<Button 
+						variant="outline" 
+						size="sm" 
+						onClick={() => router.back()}
+						className="shadow-sm hover:shadow-md transition-all"
+					>
+						<ArrowLeft className="h-4 w-4 mr-2" />
+						Back
+					</Button>
+					<div>
+						<h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+							Create Purchase Order
+						</h1>
+						<p className="text-muted-foreground mt-1">
+							Create a new purchase order for inventory restocking
+						</p>
+					</div>
 				</div>
-			</div>
 
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				{/* Purchase Order Details */}
-				<div className="lg:col-span-2 space-y-6">
-					{/* Supplier Selection */}
-					<Card>
-						<CardHeader>
-							<CardTitle>Supplier Information</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+					{/* Purchase Order Details */}
+					<div className="lg:col-span-2 space-y-6">
+						{/* Supplier Selection */}
+						<Card className="shadow-md hover:shadow-lg transition-shadow">
+							<CardHeader className="border-b bg-muted/30">
+								<CardTitle className="text-xl">Supplier Information</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-4 pt-6">
 							<div>
 								<Label htmlFor="supplier">Supplier</Label>
 								<Select
@@ -287,40 +295,40 @@ export default function CreatePurchaseOrderPage() {
 						</CardContent>
 					</Card>
 
-					{/* Purchase Order Items */}
-					<Card>
-						<CardHeader>
-							<div className="flex items-center justify-between">
-								<CardTitle>Purchase Order Items</CardTitle>
-								<Dialog
-									open={isProductSelectOpen}
-									onOpenChange={setIsProductSelectOpen}
-								>
-									<DialogTrigger asChild>
-										<Button size="sm">
-											<Plus className="h-4 w-4 mr-2" />
-											Add Product
-										</Button>
+						{/* Purchase Order Items */}
+						<Card className="shadow-md hover:shadow-lg transition-shadow">
+							<CardHeader className="border-b bg-muted/30">
+								<div className="flex items-center justify-between">
+									<CardTitle className="text-xl">Purchase Order Items</CardTitle>
+									<Dialog
+										open={isProductSelectOpen}
+										onOpenChange={setIsProductSelectOpen}
+									>
+										<DialogTrigger asChild>
+											<Button size="sm" className="shadow-sm hover:shadow-md transition-all">
+												<Plus className="h-4 w-4 mr-2" />
+												Add Product
+											</Button>
 								</DialogTrigger>
 								<DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-									<DialogHeader>
-										<DialogTitle>Select Product</DialogTitle>
+									<DialogHeader className="border-b pb-4">
+										<DialogTitle className="text-xl">Select Product</DialogTitle>
 									</DialogHeader>
-									<div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-										<Input placeholder="Search products..." className="flex-shrink-0" />
-										<div className="flex-1 overflow-y-auto border rounded-md">
+									<div className="space-y-4 flex-1 overflow-hidden flex flex-col pt-4">
+										<Input placeholder="Search products..." className="flex-shrink-0 h-10" />
+										<div className="flex-1 overflow-y-auto border rounded-lg">
 											<Table>
-													<TableHeader>
-														<TableRow>
-															<TableHead>Product</TableHead>
-															<TableHead>SKU</TableHead>
-															<TableHead>Current Stock</TableHead>
-															<TableHead>Reorder Point</TableHead>
-															<TableHead>Cost Price</TableHead>
-															<TableHead></TableHead>
-														</TableRow>
-													</TableHeader>
-													<TableBody>
+												<TableHeader className="sticky top-0 bg-background z-10">
+													<TableRow className="bg-muted/50">
+														<TableHead className="font-semibold">Product</TableHead>
+														<TableHead className="font-semibold">SKU</TableHead>
+														<TableHead className="font-semibold">Current Stock</TableHead>
+														<TableHead className="font-semibold">Reorder Point</TableHead>
+														<TableHead className="font-semibold">Cost Price</TableHead>
+														<TableHead className="w-[80px]"></TableHead>
+													</TableRow>
+												</TableHeader>
+												<TableBody>
 														{products.map((product) => (
 															<TableRow key={product.id}>
 																<TableCell>{product.name}</TableCell>
@@ -351,122 +359,132 @@ export default function CreatePurchaseOrderPage() {
 									</DialogContent>
 								</Dialog>
 							</div>
-						</CardHeader>
-						<CardContent>
-							{orderItems.length === 0 ? (
-								<div className="text-center py-8 text-muted-foreground">
-									No items added yet. Click &quot;Add Product&quot; to get
-									started.
+							</CardHeader>
+							<CardContent className="pt-6">
+								{orderItems.length === 0 ? (
+									<div className="flex flex-col items-center justify-center py-12 text-center">
+										<div className="rounded-full bg-muted p-3 mb-4">
+											<Plus className="h-8 w-8 text-muted-foreground" />
+										</div>
+										<p className="text-muted-foreground font-medium">
+											No items added yet
+										</p>
+										<p className="text-sm text-muted-foreground/70 mt-1">
+											Click &quot;Add Product&quot; to get started
+										</p>
+									</div>
+								) : (
+									<div className="border rounded-lg overflow-hidden">
+										<Table>
+											<TableHeader>
+												<TableRow className="bg-muted/50">
+													<TableHead className="font-semibold">Product</TableHead>
+													<TableHead className="font-semibold">Supplier SKU</TableHead>
+													<TableHead className="font-semibold">Quantity</TableHead>
+													<TableHead className="font-semibold">Unit Cost</TableHead>
+													<TableHead className="font-semibold">Total</TableHead>
+													<TableHead className="w-[50px]"></TableHead>
+												</TableRow>
+											</TableHeader>
+											<TableBody>
+												{orderItems.map((item) => (
+													<TableRow key={item.productId} className="hover:bg-muted/30 transition-colors">
+														<TableCell>
+															<div>
+																<div className="font-medium text-sm">
+																	{item.productName}
+																</div>
+																<div className="text-xs text-muted-foreground mt-0.5">
+																	{item.productSku}
+																</div>
+															</div>
+														</TableCell>
+													<TableCell>
+														<Input
+															value={item.supplierSku || ""}
+															onChange={(e) =>
+																updateSupplierSku(item.productId, e.target.value)
+															}
+															placeholder="Supplier SKU"
+															className="w-32 h-9"
+														/>
+													</TableCell>
+													<TableCell>
+														<Input
+															type="number"
+															min="1"
+															value={item.quantity}
+															onChange={(e) =>
+																updateItemQuantity(
+																	item.productId,
+																	parseInt(e.target.value) || 0,
+																)
+															}
+															className="w-20 h-9"
+														/>
+													</TableCell>
+													<TableCell>
+														<Input
+															type="number"
+															min="0"
+															step="0.01"
+															value={item.unitCost}
+															onChange={(e) =>
+																updateItemCost(
+																	item.productId,
+																	parseFloat(e.target.value) || 0,
+																)
+															}
+															className="w-24 h-9"
+														/>
+													</TableCell>
+													<TableCell className="font-medium">${item.totalCost.toFixed(2)}</TableCell>
+													<TableCell>
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => removeItem(item.productId)}
+															className="hover:bg-destructive/10 hover:text-destructive"
+														>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
 								</div>
-							) : (
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Product</TableHead>
-											<TableHead>Supplier SKU</TableHead>
-											<TableHead>Quantity</TableHead>
-											<TableHead>Unit Cost</TableHead>
-											<TableHead>Total</TableHead>
-											<TableHead></TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{orderItems.map((item) => (
-											<TableRow key={item.productId}>
-												<TableCell>
-													<div>
-														<div className="font-medium">
-															{item.productName}
-														</div>
-														<div className="text-sm text-muted-foreground">
-															{item.productSku}
-														</div>
-													</div>
-												</TableCell>
-												<TableCell>
-													<Input
-														value={item.supplierSku || ""}
-														onChange={(e) =>
-															updateSupplierSku(item.productId, e.target.value)
-														}
-														placeholder="Supplier SKU"
-														className="w-32"
-													/>
-												</TableCell>
-												<TableCell>
-													<Input
-														type="number"
-														min="1"
-														value={item.quantity}
-														onChange={(e) =>
-															updateItemQuantity(
-																item.productId,
-																parseInt(e.target.value) || 0,
-															)
-														}
-														className="w-20"
-													/>
-												</TableCell>
-												<TableCell>
-													<Input
-														type="number"
-														min="0"
-														step="0.01"
-														value={item.unitCost}
-														onChange={(e) =>
-															updateItemCost(
-																item.productId,
-																parseFloat(e.target.value) || 0,
-															)
-														}
-														className="w-24"
-													/>
-												</TableCell>
-												<TableCell>${item.totalCost.toFixed(2)}</TableCell>
-												<TableCell>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => removeItem(item.productId)}
-													>
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
 							)}
 						</CardContent>
 					</Card>
 				</div>
 
-				{/* Purchase Order Summary & Details */}
-				<div className="space-y-6">
-					{/* Purchase Order Summary */}
-					<Card>
-						<CardHeader>
-							<CardTitle>Purchase Order Summary</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-2">
-							<div className="flex justify-between">
-								<span>Subtotal:</span>
-								<span>${calculateSubtotal().toFixed(2)}</span>
-							</div>
-							<Separator />
-							<div className="flex justify-between font-medium">
-								<span>Total:</span>
-								<span>${calculateSubtotal().toFixed(2)}</span>
-							</div>
-						</CardContent>
+					{/* Purchase Order Summary & Details */}
+					<div className="space-y-6">
+						{/* Purchase Order Summary */}
+						<Card className="shadow-md hover:shadow-lg transition-shadow">
+							<CardHeader className="border-b bg-muted/30">
+								<CardTitle className="text-xl">Purchase Order Summary</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-3 pt-6">
+								<div className="flex justify-between text-sm">
+									<span className="text-muted-foreground">Subtotal:</span>
+									<span className="font-medium">${calculateSubtotal().toFixed(2)}</span>
+								</div>
+								<Separator />
+								<div className="flex justify-between text-lg font-semibold">
+									<span>Total:</span>
+									<span className="text-primary">${calculateSubtotal().toFixed(2)}</span>
+								</div>
+							</CardContent>
 					</Card>
 
-					{/* Additional Details */}
-					<Card>
-						<CardHeader>
-							<CardTitle>Purchase Order Details</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
+						{/* Additional Details */}
+						<Card className="shadow-md hover:shadow-lg transition-shadow">
+							<CardHeader className="border-b bg-muted/30">
+								<CardTitle className="text-xl">Purchase Order Details</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-4 pt-6">
 							<div>
 								<Label htmlFor="expectedDate">Expected Delivery Date</Label>
 								<Input
@@ -524,19 +542,20 @@ export default function CreatePurchaseOrderPage() {
 								/>
 							</div>
 
-							<Button
-								className="w-full"
-								onClick={handleSubmit}
-								disabled={
-									isSubmitting || orderItems.length === 0 || !selectedSupplierId
-								}
-							>
-								{isSubmitting
-									? "Creating Purchase Order..."
-									: "Create Purchase Order"}
-							</Button>
-						</CardContent>
-					</Card>
+								<Button
+									className="w-full shadow-md hover:shadow-lg transition-all"
+									onClick={handleSubmit}
+									disabled={
+										isSubmitting || orderItems.length === 0 || !selectedSupplierId
+									}
+								>
+									{isSubmitting
+										? "Creating Purchase Order..."
+										: "Create Purchase Order"}
+								</Button>
+							</CardContent>
+						</Card>
+					</div>
 				</div>
 			</div>
 		</div>
