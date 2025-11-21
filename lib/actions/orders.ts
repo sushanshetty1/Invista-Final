@@ -263,17 +263,17 @@ export async function createOrder(
 			return actionError("Warehouse not found or not accessible");
 		}
 
-		// Check inventory availability
-		const unavailableItems = await validateInventoryAvailability(
-			validatedData.items,
-			validatedData.warehouseId,
-		);
+		// Skip inventory availability check - allow orders regardless of stock
+		// const unavailableItems = await validateInventoryAvailability(
+		// 	validatedData.items,
+		// 	validatedData.warehouseId,
+		// );
 
-		if (unavailableItems.length > 0) {
-			return actionError(
-				`Insufficient inventory for: ${unavailableItems.join(", ")}`,
-			);
-		}
+		// if (unavailableItems.length > 0) {
+		// 	return actionError(
+		// 		`Insufficient inventory for: ${unavailableItems.join(", ")}`,
+		// 	);
+		// }
 
 		// Generate order number
 		const orderNumber = await generateOrderNumber();

@@ -61,6 +61,8 @@ interface Product {
 	sellingPrice: number | string | null | undefined;
 	costPrice?: number | string | null;
 	wholesalePrice?: number | string | null;
+	reorderPoint?: number;
+	minStockLevel?: number;
 	inventoryItems?: Array<{
 		availableQuantity: number;
 		quantity?: number;
@@ -403,6 +405,24 @@ export default function CreateOrderPage() {
 		setIsSubmitting(true);
 
 		try {
+			// First, sync the warehouse to Neon
+			console.log("[Order Create] Syncing warehouse:", selectedWarehouseId);
+			const syncResponse = await fetch("/api/warehouses/sync", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				credentials: "include",
+				body: JSON.stringify({ warehouseId: selectedWarehouseId }),
+			});
+
+			const syncData = await syncResponse.json();
+			console.log("[Order Create] Warehouse sync result:", syncData);
+
+			if (!syncResponse.ok) {
+				throw new Error(`Warehouse sync failed: ${syncData.error || "Unknown error"}`);
+			}
+
 			const orderData = {
 				customerId: selectedCustomerId,
 				warehouseId: selectedWarehouseId,
@@ -432,10 +452,17 @@ export default function CreateOrderPage() {
 			},
 			credentials: "include",
 			body: JSON.stringify(orderData),
-		});			const data = await response.json();
+		});
+
+			const data = await response.json();
+			
+			console.log("[Order Create] Response status:", response.status);
+			console.log("[Order Create] Response data:", data);
 
 			if (!response.ok) {
-				throw new Error(data.error || "Failed to create order");
+				const errorMsg = data.error || data.details || "Failed to create order";
+				console.error("[Order Create] Error:", errorMsg, data);
+				throw new Error(errorMsg);
 			}
 
 			toast.success("Order created successfully!");
@@ -1124,13 +1151,14 @@ export default function CreateOrderPage() {
 																<TableBody>
 																	{Array.isArray(products) &&
 																		products.map((product) => {
-																			const price = getProductPrice(product);
-																			const availableQuantity =
-																				getTotalAvailableQuantity(product);
-																			const isLowStock = availableQuantity > 0 && availableQuantity <= 10;
-																			const isOutOfStock = availableQuantity === 0;
-																			
-																			return (
+																				const price = getProductPrice(product);
+																				const availableQuantity =
+																					getTotalAvailableQuantity(product);
+																				// Use reorderPoint and minStockLevel like products page
+																				const reorderPoint = product.reorderPoint || 0;
+																				const minStockLevel = product.minStockLevel || 0;
+																				const isOutOfStock = reorderPoint < minStockLevel;
+																				const isLowStock = !isOutOfStock && reorderPoint <= minStockLevel * 1.5;																			return (
 																				<TableRow key={product.id} className="group hover:bg-muted/50">
 																					<TableCell className="w-3/4 align-middle">
 																						<div>
@@ -1164,14 +1192,14 @@ export default function CreateOrderPage() {
 																								<>
 																									<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 text-xs font-medium">
 																										<span className="w-1.5 h-1.5 rounded-full bg-yellow-600 dark:bg-yellow-400"></span>
-																										{availableQuantity} left
+																										{reorderPoint} left
 																									</span>
 																								</>
 																							) : (
 																								<>
 																									<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs font-medium">
 																										<span className="w-1.5 h-1.5 rounded-full bg-green-600 dark:bg-green-400"></span>
-																										{availableQuantity} available
+																										In Stock ({reorderPoint})
 																									</span>
 																								</>
 																							)}
@@ -1181,9 +1209,9 @@ export default function CreateOrderPage() {
 																						<Button
 																							size="sm"
 																							onClick={() => addProduct(product)}
-																							disabled={price <= 0}
+																							disabled={price <= 0 || isOutOfStock}
 																							className="w-full h-8 text-xs"
-																							variant={isOutOfStock ? "outline" : "default"}
+																							variant="default"
 																						>
 																							<Plus className="h-3 w-3 mr-1" />
 																							Add

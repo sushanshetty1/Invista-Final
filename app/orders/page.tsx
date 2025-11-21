@@ -543,7 +543,7 @@ export default function OrdersPage() {
 													{getStatusBadge(order.paymentStatus)}
 												</TableCell>
 												<TableCell>
-													{order.currency} {order.totalAmount.toFixed(2)}
+													{order.currency} {Number(order.totalAmount).toFixed(2)}
 												</TableCell>
 												<TableCell>
 													{format(new Date(order.orderDate), "MMM dd, yyyy")}
