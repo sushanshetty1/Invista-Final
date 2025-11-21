@@ -58,7 +58,6 @@ Invista implements a sophisticated **dual-database architecture** that separates
 
 ### **🔧 Database Generation**
 ```bash
-# Generate both Prisma clients
 npm run db:generate
 
 # Generate individual clients
