@@ -11,7 +11,7 @@ This document provides a comprehensive overview of all tables in both Supabase a
 - **companies**: Company profiles and settings
 - **company_users**: User-company relationships and roles
 - **company_invites**: Invitation system for joining companies
-- **login_history**: Authentication audit trail
+- **login_history**: Authentication audit trail(now pausedsa)
 - **password_resets**: Password recovery
 
 ### Should Be Used (Recommended)
@@ -36,22 +36,22 @@ This document provides a comprehensive overview of all tables in both Supabase a
 ### Currently Active Tables
 - **products**: Product catalog
 - **brands**: Product brands
+- **categories**: Product classification (seed from industry categories)
+- **suppliers**: Supplier directory
+- **product_suppliers**: Product-supplier links
+- **purchase_orders**: Purchase orders
+- **purchase_order_items**: PO line items
 
 ### Critical Tables (Must Use with Products)
-- **categories**: Product classification (seed from industry categories)
 - **warehouses**: Storage locations (create during company setup)
 - **inventory_items**: Stock tracking per warehouse
 - **inventory_movements**: Audit trail of all inventory changes
 
 ### Supplier Management
-- **suppliers**: Supplier directory
-- **product_suppliers**: Product-supplier links
 - **supplier_contacts**: Supplier contact persons
 - **supplier_documents**: Supplier documentation
 
 ### Purchase Order Workflow
-- **purchase_orders**: Purchase orders
-- **purchase_order_items**: PO line items
 - **goods_receipts**: Receiving documents
 - **goods_receipt_items**: Received items detail
 
