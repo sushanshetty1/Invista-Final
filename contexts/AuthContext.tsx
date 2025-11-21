@@ -164,7 +164,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			}
 		}
 	};
-
 	useEffect(() => {
 		let isMounted = true;
 		let subscription: { unsubscribe: () => void } | undefined;
