@@ -318,7 +318,7 @@ export default function CategoriesPage() {
 							<TableRow>
 								<TableHead>Category</TableHead>
 								<TableHead>Description</TableHead>
-								<TableHead>Count</TableHead>
+								<TableHead>Level</TableHead>
 								<TableHead>Slug</TableHead>
 								<TableHead>Status</TableHead>
 								<TableHead>Created</TableHead>
