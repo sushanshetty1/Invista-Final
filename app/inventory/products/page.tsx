@@ -304,17 +304,9 @@ export default function ProductsPage() {
 	};
 
 	const getStockStatus = (product: Product) => {
-		if (product.availableStock <= 0) {
+		// Only show "Out of Stock" if reorderPoint is less than minStockLevel
+		if (product.reorderPoint && product.minStockLevel && product.reorderPoint < product.minStockLevel) {
 			return <Badge variant="destructive">Out of Stock</Badge>;
-		} else if (
-			product.minStockLevel &&
-			product.availableStock <= product.minStockLevel
-		) {
-			return (
-				<Badge variant="outline" className="border-yellow-500 text-yellow-600">
-					Low Stock
-				</Badge>
-			);
 		} else {
 			return <Badge variant="secondary">In Stock</Badge>;
 		}
@@ -418,31 +410,18 @@ export default function ProductsPage() {
 				<Card>
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2 sm:p-4">
 						<CardTitle className="text-xs sm:text-sm font-medium">
-							Low Stock Items
-						</CardTitle>
-						<Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent className="p-2 sm:p-4 pt-0">
-						<div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600">
-							{
-								products.filter(
-									(p) => p.minStockLevel && p.availableStock <= p.minStockLevel,
-								).length
-							}
-						</div>
-						<p className="text-xs text-muted-foreground">Require attention</p>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2 sm:p-4">
-						<CardTitle className="text-xs sm:text-sm font-medium">
 							Out of Stock
 						</CardTitle>
 						<Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
 					</CardHeader>
 					<CardContent className="p-2 sm:p-4 pt-0">
 						<div className="text-lg sm:text-xl md:text-2xl font-bold text-red-600">
-							{products.filter((p) => p.availableStock <= 0).length}
+							{
+								products.filter(
+									(p) => p.reorderPoint && p.minStockLevel &&
+										p.reorderPoint < p.minStockLevel
+								).length
+							}
 						</div>
 						<p className="text-xs text-muted-foreground">Need restocking</p>
 					</CardContent>
