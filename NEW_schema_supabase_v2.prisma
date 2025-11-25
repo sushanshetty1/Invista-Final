@@ -1,0 +1,630 @@
+// ============================================================================
+// SUPABASE DATABASE SCHEMA V2 - PROPER VERSION
+// ============================================================================
+// Purpose: Authentication, User Management, Company/Tenant Management
+// NO business data (products, inventory, orders) - those go in Neon
+// ============================================================================
+
+generator supabaseClient {
+    provider        = "prisma-client-js"
+    output          = "./generated/supabase"
+    previewFeatures = ["multiSchema"]
+    binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource supabaseDb {
+    provider = "postgresql"
+    url      = env("SUPABASE_DATABASE_URL")
+}
+
+// ============================================================================
+// USER MANAGEMENT
+// ============================================================================
+
+model User {
+    id            String  @id @default(uuid())
+    email         String  @unique
+    emailVerified Boolean @default(false)
+    firstName     String?
+    lastName      String?
+    displayName   String?
+    avatar        String?
+    phone         String?
+    passwordHash  String?
+
+    // Security
+    twoFactorEnabled Boolean   @default(false)
+    twoFactorSecret  String?
+    isActive         Boolean   @default(true)
+    isSuspended      Boolean   @default(false)
+    suspendedReason  String?
+    lastLoginAt      DateTime?
+
+    // Audit
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    companyMemberships CompanyMember[]
+    sessions           UserSession[]
+    createdCompanies   Company[]       @relation("CompanyCreator")
+    loginHistory       LoginHistory[]
+
+    @@map("users")
+}
+
+// ============================================================================
+// COMPANY MANAGEMENT (Multi-Tenancy)
+// ============================================================================
+
+model Company {
+    id          String  @id @default(uuid())
+    name        String
+    slug        String  @unique
+    displayName String?
+    description String?
+
+    // Contact
+    email   String?
+    phone   String?
+    website String?
+
+    // ✅ Structured Address (NO JSON!)
+    address1   String?
+    address2   String?
+    city       String?
+    state      String?
+    postalCode String?
+    country    String? @default("US")
+
+    // Business Info
+    industry           String?
+    taxId              String?       @unique
+    registrationNumber String?       @unique
+    businessType       BusinessType?
+
+    // Branding
+    logo         String?
+    primaryColor String?
+
+    // Subscription & Limits
+    plan          SubscriptionPlan   @default(FREE)
+    planStatus    SubscriptionStatus @default(TRIAL)
+    trialEndsAt   DateTime?
+    maxUsers      Int                @default(5)
+    maxProducts   Int                @default(100)
+    maxWarehouses Int                @default(1)
+
+    // Status
+    isActive    Boolean @default(true)
+    isSuspended Boolean @default(false)
+
+    // Audit
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    createdById String
+
+    // Relations
+    createdBy User            @relation("CompanyCreator", fields: [createdById], references: [id])
+    members   CompanyMember[]
+
+    @@index([slug])
+    @@index([createdById])
+    @@index([isActive])
+    @@map("companies")
+}
+
+model CompanyMember {
+    id           String      @id @default(uuid())
+    companyId    String
+    userId       String
+    role         CompanyRole @default(EMPLOYEE)
+    title        String?
+    departmentId String?
+
+    // Access control
+    isActive  Boolean @default(true)
+    isOwner   Boolean @default(false)
+    canInvite Boolean @default(false)
+
+    // Dates
+    joinedAt    DateTime  @default(now())
+    invitedAt   DateTime?
+    invitedById String?
+
+    // Relations
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([companyId, userId])
+    @@index([userId])
+    @@index([companyId, isActive])
+    @@map("company_members")
+}
+
+// ============================================================================
+// SESSION MANAGEMENT
+// ============================================================================
+
+model UserSession {
+    id           String  @id @default(uuid())
+    userId       String
+    token        String  @unique
+    refreshToken String? @unique
+
+    // Device tracking
+    userAgent  String?
+    ipAddress  String?
+    deviceType String?
+    browser    String?
+
+    // Lifecycle
+    lastActivity DateTime  @default(now())
+    expiresAt    DateTime
+    isActive     Boolean   @default(true)
+    isRevoked    Boolean   @default(false)
+    revokedAt    DateTime?
+
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([token])
+    @@index([expiresAt])
+    @@map("user_sessions")
+}
+
+model LoginHistory {
+    id          String   @id @default(uuid())
+    userId      String
+    successful  Boolean
+    failReason  String?
+    ipAddress   String
+    userAgent   String?
+    location    String?
+    attemptedAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([attemptedAt])
+    @@map("login_history")
+}
+
+// ============================================================================
+// AUDIT & COMPLIANCE
+// ============================================================================
+
+model AuditLog {
+    id        String  @id @default(uuid())
+    companyId String? // NULL for system-level events
+    userId    String?
+    userEmail String?
+
+    action     String
+    resource   String
+    resourceId String?
+
+    oldValues Json?
+    newValues Json?
+
+    ipAddress String?
+    userAgent String?
+
+    severity  AuditSeverity @default(INFO)
+    timestamp DateTime      @default(now())
+
+    @@index([companyId, timestamp])
+    @@index([userId, timestamp])
+    @@index([resource, timestamp])
+    @@map("audit_logs")
+}
+
+// ============================================================================
+// ADDITIONAL TABLES - ADD TO SUPABASE SCHEMA
+// ============================================================================
+
+// 1. COMPANY INVITE - Invite companies/businesses to join platform
+model CompanyInvite {
+    id          String  @id @default(uuid())
+    email       String
+    companyName String?
+
+    // Invitation details
+    invitedByUserId String
+    role            CompanyRole @default(ADMIN)
+    message         String?
+
+    // Token
+    token     String   @unique
+    expiresAt DateTime
+
+    // Status
+    status           InviteStatus @default(PENDING)
+    acceptedAt       DateTime?
+    createdCompanyId String? // Set when invite is accepted
+
+    // Audit
+    createdAt DateTime @default(now())
+
+    // ✅ RELATIONS
+    invitedBy User @relation("CompanyInviter", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+    @@index([email, status])
+    @@index([token])
+    @@index([expiresAt])
+    @@map("company_invites")
+}
+
+enum InviteStatus {
+    PENDING
+    ACCEPTED
+    EXPIRED
+    REVOKED
+}
+
+// ============================================================================
+
+// 2. COMPANY LOCATION - Multiple offices/branches per company
+model CompanyLocation {
+    id        String  @id @default(uuid())
+    companyId String
+    name      String
+    code      String?
+
+    // Type
+    type      LocationType @default(OFFICE)
+    isPrimary Boolean      @default(false)
+
+    // Structured address
+    address1   String?
+    address2   String?
+    city       String?
+    state      String?
+    postalCode String?
+    country    String?
+
+    // Coordinates
+    latitude  Decimal? @db.Decimal(10, 8)
+    longitude Decimal? @db.Decimal(11, 8)
+
+    // Contact
+    phone         String?
+    email         String?
+    managerUserId String?
+
+    // Status
+    isActive   Boolean   @default(true)
+    openedDate DateTime?
+    closedDate DateTime?
+
+    // Audit
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // ✅ RELATIONS
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@unique([companyId, code])
+    @@index([companyId, isActive])
+    @@map("company_locations")
+}
+
+enum LocationType {
+    HEAD_OFFICE
+    BRANCH_OFFICE
+    WAREHOUSE
+    RETAIL_STORE
+    DISTRIBUTION_CENTER
+    FACTORY
+    REMOTE
+}
+
+// ============================================================================
+
+// 3. COMPANY INTEGRATION - Third-party integrations (Shopify, QuickBooks, etc.)
+model CompanyIntegration {
+    id        String @id @default(uuid())
+    companyId String
+
+    // Integration details
+    provider     String // "shopify", "quickbooks", "stripe"
+    providerName String // Display name
+
+    // Configuration
+    config        Json // API keys, settings (encrypted!)
+    webhookUrl    String?
+    webhookSecret String?
+
+    // OAuth tokens (if applicable)
+    accessToken    String?
+    refreshToken   String?
+    tokenExpiresAt DateTime?
+
+    // Status
+    status     IntegrationStatus @default(PENDING)
+    isActive   Boolean           @default(true)
+    lastSyncAt DateTime?
+    lastError  String?
+
+    // Sync settings
+    syncEnabled   Boolean @default(true)
+    syncFrequency String? // "hourly", "daily", "realtime"
+
+    // Audit
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    createdById String
+
+    // ✅ RELATIONS
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@unique([companyId, provider])
+    @@index([companyId, isActive])
+    @@map("company_integrations")
+}
+
+enum IntegrationStatus {
+    PENDING // Not configured yet
+    CONNECTED // Active and working
+    ERROR // Has errors
+    DISCONNECTED // Manually disconnected
+}
+
+// ============================================================================
+
+// 4. USER INVITATION - Invite users to join company
+model UserInvitation {
+    id        String @id @default(uuid())
+    companyId String
+    email     String
+
+    // Invitation details
+    firstName String?
+    lastName  String?
+    role      CompanyRole @default(EMPLOYEE)
+    title     String?
+
+    // Token
+    token     String   @unique
+    expiresAt DateTime
+
+    // Status
+    status     InviteStatus @default(PENDING)
+    acceptedAt DateTime?
+    userId     String? // Set when user accepts
+
+    // Audit
+    createdAt   DateTime @default(now())
+    invitedById String
+
+    // ✅ RELATIONS
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    invitedBy User    @relation("UserInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+
+    @@unique([companyId, email])
+    @@index([email, status])
+    @@index([token])
+    @@index([expiresAt])
+    @@map("user_invitations")
+}
+
+// ============================================================================
+
+// 5. USER PREFERENCE - User settings and preferences
+model UserPreference {
+    id     String @id @default(uuid())
+    userId String @unique
+
+    // Display preferences
+    theme      String @default("light") // "light", "dark", "auto"
+    language   String @default("en")
+    timezone   String @default("UTC")
+    dateFormat String @default("MM/DD/YYYY")
+
+    // Notification preferences
+    emailNotifications Boolean @default(true)
+    pushNotifications  Boolean @default(true)
+    smsNotifications   Boolean @default(false)
+
+    // Notification types
+    notifyLowStock      Boolean @default(true)
+    notifyOrderShipped  Boolean @default(true)
+    notifyNewOrder      Boolean @default(true)
+    notifySystemUpdates Boolean @default(false)
+
+    // UI preferences
+    sidebarCollapsed Boolean @default(false)
+    defaultDashboard String? // Path to default dashboard
+    itemsPerPage     Int     @default(25)
+
+    // Custom preferences (flexible)
+    customSettings Json?
+
+    // Audit
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // ✅ RELATIONS
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("user_preferences")
+}
+
+// ============================================================================
+
+// 6. USER NOTIFICATION - In-app notifications
+model UserNotification {
+    id        String  @id @default(uuid())
+    userId    String
+    companyId String? // For company-specific notifications
+
+    // Notification content
+    type    NotificationType
+    title   String
+    message String
+
+    // Additional info
+    icon       String?
+    color      String?
+    actionUrl  String?
+    actionText String?
+
+    // Priority
+    priority NotificationPriority @default(NORMAL)
+
+    // Reference
+    referenceType String? // "order", "product", "inventory"
+    referenceId   String?
+
+    // Status
+    isRead      Boolean   @default(false)
+    readAt      DateTime?
+    isDismissed Boolean   @default(false)
+    dismissedAt DateTime?
+
+    // Delivery
+    sentAt    DateTime  @default(now())
+    expiresAt DateTime?
+
+    // Audit
+    createdAt DateTime @default(now())
+
+    // ✅ RELATIONS
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId, isRead])
+    @@index([userId, createdAt])
+    @@index([expiresAt])
+    @@map("user_notifications")
+}
+
+enum NotificationType {
+    INFO
+    SUCCESS
+    WARNING
+    ERROR
+    SYSTEM
+    ORDER
+    INVENTORY
+    PAYMENT
+}
+
+enum NotificationPriority {
+    LOW
+    NORMAL
+    HIGH
+    URGENT
+}
+
+// ============================================================================
+
+// 7. BILLING HISTORY - Subscription payment tracking
+model BillingHistory {
+    id        String @id @default(uuid())
+    companyId String
+
+    // Billing period
+    periodStart DateTime
+    periodEnd   DateTime
+
+    // Amount
+    amount   Decimal @db.Decimal(12, 2)
+    currency String  @default("USD")
+
+    // Plan
+    plan         SubscriptionPlan
+    billingCycle BillingCycle
+
+    // Payment
+    status        PaymentStatus
+    paymentMethod String? // "card", "bank_transfer", "invoice"
+    transactionId String? // Stripe payment ID
+    invoiceUrl    String?
+    receiptUrl    String?
+
+    // Dates
+    dueDate DateTime
+    paidAt  DateTime?
+
+    // Failure handling
+    failureReason String?
+    retryCount    Int       @default(0)
+    nextRetryAt   DateTime?
+
+    // Audit
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // ✅ RELATIONS
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@index([companyId, status])
+    @@index([companyId, periodStart])
+    @@index([transactionId])
+    @@map("billing_history")
+}
+
+enum BillingCycle {
+    MONTHLY
+    QUARTERLY
+    YEARLY
+    ONE_TIME
+}
+
+enum PaymentStatus {
+    PENDING
+    PROCESSING
+    PAID
+    FAILED
+    REFUNDED
+    CANCELLED
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum BusinessType {
+    PRIVATE
+    PUBLIC
+    NONPROFIT
+    GOVERNMENT
+    PARTNERSHIP
+    SOLE_PROPRIETORSHIP
+}
+
+enum SubscriptionPlan {
+    FREE
+    BASIC
+    PROFESSIONAL
+    ENTERPRISE
+    CUSTOM
+}
+
+enum SubscriptionStatus {
+    TRIAL
+    ACTIVE
+    PAST_DUE
+    CANCELLED
+    SUSPENDED
+    EXPIRED
+}
+
+enum CompanyRole {
+    OWNER
+    ADMIN
+    MANAGER
+    SUPERVISOR
+    EMPLOYEE
+    CONTRACTOR
+    VIEWER
+}
+
+enum AuditSeverity {
+    INFO
+    WARNING
+    ERROR
+    CRITICAL
+}
