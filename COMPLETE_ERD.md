@@ -4,6 +4,11 @@
 
 ---
 
+
+press ctrl+shift+v for prieview of the diagram
+
+
+
 ## FULL SYSTEM ARCHITECTURE
 
 ```mermaid
