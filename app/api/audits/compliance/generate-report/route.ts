@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -32,9 +32,11 @@ export async function POST(request: NextRequest) {
 		// Calculate date range
 		const periodDays = parseInt(period);
 		const dateFrom = new Date();
-		dateFrom.setDate(dateFrom.getDate() - periodDays); // Get data based on filters
+		dateFrom.setDate(dateFrom.getDate() - periodDays);
+
+		// Get data based on filters
 		const whereClause: Record<string, unknown> = {
-			completedDate: { gte: dateFrom },
+			completedAt: { gte: dateFrom },
 			status: "COMPLETED",
 		};
 
@@ -43,31 +45,26 @@ export async function POST(request: NextRequest) {
 		}
 
 		if (filters.auditType) {
-			whereClause.type = filters.auditType;
+			whereClause.auditType = filters.auditType;
 		}
 
 		// Fetch audit data
 		const audits = await neonClient.inventoryAudit.findMany({
 			where: whereClause,
 			include: {
-				warehouse: {
-					select: { id: true, name: true, code: true },
-				},
-				product: {
-					select: { id: true, name: true, sku: true },
-				},
 				items: {
 					include: {
-						product: {
-							select: { name: true, sku: true },
-						},
-						variant: {
-							select: { name: true, sku: true },
+						inventoryItem: {
+							include: {
+								product: {
+									select: { name: true, sku: true },
+								},
+							},
 						},
 					},
 				},
 			},
-			orderBy: { completedDate: "desc" },
+			orderBy: { completedAt: "desc" },
 		});
 
 		// Generate report ID
@@ -94,20 +91,16 @@ export async function POST(request: NextRequest) {
 				},
 				auditTypes: audits.reduce(
 					(acc, audit) => {
-						acc[audit.type] = (acc[audit.type] || 0) + 1;
+						acc[audit.auditType] = (acc[audit.auditType] || 0) + 1;
 						return acc;
 					},
 					{} as Record<string, number>,
 				),
-				warehouses: [
-					...new Set(audits.map((a) => a.warehouse?.name).filter(Boolean)),
+				warehouseIds: [
+					...new Set(audits.map((a) => a.warehouseId).filter(Boolean)),
 				],
 				totalDiscrepancies: audits.reduce(
 					(sum, a) => sum + (a.discrepancies || 0),
-					0,
-				),
-				totalValueImpact: audits.reduce(
-					(sum, a) => sum + Number(a.adjustmentValue || 0),
 					0,
 				),
 			},

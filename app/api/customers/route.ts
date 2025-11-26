@@ -100,18 +100,16 @@ export async function POST(request: NextRequest) {
 			type: body.type,
 			firstName: body.firstName,
 			lastName: body.lastName,
-			companyName: body.companyName,
-			taxId: body.taxId,
+			businessName: body.businessName || body.companyName, // Support both field names
 			email: body.email,
 			phone: body.phone,
-			mobile: body.mobile,
-			billingAddress: body.billingAddress,
-			shippingAddress: body.shippingAddress,
-			creditLimit: body.creditLimit,
-			paymentTerms: body.paymentTerms,
-			currency: body.currency,
-			notes: body.notes,
-			createdBy: user.id,
+			billingAddress1: body.billingAddress?.street || body.billingAddress1,
+			billingAddress2: body.billingAddress2,
+			billingCity: body.billingAddress?.city || body.billingCity,
+			billingState: body.billingAddress?.state || body.billingState,
+			billingPostalCode: body.billingAddress?.zipCode || body.billingPostalCode,
+			billingCountry: body.billingAddress?.country || body.billingCountry,
+			createdById: user.id,
 		};
 
 		const result = await createCustomer(input);

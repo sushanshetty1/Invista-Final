@@ -5,7 +5,7 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 /**
  * GET /api/health

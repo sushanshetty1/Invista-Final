@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -38,57 +38,62 @@ export async function GET(request: NextRequest) {
 						categoryId: true,
 					},
 				},
-				movements: {
-					where: {
-						occurredAt: {
-							gte: startDate,
-							lte: endDate,
-						},
-					},
-					orderBy: {
-						occurredAt: "desc",
-					},
-					take: 1,
-				},
 			},
-		}); // Calculate total inventory value
+		});
+
+		// Calculate total inventory value using product costPrice
 		const totalInventoryValue = inventoryItems.reduce((sum: number, item) => {
-			const cost = Number(item.averageCost || item.product.costPrice || 0);
+			const cost = Number(item.product.costPrice || 0);
 			return sum + item.quantity * cost;
 		}, 0);
 
 		// Get sales and COGS data from order items
 		const orderItems = await neonClient.orderItem.findMany({
 			where: {
-				order: {
-					createdAt: {
-						gte: startDate,
-						lte: endDate,
-					},
+				orderId: {
+					not: undefined,
 				},
 			},
 			include: {
-				order: {
-					select: {
-						createdAt: true,
-						status: true,
-					},
-				},
 				product: {
 					select: {
 						costPrice: true,
 						categoryId: true,
-						categoryName: true,
+						category: {
+							select: {
+								name: true,
+							},
+						},
 					},
 				},
 			},
-		}); // Calculate COGS and revenue by month
+		});
+
+		// Get orders separately for date filtering
+		const orders = await neonClient.order.findMany({
+			where: {
+				createdAt: {
+					gte: startDate,
+					lte: endDate,
+				},
+			},
+			select: {
+				id: true,
+				createdAt: true,
+				status: true,
+			},
+		});
+
+		const orderMap = new Map(orders.map((o) => [o.id, o]));
+
+		// Calculate COGS and revenue by month
 		const monthlyData: { [key: string]: { revenue: number; cogs: number } } =
 			{};
 
 		orderItems.forEach((item) => {
-			if (item.order) {
-				const month = new Date(item.order.createdAt).toISOString().slice(0, 7); // YYYY-MM
+			const order = orderMap.get(item.orderId);
+			if (order) {
+				const month = new Date(order.createdAt).toISOString().slice(0, 7); // YYYY-MM
 				if (!monthlyData[month]) {
 					monthlyData[month] = { revenue: 0, cogs: 0 };
 				}
@@ -99,13 +104,16 @@ export async function GET(request: NextRequest) {
 				monthlyData[month].revenue += itemRevenue;
 				monthlyData[month].cogs += itemCogs;
 			}
-		}); // Get profit margin by category
+		});
+
+		// Get profit margin by category
 		const categoryData: { [key: string]: { revenue: number; cogs: number } } =
 			{};
 
 		orderItems.forEach((item) => {
-			if (item.order && item.product.categoryName) {
-				const categoryName = item.product.categoryName;
+			const order = orderMap.get(item.orderId);
+			if (order && item.product.category?.name) {
+				const categoryName = item.product.category.name;
 				if (!categoryData[categoryName]) {
 					categoryData[categoryName] = { revenue: 0, cogs: 0 };
 				}

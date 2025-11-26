@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authenticate } from "@/lib/auth";
-import { supabaseClient } from "@/lib/db";
+import { supabaseClient } from "@/lib/prisma";
 import { getIndustryCategories } from "@/lib/industry-categories";
 
 export async function GET(request: NextRequest) {
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
 		const userId = authResult.user.id;
 		console.log("👤 User ID:", userId);
 
-		// Find the user's company through company_users table
-		const companyUser = await supabaseClient.companyUser.findFirst({
+		// Find the user's company through company_members table
+		const companyMember = await supabaseClient.companyMember.findFirst({
 			where: {
 				userId: userId,
 			},
@@ -42,9 +42,9 @@ export async function GET(request: NextRequest) {
 			},
 		});
 
-		console.log("🏢 Company user data:", companyUser);
+		console.log("🏢 Company member data:", companyMember);
 
-		if (!companyUser?.company) {
+		if (!companyMember?.company) {
 			console.error("❌ No company found for user:", userId);
 			return NextResponse.json(
 				{
@@ -56,11 +56,11 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
-		const industry = companyUser.company.industry;
+		const industry = companyMember.company.industry;
 		console.log("🏭 Company industry:", industry);
 
 		if (!industry) {
-			console.error("❌ No industry set for company:", companyUser.company.id);
+			console.error("❌ No industry set for company:", companyMember.company.id);
 			return NextResponse.json(
 				{
 					error: "No industry set for company",
@@ -80,8 +80,8 @@ export async function GET(request: NextRequest) {
 		return NextResponse.json({
 			categories,
 			industry,
-			companyId: companyUser.company.id,
-			companyName: companyUser.company.name,
+			companyId: companyMember.company.id,
+			companyName: companyMember.company.name,
 		});
 	} catch (error) {
 		console.error("💥 Error in industry categories API:", error);

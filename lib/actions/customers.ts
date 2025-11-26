@@ -1,4 +1,4 @@
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export interface CustomerFilters {
 	companyId: string;
@@ -19,7 +19,7 @@ export async function getCustomers(filters: CustomerFilters) {
 			where.OR = [
 				{ firstName: { contains: filters.searchTerm, mode: "insensitive" } },
 				{ lastName: { contains: filters.searchTerm, mode: "insensitive" } },
-				{ companyName: { contains: filters.searchTerm, mode: "insensitive" } },
+				{ businessName: { contains: filters.searchTerm, mode: "insensitive" } },
 				{ email: { contains: filters.searchTerm, mode: "insensitive" } },
 			];
 		}
@@ -27,7 +27,7 @@ export async function getCustomers(filters: CustomerFilters) {
 		const customers = await neonClient.customer.findMany({
 			where,
 			orderBy: [
-				{ companyName: "asc" },
+				{ businessName: "asc" },
 				{ firstName: "asc" },
 				{ lastName: "asc" },
 			],
@@ -62,33 +62,19 @@ export async function getCustomerById(customerId: string) {
 
 export interface CreateCustomerInput {
 	companyId: string;
-	type?: "INDIVIDUAL" | "BUSINESS" | "RESELLER" | "DISTRIBUTOR";
+	type?: "INDIVIDUAL" | "BUSINESS";
 	firstName?: string;
 	lastName?: string;
-	companyName?: string;
-	taxId?: string;
+	businessName?: string;
 	email?: string;
 	phone?: string;
-	mobile?: string;
-	billingAddress?: {
-		street?: string;
-		city?: string;
-		state?: string;
-		zipCode?: string;
-		country?: string;
-	};
-	shippingAddress?: {
-		street?: string;
-		city?: string;
-		state?: string;
-		zipCode?: string;
-		country?: string;
-	};
-	creditLimit?: number;
-	paymentTerms?: string;
-	currency?: string;
-	notes?: string;
-	createdBy: string;
+	billingAddress1?: string;
+	billingAddress2?: string;
+	billingCity?: string;
+	billingState?: string;
+	billingPostalCode?: string;
+	billingCountry?: string;
+	createdById: string;
 }
 
 // Create a new customer
@@ -119,13 +105,15 @@ export async function createCustomer(input: CreateCustomerInput) {
 			};
 		}
 
-		if (input.type === "BUSINESS" && !input.companyName) {
+		if (input.type === "BUSINESS" && !input.businessName) {
 			return {
 				success: false,
-				error: "Company name is required for business customers",
+				error: "Business name is required for business customers",
 			};
 		}
 
+		// Note: Customer does NOT have mobile, taxId, companyName (use businessName),
+		// shippingAddress, creditLimit, paymentTerms, currency, notes, createdBy (use createdById)
 		const customer = await neonClient.customer.create({
 			data: {
 				companyId: input.companyId,
@@ -133,19 +121,17 @@ export async function createCustomer(input: CreateCustomerInput) {
 				type: input.type || "INDIVIDUAL",
 				firstName: input.firstName,
 				lastName: input.lastName,
-				companyName: input.companyName,
-				taxId: input.taxId,
+				businessName: input.businessName,
 				email: input.email,
 				phone: input.phone,
-				mobile: input.mobile,
-				billingAddress: input.billingAddress || {},
-				shippingAddress: input.shippingAddress || {},
-				creditLimit: input.creditLimit,
-				paymentTerms: input.paymentTerms,
-				currency: input.currency || "USD",
-				notes: input.notes,
+				billingAddress1: input.billingAddress1,
+				billingAddress2: input.billingAddress2,
+				billingCity: input.billingCity,
+				billingState: input.billingState,
+				billingPostalCode: input.billingPostalCode,
+				billingCountry: input.billingCountry,
 				status: "ACTIVE",
-				createdBy: input.createdBy,
+				createdById: input.createdById,
 			},
 		});
 

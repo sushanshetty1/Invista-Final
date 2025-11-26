@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 import { createClient } from "@/lib/supabaseServer";
 
 // GET /api/product-suppliers - Get product-supplier relationships
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 						},
 					},
 				},
-				orderBy: { createdAt: "desc" },
+				orderBy: { unitCost: "asc" },
 			});
 		} else {
 			// Get all product-supplier relationships
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
 						},
 					},
 				},
-				orderBy: { createdAt: "desc" },
+				orderBy: { unitCost: "asc" },
 				take: 100,
 			});
 		}
@@ -124,14 +124,9 @@ export async function POST(request: NextRequest) {
 			productId,
 			supplierId,
 			supplierSku,
-			supplierName,
 			unitCost,
-			currency = "USD",
-			minOrderQty,
-			maxOrderQty,
 			leadTimeDays,
 			isPreferred = false,
-			isActive = true,
 		} = body;
 
 		// Validate required fields
@@ -168,19 +163,15 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Create product-supplier relationship
+		// Note: ProductSupplier does NOT have supplierName, currency, minOrderQty, maxOrderQty, isActive
 		const productSupplier = await neonClient.productSupplier.create({
 			data: {
 				productId,
 				supplierId,
 				supplierSku,
-				supplierName,
 				unitCost,
-				currency,
-				minOrderQty,
-				maxOrderQty,
 				leadTimeDays,
 				isPreferred,
-				isActive,
 			},
 			include: {
 				product: {
@@ -227,14 +218,9 @@ export async function PUT(request: NextRequest) {
 		const {
 			id,
 			supplierSku,
-			supplierName,
 			unitCost,
-			currency,
-			minOrderQty,
-			maxOrderQty,
 			leadTimeDays,
 			isPreferred,
-			isActive,
 		} = body;
 
 		if (!id) {
@@ -262,18 +248,14 @@ export async function PUT(request: NextRequest) {
 		}
 
 		// Update the relationship
+		// Note: ProductSupplier does NOT have supplierName, currency, minOrderQty, maxOrderQty, isActive
 		const productSupplier = await neonClient.productSupplier.update({
 			where: { id },
 			data: {
 				supplierSku,
-				supplierName,
 				unitCost,
-				currency,
-				minOrderQty,
-				maxOrderQty,
 				leadTimeDays,
 				isPreferred,
-				isActive,
 			},
 			include: {
 				product: {

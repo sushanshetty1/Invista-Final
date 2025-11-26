@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
-import { supabaseClient } from "@/lib/db";
+import { supabaseClient } from "@/lib/prisma";
 import { getIndustryCategories } from "@/lib/industry-categories";
 
 export async function GET(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 		const userId = user.id;
 
 		// Get user's company industry through the database
-		const companyUser = await supabaseClient.companyUser.findFirst({
+		const companyMember = await supabaseClient.companyMember.findFirst({
 			where: {
 				userId: userId,
 			},
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 			},
 		});
 
-		if (!companyUser?.company?.industry) {
+		if (!companyMember?.company?.industry) {
 			return NextResponse.json({
 				industry: null,
 				categories: [],
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 			});
 		}
 
-		const industry = companyUser.company.industry;
+		const industry = companyMember.company.industry;
 		const categories = getIndustryCategories(industry);
 
 		return NextResponse.json({

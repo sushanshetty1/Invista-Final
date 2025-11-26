@@ -2,7 +2,7 @@
 // This is a temporary fix - the full implementation is in categories.ts.backup
 
 import { z } from "zod";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 import { actionError, actionSuccess, type ActionResponse } from "@/lib/api-utils";
 import type { Prisma } from "../../prisma/generated/neon";
 
@@ -147,32 +147,32 @@ export async function createCategory(
 			slug,
 			parentId,
 			color,
-			image,
+			icon,
 			isActive,
+			companyId,
 		} = validatedInput;
 
-		// Check if slug already exists
+		// Check if slug already exists for this company
 		const existingCategory = await neonClient.category.findFirst({
-			where: { slug },
+			where: { companyId, slug },
 		});
 
 		if (existingCategory) {
 			return actionError("Category with this slug already exists");
 		}
 
-		// Calculate level (simplified)
-		const level = parentId ? 1 : 0;
-
+		// Note: Category does NOT have 'image' or 'level' fields
+		// It has 'icon' and 'displayOrder' instead
 		const category = await neonClient.category.create({
 			data: {
+				companyId,
 				name,
 				description,
 				slug,
 				parentId,
 				color,
-				image,
+				icon,
 				isActive,
-				level,
 			},
 		});
 

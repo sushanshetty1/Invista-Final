@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -13,27 +13,21 @@ export async function GET(request: NextRequest) {
 		// Get audits for the period to generate reports data
 		const audits = await neonClient.inventoryAudit.findMany({
 			where: {
-				completedDate: { gte: dateFrom },
+				completedAt: { gte: dateFrom },
 				status: "COMPLETED",
 			},
 			include: {
-				warehouse: {
-					select: { id: true, name: true, code: true },
-				},
-				product: {
-					select: { id: true, name: true, sku: true },
-				},
 				items: {
 					select: {
 						id: true,
-						systemQty: true,
-						countedQty: true,
-						adjustmentQty: true,
+						expectedQuantity: true,
+						countedQuantity: true,
+						variance: true,
 						discrepancyReason: true,
 					},
 				},
 			},
-			orderBy: { completedDate: "desc" },
+			orderBy: { completedAt: "desc" },
 		});
 
 		// Generate different report types
@@ -51,18 +45,14 @@ export async function GET(request: NextRequest) {
 				downloadUrl: "/api/audits/reports/download/audit-summary",
 				data: {
 					totalAudits: audits.length,
-					totalItems: audits.reduce((sum, a) => sum + (a.totalItems || 0), 0),
+					totalItems: audits.reduce((sum, a) => sum + (a.itemsPlanned || 0), 0),
 					totalDiscrepancies: audits.reduce(
 						(sum, a) => sum + (a.discrepancies || 0),
 						0,
 					),
-					totalValueImpact: audits.reduce(
-						(sum, a) => sum + Number(a.adjustmentValue || 0),
-						0,
-					),
 					auditsByType: audits.reduce(
 						(acc, audit) => {
-							acc[audit.type] = (acc[audit.type] || 0) + 1;
+							acc[audit.auditType] = (acc[audit.auditType] || 0) + 1;
 							return acc;
 						},
 						{} as Record<string, number>,
@@ -83,24 +73,18 @@ export async function GET(request: NextRequest) {
 				downloadUrl: "/api/audits/reports/download/discrepancy-analysis",
 				data: {
 					discrepancyItems: audits.flatMap((audit) =>
-						audit.items.filter((item) => item.adjustmentQty !== 0),
+						audit.items.filter((item: { variance: number | null }) => item.variance !== 0),
 					).length,
 					warehouseImpact: audits.reduce(
 						(acc, audit) => {
-							const warehouseName = audit.warehouse?.name || "Unknown";
-							if (!acc[warehouseName]) {
-								acc[warehouseName] = { discrepancies: 0, valueImpact: 0 };
+							const warehouseId = audit.warehouseId || "Unknown";
+							if (!acc[warehouseId]) {
+								acc[warehouseId] = { discrepancies: 0 };
 							}
-							acc[warehouseName].discrepancies += audit.discrepancies || 0;
-							acc[warehouseName].valueImpact += Number(
-								audit.adjustmentValue || 0,
-							);
+							acc[warehouseId].discrepancies += audit.discrepancies || 0;
 							return acc;
 						},
-						{} as Record<
-							string,
-							{ discrepancies: number; valueImpact: number }
-						>,
+						{} as Record<string, { discrepancies: number }>,
 					),
 				},
 			},
@@ -140,7 +124,7 @@ export async function GET(request: NextRequest) {
 				downloadUrl: "/api/audits/reports/download/audit-trail",
 				data: {
 					totalEvents: audits.length * 3, // Estimated events per audit
-					uniqueUsers: new Set(audits.map((a) => a.auditedBy)).size,
+					uniqueUsers: new Set(audits.map((a) => a.conductedBy)).size,
 					timeRange: {
 						from: dateFrom.toISOString(),
 						to: new Date().toISOString(),
@@ -159,7 +143,7 @@ export async function GET(request: NextRequest) {
 				size: "3.2 MB",
 				downloadUrl: "/api/audits/reports/download/cycle-count-performance",
 				data: {
-					cycleCountAudits: audits.filter((a) => a.type === "CYCLE_COUNT")
+					cycleCountAudits: audits.filter((a) => a.auditType === "CYCLE_COUNT")
 						.length,
 					coverage: "78%", // Percentage of items covered
 					accuracy: "94.2%", // Accuracy rate

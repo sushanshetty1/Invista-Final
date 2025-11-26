@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { supabaseClient, neonClient } from "@/lib/db";
+import { supabaseClient, neonClient } from "@/lib/prisma";
 
 // GET /api/companies/[companyId]/locations/[locationId] - Get specific location
 export async function GET(
@@ -33,7 +33,7 @@ export async function GET(
 			});
 		} catch (error) {
 			console.warn("Could not check warehouse association:", error);
-		}		return NextResponse.json({
+		} return NextResponse.json({
 			success: true,
 			data: {
 				...location,
@@ -84,7 +84,7 @@ export async function PUT(
 					where: {
 						companyId,
 						OR: [
-							{ name: location.name }, 
+							{ name: location.name },
 							{ code: (location as { code?: string }).code }
 						],
 					},

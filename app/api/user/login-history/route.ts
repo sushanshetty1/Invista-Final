@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authenticate } from "@/lib/auth";
-import { supabaseClient } from "@/lib/db";
+import { supabaseClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
     try {

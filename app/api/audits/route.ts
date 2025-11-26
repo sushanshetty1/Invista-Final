@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 // GET /api/audits - List all audits with optional filtering
 export async function GET(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
 		// Build where clause
 		const where: Record<string, unknown> = {};
-		if (type) where.type = type;
+		if (type) where.auditType = type;
 		if (status) where.status = status;
 		if (warehouseId) where.warehouseId = warehouseId;
 
@@ -45,12 +45,6 @@ export async function GET(request: NextRequest) {
 			neonClient.inventoryAudit.findMany({
 				where,
 				include: {
-					warehouse: {
-						select: { name: true },
-					},
-					product: {
-						select: { name: true, sku: true },
-					},
 					items: {
 						select: { id: true },
 					},
@@ -60,31 +54,41 @@ export async function GET(request: NextRequest) {
 				take: limit,
 			}),
 			neonClient.inventoryAudit.count({ where }),
-		]); // Transform the data to match our interface
-		const transformedAudits = audits.map((audit: Record<string, unknown>) => ({
-			id: audit.id,
-			auditNumber: audit.auditNumber,
-			type: audit.type,
-			method: audit.method,
-			status: audit.status,
-			warehouseId: audit.warehouseId,
-			warehouseName: (audit.warehouse as { name: string } | null)?.name,
-			productId: audit.productId,
-			productName: (audit.product as { name: string; sku: string } | null)
-				?.name,
-			plannedDate: audit.plannedDate,
-			startedDate: audit.startedDate,
-			completedDate: audit.completedDate,
-			auditedBy: audit.auditedBy,
-			supervisedBy: audit.supervisedBy,
-			totalItems: audit.totalItems,
-			itemsCounted: audit.itemsCounted,
-			discrepancies: audit.discrepancies,
-			adjustmentValue: audit.adjustmentValue,
-			notes: audit.notes,
-			createdAt: audit.createdAt,
-			updatedAt: audit.updatedAt,
-		}));
+		]);
+
+		// Fetch warehouse names separately
+		const warehouseIds = [...new Set(audits.map(a => a.warehouseId).filter(Boolean))] as string[];
+		const warehouses = warehouseIds.length > 0
+			? await neonClient.warehouse.findMany({
+				where: { id: { in: warehouseIds } },
+				select: { id: true, name: true },
+			})
+			: [];
+		const warehouseMap = new Map(warehouses.map(w => [w.id, w]));
+
+		// Transform the data to match our interface
+		const transformedAudits = audits.map((audit) => {
+			const warehouse = audit.warehouseId ? warehouseMap.get(audit.warehouseId) : null;
+			return {
+				id: audit.id,
+				auditNumber: audit.auditNumber,
+				type: audit.auditType,
+				method: audit.method,
+				status: audit.status,
+				warehouseId: audit.warehouseId,
+				warehouseName: warehouse?.name,
+				plannedDate: audit.plannedDate,
+				startedDate: audit.startedAt,
+				completedDate: audit.completedAt,
+				conductedBy: audit.conductedBy,
+				approvedBy: audit.approvedBy,
+				totalItems: audit.itemsPlanned,
+				itemsCounted: audit.itemsCounted,
+				discrepancies: audit.discrepancies,
+				notes: audit.notes,
+				createdAt: audit.createdAt,
+			};
+		});
 
 		return NextResponse.json({
 			audits: transformedAudits,
@@ -109,10 +113,9 @@ export async function POST(request: NextRequest) {
 			type,
 			method,
 			warehouseId,
-			productId,
 			plannedDate,
-			supervisedBy,
 			notes,
+			companyId = "", // Should come from auth context
 		} = body;
 
 		// Validate required fields
@@ -127,43 +130,38 @@ export async function POST(request: NextRequest) {
 		const auditNumber = `AUD-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
 		// Get current user (in a real app, this would come from authentication)
-		const auditedBy = "current-user-id"; // Replace with actual user ID from auth
-
-		const auditData = {
-			auditNumber,
-			type,
-			method,
-			warehouseId: warehouseId || null,
-			productId: productId || null,
-			plannedDate: new Date(plannedDate),
-			auditedBy,
-			supervisedBy: supervisedBy || null,
-			status: "PLANNED" as const,
-			notes: notes || null,
-		};
+		const createdById = "current-user-id"; // Replace with actual user ID from auth
 
 		const audit = await neonClient.inventoryAudit.create({
-			data: auditData,
+			data: {
+				companyId,
+				auditNumber,
+				auditType: type,
+				method,
+				warehouseId: warehouseId || null,
+				plannedDate: new Date(plannedDate),
+				createdById,
+				conductedBy: createdById,
+				status: "PLANNED",
+				notes: notes || null,
+			},
 		});
 
 		// Generate audit items based on audit type and scope
-		await generateAuditItems(audit.id, type, warehouseId, productId);
+		await generateAuditItems(audit.id, type, warehouseId);
 
 		return NextResponse.json({
 			audit: {
 				id: audit.id,
 				auditNumber: audit.auditNumber,
-				type: audit.type,
+				type: audit.auditType,
 				method: audit.method,
 				status: audit.status,
 				warehouseId: audit.warehouseId,
-				productId: audit.productId,
 				plannedDate: audit.plannedDate,
-				auditedBy: audit.auditedBy,
-				supervisedBy: audit.supervisedBy,
+				conductedBy: audit.conductedBy,
 				notes: audit.notes,
 				createdAt: audit.createdAt,
-				updatedAt: audit.updatedAt,
 			},
 		});
 	} catch (error) {
@@ -180,19 +178,18 @@ async function generateAuditItems(
 	auditId: string,
 	type: string,
 	warehouseId?: string,
-	productId?: string,
 ) {
 	try {
 		const where: Record<string, unknown> = {};
 		if (warehouseId) where.warehouseId = warehouseId;
-		if (productId) where.productId = productId;
 
 		const inventoryItems = await neonClient.inventoryItem.findMany({
 			where,
-			include: {
-				product: {
-					select: { name: true, sku: true },
-				},
+			select: {
+				id: true,
+				productId: true,
+				warehouseId: true,
+				quantity: true,
 			},
 			take: type === "CYCLE_COUNT" ? 100 : undefined, // Limit cycle count items
 		});
@@ -200,10 +197,10 @@ async function generateAuditItems(
 		// Create audit items
 		const auditItems = inventoryItems.map((item) => ({
 			auditId,
+			inventoryItemId: item.id,
 			productId: item.productId,
 			warehouseId: item.warehouseId,
-			systemQty: item.quantity,
-			location: item.locationCode,
+			expectedQuantity: item.quantity,
 			status: "PENDING" as const,
 		}));
 
@@ -214,7 +211,7 @@ async function generateAuditItems(
 		// Update audit with total items count
 		await neonClient.inventoryAudit.update({
 			where: { id: auditId },
-			data: { totalItems: auditItems.length },
+			data: { itemsPlanned: auditItems.length },
 		});
 	} catch (error) {
 		console.error("Error generating audit items:", error);

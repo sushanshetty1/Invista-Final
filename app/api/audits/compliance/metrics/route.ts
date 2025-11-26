@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -17,13 +17,13 @@ export async function GET(request: NextRequest) {
 			},
 			select: {
 				id: true,
-				type: true,
+				auditType: true,
 				status: true,
 				plannedDate: true,
-				startedDate: true,
-				completedDate: true,
+				startedAt: true,
+				completedAt: true,
 				discrepancies: true,
-				totalItems: true,
+				itemsPlanned: true,
 				itemsCounted: true,
 				createdAt: true,
 			},
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 			(a) => a.status === "PLANNED" && a.plannedDate < new Date(),
 		).length;
 		const cancelledAudits = allAudits.filter(
-			(a) => a.status === "CANCELLED",
+			(a) => a.status === "REVIEW",
 		).length;
 
 		// Completion rate
@@ -49,9 +49,9 @@ export async function GET(request: NextRequest) {
 		const onTimeCompletions = allAudits.filter(
 			(a) =>
 				a.status === "COMPLETED" &&
-				a.completedDate &&
+				a.completedAt &&
 				a.plannedDate &&
-				a.completedDate <= a.plannedDate,
+				a.completedAt <= a.plannedDate,
 		).length;
 		const onTimeRate =
 			completedAudits > 0
@@ -60,22 +60,22 @@ export async function GET(request: NextRequest) {
 
 		// Average time to complete (in days)
 		const completedWithTimes = allAudits.filter(
-			(a) => a.status === "COMPLETED" && a.startedDate && a.completedDate,
+			(a) => a.status === "COMPLETED" && a.startedAt && a.completedAt,
 		);
 		const avgCompletionTime =
 			completedWithTimes.length > 0
 				? completedWithTimes.reduce((sum, audit) => {
-						const start = new Date(audit.startedDate!);
-						const end = new Date(audit.completedDate!);
-						return (
-							sum + (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-						);
-					}, 0) / completedWithTimes.length
+					const start = new Date(audit.startedAt!);
+					const end = new Date(audit.completedAt!);
+					return (
+						sum + (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+					);
+				}, 0) / completedWithTimes.length
 				: 0;
 
 		// Discrepancy rate
 		const auditItemsTotal = allAudits.reduce(
-			(sum, a) => sum + (a.totalItems || 0),
+			(sum, a) => sum + (a.itemsPlanned || 0),
 			0,
 		);
 		const discrepanciesTotal = allAudits.reduce(
@@ -90,9 +90,9 @@ export async function GET(request: NextRequest) {
 		// Audit frequency compliance (cycle counts should be monthly, full counts quarterly)
 		const cycleCountsThisMonth = allAudits.filter(
 			(a) =>
-				a.type === "CYCLE_COUNT" &&
+				a.auditType === "CYCLE_COUNT" &&
 				a.createdAt >=
-					new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+				new Date(new Date().getFullYear(), new Date().getMonth(), 1),
 		).length;
 
 		const fullCountsThisQuarter = allAudits.filter((a) => {
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
 			quarterStart.setMonth(Math.floor(quarterStart.getMonth() / 3) * 3, 1);
 			quarterStart.setHours(0, 0, 0, 0);
 
-			return a.type === "FULL_COUNT" && a.createdAt >= quarterStart;
+			return a.auditType === "FULL_COUNT" && a.createdAt >= quarterStart;
 		}).length;
 
 		// Overall compliance score (weighted average)
@@ -119,15 +119,15 @@ export async function GET(request: NextRequest) {
 
 		const overallScore = Math.round(
 			completionRate * weights.completion +
-				onTimeRate * weights.onTime +
-				frequencyScore * weights.frequency +
-				qualityScore * weights.quality,
+			onTimeRate * weights.onTime +
+			frequencyScore * weights.frequency +
+			qualityScore * weights.quality,
 		);
 
 		// Compliance by audit type
 		const typeCompliance = allAudits.reduce(
 			(acc, audit) => {
-				const type = audit.type;
+				const type = audit.auditType;
 				if (!acc[type]) {
 					acc[type] = {
 						type,
@@ -144,9 +144,9 @@ export async function GET(request: NextRequest) {
 				if (audit.status === "COMPLETED") {
 					acc[type].completed += 1;
 					if (
-						audit.completedDate &&
+						audit.completedAt &&
 						audit.plannedDate &&
-						audit.completedDate <= audit.plannedDate
+						audit.completedAt <= audit.plannedDate
 					) {
 						acc[type].onTime += 1;
 					}
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
 					audit.plannedDate < new Date()
 				) {
 					acc[type].overdue += 1;
-				} else if (audit.status === "CANCELLED") {
+				} else if (audit.status === "REVIEW") {
 					acc[type].cancelled += 1;
 				}
 				return acc;

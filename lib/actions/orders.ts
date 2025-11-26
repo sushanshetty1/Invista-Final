@@ -1,6 +1,6 @@
 "use server";
 
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";

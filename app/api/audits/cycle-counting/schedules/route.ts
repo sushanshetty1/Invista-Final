@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 // This API manages cycle counting schedules by creating recurring audits
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 		const warehouseId = searchParams.get("warehouseId");
 
 		const where = {
-			type: "CYCLE_COUNT" as const,
+			auditType: "CYCLE_COUNT" as const,
 			...(status && {
 				status: status as "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED",
 			}),
@@ -25,19 +25,12 @@ export async function GET(request: NextRequest) {
 				skip: offset,
 				take: limit,
 				include: {
-					warehouse: {
+					items: {
 						select: {
 							id: true,
-							name: true,
-							code: true,
+							productId: true,
 						},
-					},
-					product: {
-						select: {
-							id: true,
-							name: true,
-							sku: true,
-						},
+						take: 1,
 					},
 					_count: {
 						select: {
@@ -49,28 +42,39 @@ export async function GET(request: NextRequest) {
 			neonClient.inventoryAudit.count({ where }),
 		]);
 
+		// Fetch warehouses for audits that have warehouseId
+		const warehouseIds = [...new Set(audits.map(a => a.warehouseId).filter(Boolean))] as string[];
+		const warehouses = warehouseIds.length > 0
+			? await neonClient.warehouse.findMany({
+				where: { id: { in: warehouseIds } },
+				select: { id: true, name: true, code: true },
+			})
+			: [];
+
+		const warehouseMap = new Map(warehouses.map(w => [w.id, w]));
+
 		// Transform audits to include schedule-like information
-		const schedules = audits.map((audit) => ({
-			id: audit.id,
-			name: `Cycle Count - ${audit.warehouse?.name || audit.product?.name || "All Products"}`,
-			auditNumber: audit.auditNumber,
-			warehouseId: audit.warehouseId,
-			productId: audit.productId,
-			warehouse: audit.warehouse,
-			product: audit.product,
-			status: audit.status,
-			plannedDate: audit.plannedDate,
-			nextCountDate: audit.plannedDate,
-			completedDate: audit.completedDate,
-			itemCount: audit._count.items,
-			totalItems: audit.totalItems,
-			discrepancies: audit.discrepancies,
-			type: "CYCLE_COUNT",
-			frequency: "MONTHLY", // This could be stored in notes or a separate field
-			priority: "MEDIUM",
-			createdAt: audit.createdAt,
-			updatedAt: audit.updatedAt,
-		}));
+		const schedules = audits.map((audit) => {
+			const warehouse = audit.warehouseId ? warehouseMap.get(audit.warehouseId) : null;
+			return {
+				id: audit.id,
+				name: `Cycle Count - ${warehouse?.name || "All Products"}`,
+				auditNumber: audit.auditNumber,
+				warehouseId: audit.warehouseId,
+				warehouse,
+				status: audit.status,
+				plannedDate: audit.plannedDate,
+				nextCountDate: audit.plannedDate,
+				completedDate: audit.completedAt,
+				itemCount: audit._count.items,
+				totalItems: audit.itemsPlanned,
+				discrepancies: audit.discrepancies,
+				type: "CYCLE_COUNT",
+				frequency: "MONTHLY", // This could be stored in notes or a separate field
+				priority: "MEDIUM",
+				createdAt: audit.createdAt,
+			};
+		});
 
 		return NextResponse.json({
 			schedules,
@@ -93,11 +97,11 @@ export async function POST(request: NextRequest) {
 			name,
 			description,
 			warehouseId,
-			productId,
 			frequency = "MONTHLY",
 			plannedDate,
 			priority = "MEDIUM",
-			auditedBy = "system", // This should come from auth context
+			createdById = "system", // This should come from auth context
+			companyId = "", // This should come from auth context
 		} = body;
 
 		// Validate required fields
@@ -109,28 +113,16 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Verify warehouse exists if provided
+		let warehouse = null;
 		if (warehouseId) {
-			const warehouse = await neonClient.warehouse.findUnique({
+			warehouse = await neonClient.warehouse.findUnique({
 				where: { id: warehouseId },
+				select: { id: true, name: true, code: true },
 			});
 
 			if (!warehouse) {
 				return NextResponse.json(
 					{ error: "Warehouse not found" },
-					{ status: 404 },
-				);
-			}
-		}
-
-		// Verify product exists if provided
-		if (productId) {
-			const product = await neonClient.product.findUnique({
-				where: { id: productId },
-			});
-
-			if (!product) {
-				return NextResponse.json(
-					{ error: "Product not found" },
 					{ status: 404 },
 				);
 			}
@@ -142,32 +134,17 @@ export async function POST(request: NextRequest) {
 		// Create cycle count audit
 		const audit = await neonClient.inventoryAudit.create({
 			data: {
+				companyId,
 				auditNumber,
 				warehouseId,
-				productId,
-				type: "CYCLE_COUNT",
+				auditType: "CYCLE_COUNT",
 				method: "ABC_ANALYSIS",
 				status: "PLANNED",
 				plannedDate: new Date(plannedDate),
-				auditedBy,
+				createdById,
+				conductedBy: createdById,
 				notes:
 					`${description || ""}\nFrequency: ${frequency}\nPriority: ${priority}`.trim(),
-			},
-			include: {
-				warehouse: {
-					select: {
-						id: true,
-						name: true,
-						code: true,
-					},
-				},
-				product: {
-					select: {
-						id: true,
-						name: true,
-						sku: true,
-					},
-				},
 			},
 		});
 
@@ -177,9 +154,7 @@ export async function POST(request: NextRequest) {
 			name,
 			auditNumber: audit.auditNumber,
 			warehouseId: audit.warehouseId,
-			productId: audit.productId,
-			warehouse: audit.warehouse,
-			product: audit.product,
+			warehouse,
 			status: audit.status,
 			plannedDate: audit.plannedDate,
 			nextCountDate: audit.plannedDate,
@@ -187,7 +162,6 @@ export async function POST(request: NextRequest) {
 			frequency,
 			priority,
 			createdAt: audit.createdAt,
-			updatedAt: audit.updatedAt,
 		};
 
 		return NextResponse.json(schedule, { status: 201 });

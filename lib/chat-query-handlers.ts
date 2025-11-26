@@ -980,7 +980,7 @@ export async function handleWarehousesList(
 ): Promise<QueryResult> {
   try {
     const { getWarehouses } = await import("@/lib/actions/warehouses");
-    const { neonClient } = await import("@/lib/db");
+    const { neonClient } = await import("@/lib/prisma");
     
     const result = await getWarehouses({
       page: 1,

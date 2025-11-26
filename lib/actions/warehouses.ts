@@ -1,6 +1,6 @@
 "use server";
 
-import { supabaseClient } from "@/lib/db";
+import { supabaseClient } from "@/lib/prisma";
 import {
 	createWarehouseSchema,
 	updateWarehouseSchema,

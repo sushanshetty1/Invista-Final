@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 import { createClient } from "@/lib/supabaseServer";
 
 export async function GET(_request: NextRequest) {

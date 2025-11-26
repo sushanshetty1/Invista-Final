@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -28,16 +28,21 @@ export async function GET(request: NextRequest) {
 				startDate.setDate(endDate.getDate() - 30);
 		}
 
+		// Build warehouse filter for movements (via inventoryItem)
+		const movementWhereClause: Record<string, unknown> = {
+			occurredAt: {
+				gte: startDate,
+				lte: endDate,
+			},
+		};
+		if (warehouseId && warehouseId !== "all") {
+			movementWhereClause.inventoryItem = { warehouseId };
+		}
+
 		// Get stock movement data
 		const movementData = await neonClient.inventoryMovement.groupBy({
 			by: ["occurredAt"],
-			where: {
-				occurredAt: {
-					gte: startDate,
-					lte: endDate,
-				},
-				...(warehouseId !== "all" && warehouseId ? { warehouseId } : {}),
-			},
+			where: movementWhereClause,
 			_sum: {
 				quantity: true,
 			},
@@ -47,29 +52,34 @@ export async function GET(request: NextRequest) {
 			orderBy: {
 				occurredAt: "asc",
 			},
-		}); // Get ABC analysis data
+		});
+
+		// Get ABC analysis data - using costPrice from Product since InventoryItem doesn't have averageCost
 		const products = await neonClient.product.findMany({
-			include: {
+			select: {
+				id: true,
+				name: true,
+				costPrice: true,
 				inventoryItems: {
 					select: {
 						quantity: true,
-						averageCost: true,
 					},
 				},
 			},
-		}); // Calculate ABC analysis
+		});
+
+		// Calculate ABC analysis using product cost price
 		const productValues = products
 			.map((product) => {
-				const totalValue = product.inventoryItems.reduce(
-					(sum: number, item) => {
-						return sum + item.quantity * Number(item.averageCost || 0);
-					},
+				const totalQuantity = product.inventoryItems.reduce(
+					(sum: number, item) => sum + item.quantity,
 					0,
 				);
+				const unitCost = Number(product.costPrice || 0);
 				return {
 					id: product.id,
 					name: product.name,
-					value: Number(totalValue),
+					value: totalQuantity * unitCost,
 				};
 			})
 			.sort((a, b) => b.value - a.value);
@@ -78,7 +88,7 @@ export async function GET(request: NextRequest) {
 		let cumulativeValue = 0;
 		const abcAnalysis = productValues.map((product) => {
 			cumulativeValue += product.value;
-			const cumulativePercentage = (cumulativeValue / totalValue) * 100;
+			const cumulativePercentage = totalValue > 0 ? (cumulativeValue / totalValue) * 100 : 0;
 
 			let category = "C";
 			if (cumulativePercentage <= 80) category = "A";
@@ -91,21 +101,23 @@ export async function GET(request: NextRequest) {
 			};
 		});
 
-		// Get inventory aging data
+		// Get inventory aging data - use product costPrice for value calculation
 		const inventoryItems = await neonClient.inventoryItem.findMany({
 			include: {
 				product: {
 					select: {
 						name: true,
 						sku: true,
+						costPrice: true,
 					},
 				},
 			},
 		});
+
 		const agingData = inventoryItems.map((item) => {
 			const daysInInventory = Math.floor(
 				(new Date().getTime() - new Date(item.createdAt).getTime()) /
-					(1000 * 60 * 60 * 24),
+				(1000 * 60 * 60 * 24),
 			);
 
 			let ageCategory = "0-30 days";
@@ -117,13 +129,13 @@ export async function GET(request: NextRequest) {
 				...item,
 				daysInInventory,
 				ageCategory,
-				value: item.quantity * Number(item.averageCost || 0),
+				value: item.quantity * Number(item.product?.costPrice || 0),
 			};
 		});
 
-		// Get top moving items
+		// Get top moving items - use inventoryItemId to get productId from movements
 		const topMovingItems = await neonClient.inventoryMovement.groupBy({
-			by: ["productId"],
+			by: ["inventoryItemId"],
 			where: {
 				occurredAt: {
 					gte: startDate,
@@ -142,34 +154,69 @@ export async function GET(request: NextRequest) {
 			take: 10,
 		});
 
-		// Get slow moving items
-		const slowMovingItems = await neonClient.product.findMany({
+		// Get product details for top moving items
+		const topMovingItemIds = topMovingItems.map((m) => m.inventoryItemId);
+		const topMovingInventoryItems = await neonClient.inventoryItem.findMany({
+			where: {
+				id: { in: topMovingItemIds },
+			},
 			include: {
-				movements: {
-					where: {
-						type: "SHIPMENT",
-						occurredAt: {
-							gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
-						},
-					},
-					orderBy: {
-						occurredAt: "desc",
-					},
-					take: 1,
-				},
-				inventoryItems: {
+				product: {
 					select: {
-						quantity: true,
+						id: true,
+						name: true,
+						sku: true,
 					},
 				},
 			},
+		});
+
+		const topMovingWithDetails = topMovingItems.map((item) => {
+			const inventoryItem = topMovingInventoryItems.find(
+				(inv) => inv.id === item.inventoryItemId
+			);
+			return {
+				...item,
+				product: inventoryItem?.product,
+			};
+		});
+
+		// Get slow moving items - products with no recent shipment movements
+		// First, get all product IDs that have had recent shipments
+		const recentShipments = await neonClient.inventoryMovement.findMany({
 			where: {
-				movements: {
-					none: {
-						type: "SHIPMENT",
-						occurredAt: {
-							gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-						},
+				type: "SHIPMENT",
+				occurredAt: {
+					gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+				},
+			},
+			select: {
+				inventoryItem: {
+					select: {
+						productId: true,
+					},
+				},
+			},
+		});
+
+		const activeProductIds = [
+			...new Set(recentShipments.map((s) => s.inventoryItem.productId)),
+		];
+
+		// Get products that have NOT had recent shipments
+		const slowMovingItems = await neonClient.product.findMany({
+			where: {
+				id: {
+					notIn: activeProductIds,
+				},
+			},
+			select: {
+				id: true,
+				name: true,
+				sku: true,
+				inventoryItems: {
+					select: {
+						quantity: true,
 					},
 				},
 			},
@@ -217,12 +264,14 @@ export async function GET(request: NextRequest) {
 							.filter((item) => item.ageCategory === range)
 							.reduce((sum, item) => sum + item.value, 0),
 						percentage:
-							(agingData.filter((item) => item.ageCategory === range).length /
-								agingData.length) *
-							100,
+							agingData.length > 0
+								? (agingData.filter((item) => item.ageCategory === range).length /
+									agingData.length) *
+								100
+								: 0,
 					}),
 				),
-				topMovingItems,
+				topMovingItems: topMovingWithDetails,
 				slowMovingItems,
 			},
 		});

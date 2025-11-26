@@ -1,4 +1,4 @@
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 import { type NextRequest, NextResponse } from "next/server";
 
 // GET /api/inventory/stock/movements - List stock movements
@@ -13,13 +13,16 @@ export async function GET(request: NextRequest) {
 		const startDate = searchParams.get("startDate");
 		const endDate = searchParams.get("endDate");
 
-		const skip = (page - 1) * limit; // Build where clause
+		const skip = (page - 1) * limit;
+
+		// Build where clause - filter through inventoryItem relation since InventoryMovement
+		// only has inventoryItemId, not direct product/warehouse references
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const where: any = {};
 
 		if (type) where.type = type;
-		if (warehouseId) where.warehouseId = warehouseId;
-		if (productId) where.productId = productId;
+		if (warehouseId) where.inventoryItem = { ...where.inventoryItem, warehouseId };
+		if (productId) where.inventoryItem = { ...where.inventoryItem, productId };
 
 		if (startDate || endDate) {
 			where.occurredAt = {};
@@ -27,30 +30,34 @@ export async function GET(request: NextRequest) {
 			if (endDate) where.occurredAt.lte = new Date(endDate);
 		}
 
-		// Fetch movements with relations
+		// Fetch movements with relations through inventoryItem
 		const [movements, total] = await Promise.all([
 			neonClient.inventoryMovement.findMany({
 				where,
 				include: {
-					product: {
-						select: {
-							id: true,
-							name: true,
-							sku: true,
-						},
-					},
-					variant: {
-						select: {
-							id: true,
-							name: true,
-							sku: true,
-						},
-					},
-					warehouse: {
-						select: {
-							id: true,
-							name: true,
-							code: true,
+					inventoryItem: {
+						include: {
+							product: {
+								select: {
+									id: true,
+									name: true,
+									sku: true,
+								},
+							},
+							variant: {
+								select: {
+									id: true,
+									name: true,
+									sku: true,
+								},
+							},
+							warehouse: {
+								select: {
+									id: true,
+									name: true,
+									code: true,
+								},
+							},
 						},
 					},
 				},
@@ -61,8 +68,26 @@ export async function GET(request: NextRequest) {
 			neonClient.inventoryMovement.count({ where }),
 		]);
 
+		// Flatten the response for easier consumption
+		const formattedMovements = movements.map((m) => ({
+			id: m.id,
+			type: m.type,
+			quantity: m.quantity,
+			quantityBefore: m.quantityBefore,
+			quantityAfter: m.quantityAfter,
+			reason: m.reason,
+			referenceType: m.referenceType,
+			referenceId: m.referenceId,
+			notes: m.notes,
+			occurredAt: m.occurredAt,
+			createdAt: m.createdAt,
+			product: m.inventoryItem.product,
+			variant: m.inventoryItem.variant,
+			warehouse: m.inventoryItem.warehouse,
+		}));
+
 		return NextResponse.json({
-			movements,
+			movements: formattedMovements,
 			pagination: {
 				page,
 				limit,
@@ -89,10 +114,9 @@ export async function POST(request: NextRequest) {
 			variantId,
 			warehouseId,
 			quantity,
-			unitCost,
 			reason,
 			notes,
-			userId,
+			createdById,
 			referenceType,
 			referenceId,
 			lotNumber,
@@ -100,7 +124,7 @@ export async function POST(request: NextRequest) {
 			expiryDate,
 		} = body;
 
-		if (!type || !productId || !warehouseId || !quantity || !userId) {
+		if (!type || !productId || !warehouseId || !quantity || !createdById) {
 			return NextResponse.json(
 				{ error: "Missing required fields" },
 				{ status: 400 },
@@ -114,7 +138,6 @@ export async function POST(request: NextRequest) {
 				variantId: variantId || null,
 				warehouseId,
 				lotNumber: lotNumber || null,
-				batchNumber: batchNumber || null,
 			},
 		});
 
@@ -133,17 +156,13 @@ export async function POST(request: NextRequest) {
 		// Create or update inventory item and movement in a transaction
 		const result = await neonClient.$transaction(async (tx) => {
 			// Create or update inventory item
+			// Note: InventoryItem does NOT have availableQuantity, lastCost, lastMovement, qcStatus
+			// availableQuantity is computed as (quantity - reservedQuantity)
 			if (inventoryItem) {
 				inventoryItem = await tx.inventoryItem.update({
 					where: { id: inventoryItem.id },
 					data: {
 						quantity: quantityAfter,
-						availableQuantity: Math.max(
-							0,
-							quantityAfter - (inventoryItem.reservedQuantity || 0),
-						),
-						lastMovement: new Date(),
-						...(unitCost && { lastCost: unitCost }),
 						...(expiryDate && { expiryDate: new Date(expiryDate) }),
 					},
 				});
@@ -154,40 +173,30 @@ export async function POST(request: NextRequest) {
 						variantId,
 						warehouseId,
 						quantity: quantityAfter,
-						availableQuantity: quantityAfter,
 						reservedQuantity: 0,
 						status: "AVAILABLE",
-						qcStatus: "PENDING",
 						lotNumber,
 						batchNumber,
 						expiryDate: expiryDate ? new Date(expiryDate) : null,
-						lastCost: unitCost,
-						lastMovement: new Date(),
 					},
 				});
 			}
 
 			// Create movement record
+			// Note: InventoryMovement does NOT have productId, variantId, warehouseId, unitCost, totalCost, userId, lotNumber, batchNumber, expiryDate
+			// It only links to inventoryItem which has those relationships
 			const movement = await tx.inventoryMovement.create({
 				data: {
 					type,
-					productId,
-					variantId,
-					warehouseId,
 					inventoryItemId: inventoryItem.id,
-					quantity: Math.abs(quantity),
+					quantity: isInbound ? Math.abs(quantity) : -Math.abs(quantity),
 					quantityBefore,
 					quantityAfter,
-					unitCost,
-					totalCost: unitCost ? unitCost * quantity : null,
 					referenceType,
 					referenceId,
 					reason,
 					notes,
-					userId,
-					lotNumber,
-					batchNumber,
-					expiryDate: expiryDate ? new Date(expiryDate) : null,
+					createdById,
 				},
 			});
 

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -14,42 +14,35 @@ export async function GET(request: NextRequest) {
 		// Get all audits and audit items for audit trail
 		const audits = await neonClient.inventoryAudit.findMany({
 			where: {
-				updatedAt: { gte: dateFrom },
+				createdAt: { gte: dateFrom },
 			},
 			include: {
-				warehouse: {
-					select: { id: true, name: true, code: true },
-				},
-				product: {
-					select: { id: true, name: true, sku: true },
-				},
 				items: {
 					where: {
 						OR: [
 							{ countedAt: { not: null } },
 							{ verifiedAt: { not: null } },
-							{ adjustmentQty: { not: 0 } },
+							{ variance: { not: 0 } },
 						],
 					},
 					select: {
 						id: true,
-						systemQty: true,
-						countedQty: true,
-						adjustmentQty: true,
-						countedBy: true,
+						expectedQuantity: true,
+						countedQuantity: true,
+						variance: true,
+						countedById: true,
 						countedAt: true,
-						verifiedBy: true,
+						verifiedById: true,
 						verifiedAt: true,
 						status: true,
 						discrepancyReason: true,
-						product: {
-							select: { name: true, sku: true },
-						},
+						productId: true,
+						warehouseId: true,
 					},
 					take: 50, // Limit items per audit for performance
 				},
 			},
-			orderBy: { updatedAt: "desc" },
+			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
 
@@ -65,49 +58,47 @@ export async function GET(request: NextRequest) {
 				event: "AUDIT_CREATED",
 				entityType: "AUDIT",
 				entityId: audit.id,
-				description: `${audit.type} audit created: ${audit.auditNumber}`,
-				performedBy: audit.auditedBy,
+				description: `${audit.auditType} audit created: ${audit.auditNumber}`,
+				performedBy: audit.conductedBy || audit.createdById,
 				metadata: {
 					auditNumber: audit.auditNumber,
-					type: audit.type,
-					warehouse: audit.warehouse?.name,
-					product: audit.product?.name,
+					type: audit.auditType,
+					warehouseId: audit.warehouseId,
 					plannedDate: audit.plannedDate,
 				},
 			});
 
 			// Audit started
-			if (audit.startedDate) {
+			if (audit.startedAt) {
 				auditTrail.push({
 					id: `audit-${audit.id}-started`,
-					timestamp: audit.startedDate,
+					timestamp: audit.startedAt,
 					event: "AUDIT_STARTED",
 					entityType: "AUDIT",
 					entityId: audit.id,
 					description: `Audit started: ${audit.auditNumber}`,
-					performedBy: audit.auditedBy,
+					performedBy: audit.conductedBy || audit.createdById,
 					metadata: {
 						auditNumber: audit.auditNumber,
-						totalItems: audit.totalItems,
+						itemsPlanned: audit.itemsPlanned,
 					},
 				});
 			}
 
 			// Audit completed
-			if (audit.completedDate) {
+			if (audit.completedAt) {
 				auditTrail.push({
 					id: `audit-${audit.id}-completed`,
-					timestamp: audit.completedDate,
+					timestamp: audit.completedAt,
 					event: "AUDIT_COMPLETED",
 					entityType: "AUDIT",
 					entityId: audit.id,
 					description: `Audit completed: ${audit.auditNumber}`,
-					performedBy: audit.auditedBy,
+					performedBy: audit.conductedBy || audit.createdById,
 					metadata: {
 						auditNumber: audit.auditNumber,
 						itemsCounted: audit.itemsCounted,
 						discrepancies: audit.discrepancies,
-						adjustmentValue: audit.adjustmentValue,
 					},
 				});
 			}
@@ -115,69 +106,66 @@ export async function GET(request: NextRequest) {
 			// Add item-level events
 			for (const item of audit.items) {
 				// Item counted
-				if (item.countedAt && item.countedBy) {
+				if (item.countedAt && item.countedById) {
 					auditTrail.push({
 						id: `item-${item.id}-counted`,
 						timestamp: item.countedAt,
 						event: "ITEM_COUNTED",
 						entityType: "AUDIT_ITEM",
 						entityId: item.id,
-						description: `Item counted: ${item.product?.name} (${item.product?.sku})`,
-						performedBy: item.countedBy,
+						description: `Item counted for product ${item.productId}`,
+						performedBy: item.countedById,
 						metadata: {
 							auditNumber: audit.auditNumber,
-							productName: item.product?.name,
-							productSku: item.product?.sku,
-							systemQty: item.systemQty,
-							countedQty: item.countedQty,
-							adjustment: item.adjustmentQty,
+							productId: item.productId,
+							expectedQuantity: item.expectedQuantity,
+							countedQuantity: item.countedQuantity,
+							variance: item.variance,
 						},
 					});
 				}
 
 				// Item verified
-				if (item.verifiedAt && item.verifiedBy) {
+				if (item.verifiedAt && item.verifiedById) {
 					auditTrail.push({
 						id: `item-${item.id}-verified`,
 						timestamp: item.verifiedAt,
 						event: "ITEM_VERIFIED",
 						entityType: "AUDIT_ITEM",
 						entityId: item.id,
-						description: `Item verified: ${item.product?.name} (${item.product?.sku})`,
-						performedBy: item.verifiedBy,
+						description: `Item verified for product ${item.productId}`,
+						performedBy: item.verifiedById,
 						metadata: {
 							auditNumber: audit.auditNumber,
-							productName: item.product?.name,
-							productSku: item.product?.sku,
-							finalQty: item.countedQty,
-							adjustment: item.adjustmentQty,
+							productId: item.productId,
+							countedQuantity: item.countedQuantity,
+							variance: item.variance,
 							discrepancyReason: item.discrepancyReason,
 						},
 					});
 				}
 
 				// Discrepancy found
-				if (item.adjustmentQty && item.adjustmentQty !== 0) {
+				if (item.variance && item.variance !== 0) {
 					auditTrail.push({
 						id: `item-${item.id}-discrepancy`,
-						timestamp: item.countedAt || item.verifiedAt || audit.updatedAt,
+						timestamp: item.countedAt || item.verifiedAt || audit.createdAt,
 						event: "DISCREPANCY_FOUND",
 						entityType: "AUDIT_ITEM",
 						entityId: item.id,
-						description: `Discrepancy found: ${item.product?.name} (${item.adjustmentQty > 0 ? "+" : ""}${item.adjustmentQty})`,
-						performedBy: item.countedBy || item.verifiedBy || audit.auditedBy,
+						description: `Discrepancy found: ${item.variance > 0 ? "+" : ""}${item.variance}`,
+						performedBy: item.countedById || item.verifiedById || audit.conductedBy || audit.createdById,
 						metadata: {
 							auditNumber: audit.auditNumber,
-							productName: item.product?.name,
-							productSku: item.product?.sku,
-							systemQty: item.systemQty,
-							countedQty: item.countedQty,
-							adjustment: item.adjustmentQty,
+							productId: item.productId,
+							expectedQuantity: item.expectedQuantity,
+							countedQuantity: item.countedQuantity,
+							variance: item.variance,
 							discrepancyReason: item.discrepancyReason,
 							severity:
-								Math.abs(item.adjustmentQty) >= 100
+								Math.abs(item.variance) >= 100
 									? "HIGH"
-									: Math.abs(item.adjustmentQty) >= 10
+									: Math.abs(item.variance) >= 10
 										? "MEDIUM"
 										: "LOW",
 						},

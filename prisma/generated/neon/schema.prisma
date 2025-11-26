@@ -1,868 +1,784 @@
+// ============================================================================
+// NEON DATABASE SCHEMA V2 - PROPER VERSION
+// ============================================================================
+// Purpose: ALL Business Logic - Products, Inventory, Orders, Suppliers, Customers
+// References Supabase via companyId (string) and createdById (string)
+// ============================================================================
+
 generator neonClient {
   provider        = "prisma-client-js"
   output          = "./generated/neon"
-  previewFeatures = ["multiSchema"]
+  previewFeatures = ["postgresqlExtensions"]
   binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource neonDb {
-  provider = "postgresql"
-  url      = env("NEON_DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("NEON_DATABASE_URL")
+  extensions = [vector]
 }
 
-model Product {
-  id                String               @id @default(uuid())
-  companyId         String
-  name              String
-  description       String?
-  categoryId        String?
-  brandId           String?
-  categoryName      String?
-  brandName         String?
-  sku               String               @unique
-  barcode           String?              @unique
-  slug              String?              @unique
-  weight            Decimal?
-  dimensions        Json?
-  color             String?
-  size              String?
-  material          String?
-  costPrice         Decimal?
-  sellingPrice      Decimal?
-  wholesalePrice    Decimal?
-  minStockLevel     Int                  @default(0)
-  maxStockLevel     Int?
-  reorderPoint      Int?
-  reorderQuantity   Int?
-  status            ProductStatus        @default(ACTIVE)
-  isTrackable       Boolean              @default(true)
-  isSerialized      Boolean              @default(false)
-  images            Json?
-  primaryImage      String?
-  metaTitle         String?
-  metaDescription   String?
-  tags              Json?
-  leadTimeSupply    Int?
-  shelfLife         Int?
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  createdBy         String
-  BundleItems       BundleItems[]
-  BundleProducts    BundleProducts[]
-  goodsReceiptItems GoodsReceiptItem[]
-  auditItems        InventoryAuditItem[]
-  audits            InventoryAudit[]
-  inventoryItems    InventoryItem[]
-  movements         InventoryMovement[]
-  orderItems        OrderItem[]
-  reviews           ProductReview[]
-  suppliers         ProductSupplier[]
-  variants          ProductVariant[]
-  purchaseItems     PurchaseOrderItem[]
-  transferItems     StockTransferItem[]
-
-  @@map("products")
-}
-
-model ProductVariant {
-  id                String               @id @default(uuid())
-  productId         String
-  name              String
-  sku               String               @unique
-  barcode           String?              @unique
-  attributes        Json
-  costPrice         Decimal?
-  sellingPrice      Decimal?
-  minStockLevel     Int?
-  reorderPoint      Int?
-  isActive          Boolean              @default(true)
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  goodsReceiptItems GoodsReceiptItem[]
-  auditItems        InventoryAuditItem[]
-  inventoryItems    InventoryItem[]
-  movements         InventoryMovement[]
-  orderItems        OrderItem[]
-  product           Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
-  purchaseItems     PurchaseOrderItem[]
-  transferItems     StockTransferItem[]
-
-  @@map("product_variants")
-}
+// ============================================================================
+// PRODUCT CATALOG
+// ============================================================================
 
 model Category {
-  id          String     @id @default(uuid())
-  name        String
-  description String?
-  slug        String     @unique
-  parentId    String?
-  level       Int        @default(0)
-  color       String?
-  image       String?
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryHierarchy")
+  id           String  @id @default(uuid())
+  companyId    String // ✅ Reference to Supabase Company.id
+  name         String
+  slug         String
+  description  String?
+  parentId     String?
+  displayOrder Int     @default(0)
+  icon         String?
+  color        String?
+  isActive     Boolean @default(true)
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ✅ PROPER RELATIONS
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("CategoryTree")
+  products Product[] // ✅ Back-relation to products!
+
+  @@unique([companyId, slug])
+  @@index([companyId, parentId])
+  @@index([companyId, isActive])
   @@map("categories")
 }
 
 model Brand {
-  id           String   @id @default(uuid())
-  name         String   @unique
-  description  String?
-  website      String?
-  contactEmail String?
-  contactPhone String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String  @id @default(uuid())
+  companyId   String // ✅ Reference to Supabase Company.id
+  name        String
+  slug        String
+  description String?
+  logo        String?
+  website     String?
+  isActive    Boolean @default(true)
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ✅ PROPER RELATIONS
+  products Product[] // ✅ Back-relation to products!
+
+  @@unique([companyId, slug])
+  @@index([companyId, isActive])
   @@map("brands")
 }
 
-model ProductBundle {
-  id             String           @id @default(uuid())
-  name           String
-  description    String?
-  sku            String           @unique
-  bundlePrice    Decimal
-  discount       Decimal?
-  isActive       Boolean          @default(true)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  BundleItems    BundleItems[]
-  BundleProducts BundleProducts[]
+model Product {
+  id         String  @id @default(uuid())
+  companyId  String // ✅ Reference to Supabase Company.id
+  categoryId String?
+  brandId    String?
 
-  @@map("product_bundles")
+  // Basic info (NO redundant categoryName/brandName!)
+  name        String
+  sku         String
+  barcode     String?
+  description String?
+
+  // ✅ Dimensions - Structured (NOT JSON!)
+  lengthCm Decimal? @neonDb.Decimal(10, 2)
+  widthCm  Decimal? @neonDb.Decimal(10, 2)
+  heightCm Decimal? @neonDb.Decimal(10, 2)
+  weightKg Decimal? @neonDb.Decimal(10, 3)
+
+  // Pricing
+  costPrice      Decimal? @neonDb.Decimal(12, 2)
+  sellingPrice   Decimal? @neonDb.Decimal(12, 2)
+  wholesalePrice Decimal? @neonDb.Decimal(12, 2)
+
+  // Inventory config (global defaults for all warehouses)
+  minStock     Int @default(10)
+  reorderPoint Int @default(50)
+
+  // Product metadata
+  status       ProductStatus @default(ACTIVE)
+  isTrackable  Boolean       @default(true)
+  isSerialized Boolean       @default(false)
+
+  // Audit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String // ✅ Reference to Supabase User.id
+
+  // ✅ PROPER FOREIGN KEY RELATIONS (Not orphaned!)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand    Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+
+  // Child relations
+  variants         ProductVariant[]
+  images           ProductImage[]
+  tags             ProductTag[]
+  inventoryItems   InventoryItem[] // ✅ For actual stock tracking
+  supplierProducts ProductSupplier[]
+  orderItems       OrderItem[]
+  purchaseItems    PurchaseOrderItem[]
+  productReviews   ProductReview[]
+
+  @@unique([companyId, sku])
+  @@index([companyId, status])
+  @@index([companyId, categoryId])
+  @@index([companyId, brandId])
+  @@map("products")
 }
 
-model Warehouse {
-  id                 String               @id @default(uuid())
-  companyId          String
-  locationId         String?
-  name               String
-  code               String               @unique
-  description        String?
-  address            Json?
-  coordinates        Json?
-  timezone           String?
-  managerName        String?
-  managerEmail       String?
-  managerPhone       String?
-  phone              String?
-  email              String?
-  type               WarehouseType        @default(STANDARD)
-  capacity           Json?
-  isActive           Boolean              @default(true)
-  hasRfid            Boolean              @default(false)
-  hasBarcode         Boolean              @default(true)
-  temperatureControl Boolean              @default(false)
-  securityLevel      String?
-  allowsReceiving    Boolean              @default(true)
-  allowsShipping     Boolean              @default(true)
-  allowsTransfers    Boolean              @default(true)
-  allowsCrossDock    Boolean              @default(false)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  goodsReceipts      GoodsReceipt[]
-  auditItems         InventoryAuditItem[]
-  audits             InventoryAudit[]
-  inventoryItems     InventoryItem[]
-  movements          InventoryMovement[]
-  orders             Order[]
-  purchaseOrders     PurchaseOrder[]
-  shipments          Shipment[]
-  transfers          StockTransfer[]      @relation("TransferFrom")
-  receivedTransfers  StockTransfer[]      @relation("TransferTo")
+model ProductVariant {
+  id           String   @id @default(uuid())
+  productId    String
+  name         String
+  sku          String
+  barcode      String?
+  costPrice    Decimal? @neonDb.Decimal(12, 2)
+  sellingPrice Decimal? @neonDb.Decimal(12, 2)
+  isActive     Boolean  @default(true)
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product        Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributes     VariantAttribute[]
+  inventoryItems InventoryItem[]
+  orderItems     OrderItem[]
+  purchaseItems  PurchaseOrderItem[]
+
+  @@unique([productId, sku])
+  @@index([productId])
+  @@map("product_variants")
+}
+
+// ✅ NO MORE JSON! Proper normalized attributes
+model VariantAttribute {
+  id        String @id @default(uuid())
+  variantId String
+  name      String // "color", "size", "material"
+  value     String // "red", "Large", "cotton"
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, name])
+  @@index([name, value])
+  @@map("variant_attributes")
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  productId String
+  url       String
+  altText   String?
+  order     Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, isPrimary])
+  @@map("product_images")
+}
+
+model Tag {
+  id        String @id @default(uuid())
+  companyId String
+  name      String
+  slug      String
+
+  products ProductTag[]
+
+  @@unique([companyId, slug])
+  @@map("tags")
+}
+
+model ProductTag {
+  productId String
+  tagId     String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tagId])
+  @@map("product_tags")
+}
+
+// ============================================================================
+// WAREHOUSE & INVENTORY
+// ============================================================================
+
+model Warehouse {
+  id          String  @id @default(uuid())
+  companyId   String // ✅ Reference to Supabase Company.id
+  name        String
+  code        String
+  description String?
+
+  // ✅ Structured address (NO JSON!)
+  address1   String?
+  address2   String?
+  city       String?
+  state      String?
+  postalCode String?
+  country    String?
+
+  // Coordinates for mapping
+  latitude  Decimal? @neonDb.Decimal(10, 8)
+  longitude Decimal? @neonDb.Decimal(11, 8)
+
+  type     WarehouseType @default(STANDARD)
+  isActive Boolean       @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inventory InventoryItem[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive])
   @@map("warehouses")
 }
 
 model InventoryItem {
-  id                String              @id @default(uuid())
-  productId         String
-  variantId         String?
-  warehouseId       String
-  zone              String?
-  aisle             String?
-  shelf             String?
-  bin               String?
-  locationCode      String?
-  quantity          Int                 @default(0)
-  reservedQuantity  Int                 @default(0)
-  availableQuantity Int                 @default(0)
-  averageCost       Decimal?
-  lastCost          Decimal?
-  lotNumber         String?
-  batchNumber       String?
-  serialNumbers     Json?
-  expiryDate        DateTime?
-  status            InventoryStatus     @default(AVAILABLE)
-  qcStatus          QualityStatus       @default(PASSED)
-  quarantineReason  String?
-  lastMovement      DateTime?
-  lastCount         DateTime?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  product           Product             @relation(fields: [productId], references: [id])
-  variant           ProductVariant?     @relation(fields: [variantId], references: [id])
-  warehouse         Warehouse           @relation(fields: [warehouseId], references: [id])
-  movements         InventoryMovement[]
-  reservations      StockReservation[]
+  id          String  @id @default(uuid())
+  productId   String
+  variantId   String?
+  warehouseId String
+
+  // Location within warehouse
+  zone  String?
+  aisle String?
+  shelf String?
+  bin   String?
+
+  // ✅ ACTUAL STOCK QUANTITIES (This is truth, not Product table!)
+  quantity         Int @default(0)
+  reservedQuantity Int @default(0)
+  // ❌ NO availableQuantity field - it's computed as (quantity - reservedQuantity)
+
+  // Lot/Batch tracking
+  lotNumber     String?
+  batchNumber   String?
+  expiryDate    DateTime?
+  serialNumbers Json? // ✅ ADDED: For tracking serialized items (electronics, appliances)
+
+  status InventoryStatus @default(AVAILABLE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product             Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant             ProductVariant?      @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  warehouse           Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  movements           InventoryMovement[]
+  stockReservations   StockReservation[]
+  inventoryAuditItems InventoryAuditItem[]
 
   @@unique([productId, variantId, warehouseId, lotNumber])
+  @@index([warehouseId, status])
+  @@index([productId])
   @@map("inventory_items")
 }
 
 model InventoryMovement {
-  id              String          @id @default(uuid())
+  id              String       @id @default(uuid())
+  inventoryItemId String
   type            MovementType
-  subtype         String?
-  productId       String
-  variantId       String?
-  warehouseId     String
-  inventoryItemId String?
-  quantity        Int
-  quantityBefore  Int
-  quantityAfter   Int
-  unitCost        Decimal?
-  totalCost       Decimal?
-  referenceType   String?
-  referenceId     String?
-  fromLocation    String?
-  toLocation      String?
-  lotNumber       String?
-  batchNumber     String?
-  expiryDate      DateTime?
-  reason          String?
-  notes           String?
-  userId          String
-  approvedBy      String?
-  approvedAt      DateTime?
-  occurredAt      DateTime        @default(now())
-  createdAt       DateTime        @default(now())
-  inventoryItem   InventoryItem?  @relation(fields: [inventoryItemId], references: [id])
-  product         Product         @relation(fields: [productId], references: [id])
-  variant         ProductVariant? @relation(fields: [variantId], references: [id])
-  warehouse       Warehouse       @relation(fields: [warehouseId], references: [id])
 
+  quantity       Int // Movement amount (+ve for in, -ve for out)
+  quantityBefore Int // Audit trail
+  quantityAfter  Int // Audit trail
+
+  reason        String?
+  referenceType String? // "ORDER", "PURCHASE", "ADJUSTMENT", "TRANSFER"
+  referenceId   String? // ID of related record
+
+  notes String?
+
+  occurredAt  DateTime @default(now())
+  createdById String // ✅ Reference to Supabase User.id
+  createdAt   DateTime @default(now()) // ✅ ADDED
+  updatedAt   DateTime @updatedAt // ✅ ADDED: For audit trail
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryItemId, occurredAt])
+  @@index([referenceType, referenceId])
   @@map("inventory_movements")
 }
 
-model Supplier {
-  id                 String             @id @default(uuid())
-  companyId          String
-  name               String
-  code               String             @unique
-  email              String?
-  phone              String?
-  website            String?
-  companyType        CompanyType?
-  taxId              String?
-  vatNumber          String?
-  registrationNumber String?
-  billingAddress     Json
-  shippingAddress    Json?
-  contactName        String?
-  contactEmail       String?
-  contactPhone       String?
-  contactTitle       String?
-  paymentTerms       String?
-  creditLimit        Decimal?
-  currency           String             @default("USD")
-  rating             Decimal?
-  onTimeDelivery     Decimal?
-  qualityRating      Decimal?
-  status             SupplierStatus     @default(ACTIVE)
-  certifications     Json?
-  notes              String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  createdBy          String
-  products           ProductSupplier[]
-  purchaseOrders     PurchaseOrder[]
-  contacts           SupplierContact[]
-  documents          SupplierDocument[]
-  invoices           SupplierInvoice[]
+// ============================================================================
+// SUPPLIERS & PURCHASING
+// ============================================================================
 
+model Supplier {
+  id        String  @id @default(uuid())
+  companyId String // ✅ Reference to Supabase Company.id
+  name      String
+  code      String
+  email     String?
+  phone     String?
+  website   String?
+
+  // ✅ Structured address (NO JSON!)
+  address1   String?
+  address2   String?
+  city       String?
+  state      String?
+  postalCode String?
+  country    String?
+
+  // Business info
+  taxId        String?
+  paymentTerms String?
+  currency     String  @default("USD")
+
+  status SupplierStatus @default(ACTIVE)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String // ✅ Reference to Supabase User.id
+
+  productSuppliers ProductSupplier[]
+  purchaseOrders   PurchaseOrder[]
+
+  @@unique([companyId, code])
+  @@index([companyId, status])
   @@map("suppliers")
 }
 
 model ProductSupplier {
-  id           String   @id @default(uuid())
-  productId    String
-  supplierId   String
+  id         String @id @default(uuid())
+  productId  String
+  supplierId String
+
+  // ❌ NO supplierName field! Get it from relation
   supplierSku  String?
-  supplierName String?
-  unitCost     Decimal
-  currency     String   @default("USD")
-  minOrderQty  Int?
-  maxOrderQty  Int?
+  unitCost     Decimal @neonDb.Decimal(12, 2)
   leadTimeDays Int?
-  isPreferred  Boolean  @default(false)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  supplier     Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  isPreferred  Boolean @default(false)
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
 
   @@unique([productId, supplierId])
+  @@index([supplierId])
   @@map("product_suppliers")
 }
 
-model SupplierContact {
-  id         String   @id @default(uuid())
-  supplierId String
-  name       String
-  title      String?
-  email      String?
-  phone      String?
-  mobile     String?
-  isPrimary  Boolean  @default(false)
-  department String?
-  isActive   Boolean  @default(true)
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-
-  @@map("supplier_contacts")
-}
-
-model SupplierDocument {
-  id         String       @id @default(uuid())
-  supplierId String
-  name       String
-  type       DocumentType
-  category   String?
-  fileName   String
-  fileSize   Int?
-  fileType   String?
-  filePath   String
-  uploadedBy String
-  uploadedAt DateTime     @default(now())
-  expiresAt  DateTime?
-  isActive   Boolean      @default(true)
-  supplier   Supplier     @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-
-  @@map("supplier_documents")
-}
-
 model PurchaseOrder {
-  id             String              @id @default(uuid())
-  orderNumber    String              @unique
-  supplierId     String
-  warehouseId    String?
-  subtotal       Decimal             @default(0)
-  taxAmount      Decimal             @default(0)
-  shippingCost   Decimal             @default(0)
-  discountAmount Decimal             @default(0)
-  totalAmount    Decimal             @default(0)
-  currency       String              @default("USD")
-  status         PurchaseOrderStatus @default(DRAFT)
-  orderDate      DateTime            @default(now())
-  expectedDate   DateTime?
-  deliveryDate   DateTime?
-  paymentTerms   String?
-  shippingTerms  String?
-  trackingNumber String?
-  carrier        String?
-  approvedBy     String?
-  approvedAt     DateTime?
-  notes          String?
-  internalNotes  String?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  createdBy      String
-  receipts       GoodsReceipt[]
-  items          PurchaseOrderItem[]
-  supplier       Supplier            @relation(fields: [supplierId], references: [id])
-  warehouse      Warehouse?          @relation(fields: [warehouseId], references: [id])
-  invoices       SupplierInvoice[]
+  id          String @id @default(uuid())
+  companyId   String // ✅ Reference to Supabase Company.id
+  orderNumber String
+  supplierId  String
 
+  subtotal     Decimal @neonDb.Decimal(12, 2)
+  taxAmount    Decimal @default(0) @neonDb.Decimal(12, 2)
+  shippingCost Decimal @default(0) @neonDb.Decimal(12, 2)
+  totalAmount  Decimal @neonDb.Decimal(12, 2)
+
+  status       PurchaseOrderStatus @default(DRAFT)
+  orderDate    DateTime            @default(now())
+  expectedDate DateTime?
+  receivedDate DateTime?
+
+  notes String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String // ✅ Reference to Supabase User.id
+
+  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  items    PurchaseOrderItem[]
+
+  @@unique([companyId, orderNumber])
+  @@index([companyId, status])
+  @@index([supplierId])
   @@map("purchase_orders")
 }
 
 model PurchaseOrderItem {
-  id              String             @id @default(uuid())
+  id              String  @id @default(uuid())
   purchaseOrderId String
   productId       String
   variantId       String?
-  orderedQty      Int
-  receivedQty     Int                @default(0)
-  remainingQty    Int
-  unitCost        Decimal
-  totalCost       Decimal
-  productName     String
-  productSku      String
-  supplierSku     String?
-  expectedDate    DateTime?
-  status          PurchaseItemStatus @default(PENDING)
-  notes           String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  product         Product            @relation(fields: [productId], references: [id])
-  purchaseOrder   PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  variant         ProductVariant?    @relation(fields: [variantId], references: [id])
 
+  orderedQty  Int
+  receivedQty Int     @default(0)
+  unitCost    Decimal @neonDb.Decimal(12, 2)
+  totalCost   Decimal @neonDb.Decimal(12, 2)
+
+  notes String?
+
+  purchaseOrder PurchaseOrder   @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product       Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([purchaseOrderId])
+  @@index([productId])
   @@map("purchase_order_items")
 }
 
-model GoodsReceipt {
-  id              String             @id @default(uuid())
-  purchaseOrderId String
-  warehouseId     String
-  receiptNumber   String             @unique
-  receivedDate    DateTime           @default(now())
-  qcStatus        QualityStatus      @default(PENDING)
-  qcNotes         String?
-  qcBy            String?
-  qcDate          DateTime?
-  status          ReceiptStatus      @default(PENDING)
-  notes           String?
-  receivedBy      String
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  items           GoodsReceiptItem[]
-  purchaseOrder   PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id])
-  warehouse       Warehouse          @relation(fields: [warehouseId], references: [id])
-
-  @@map("goods_receipts")
-}
-
-model GoodsReceiptItem {
-  id               String          @id @default(uuid())
-  goodsReceiptId   String
-  productId        String
-  variantId        String?
-  expectedQty      Int
-  receivedQty      Int
-  acceptedQty      Int
-  rejectedQty      Int
-  qcStatus         QualityStatus   @default(PENDING)
-  qcNotes          String?
-  rejectionReason  String?
-  lotNumber        String?
-  batchNumber      String?
-  expiryDate       DateTime?
-  serialNumbers    Json?
-  receivedLocation String?
-  notes            String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  goodsReceipt     GoodsReceipt    @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
-  product          Product         @relation(fields: [productId], references: [id])
-  variant          ProductVariant? @relation(fields: [variantId], references: [id])
-
-  @@map("goods_receipt_items")
-}
+// ============================================================================
+// CUSTOMERS & ORDERS
+// ============================================================================
 
 model Customer {
-  id                String            @id @default(uuid())
-  companyId         String
-  customerNumber    String            @unique
-  type              CustomerType      @default(INDIVIDUAL)
-  firstName         String?
-  lastName          String?
-  companyName       String?
-  taxId             String?
-  email             String?
-  phone             String?
-  mobile            String?
-  billingAddress    Json?
-  shippingAddress   Json?
-  creditLimit       Decimal?
-  paymentTerms      String?
-  currency          String            @default("USD")
-  preferredLanguage String?
-  timezone          String?
-  allowMarketing    Boolean           @default(true)
-  source            String?
-  status            CustomerStatus    @default(ACTIVE)
-  notes             String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  createdBy         String
-  contacts          CustomerContact[]
-  invoices          CustomerInvoice[]
-  orders            Order[]
+  id             String       @id @default(uuid())
+  companyId      String // ✅ Reference to Supabase Company.id
+  customerNumber String
+  type           CustomerType @default(INDIVIDUAL)
 
+  // For individuals
+  firstName String?
+  lastName  String?
+
+  // For businesses
+  businessName String?
+
+  email String?
+  phone String?
+
+  // ✅ Structured billing address (NO JSON!)
+  billingAddress1   String?
+  billingAddress2   String?
+  billingCity       String?
+  billingState      String?
+  billingPostalCode String?
+  billingCountry    String?
+
+  status CustomerStatus @default(ACTIVE)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String // ✅ Reference to Supabase User.id
+
+  orders Order[]
+
+  @@unique([companyId, customerNumber])
+  @@index([companyId, status])
+  @@index([email])
   @@map("customers")
 }
 
-model CustomerContact {
-  id         String   @id @default(uuid())
-  customerId String
-  name       String
-  title      String?
-  email      String?
-  phone      String?
-  mobile     String?
-  isPrimary  Boolean  @default(false)
-  department String?
-  isActive   Boolean  @default(true)
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@map("customer_contacts")
-}
-
 model Order {
-  id                String            @id @default(uuid())
-  companyId         String
-  orderNumber       String            @unique
-  customerId        String
-  warehouseId       String
-  type              OrderType         @default(SALES)
-  channel           OrderChannel      @default(DIRECT)
-  subtotal          Decimal           @default(0)
-  taxAmount         Decimal           @default(0)
-  shippingCost      Decimal           @default(0)
-  discountAmount    Decimal           @default(0)
-  totalAmount       Decimal           @default(0)
-  currency          String            @default("USD")
-  status            OrderStatus       @default(PENDING)
-  fulfillmentStatus FulfillmentStatus @default(PENDING)
-  paymentStatus     PaymentStatus     @default(PENDING)
-  orderDate         DateTime          @default(now())
-  requiredDate      DateTime?
-  promisedDate      DateTime?
-  shippedDate       DateTime?
-  deliveredDate     DateTime?
-  shippingMethod    String?
-  trackingNumber    String?
-  carrier           String?
-  shippingAddress   Json?
-  priority          OrderPriority     @default(NORMAL)
-  rushOrder         Boolean           @default(false)
-  notes             String?
-  internalNotes     String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  createdBy         String
-  invoices          CustomerInvoice[]
-  items             OrderItem[]
-  customer          Customer          @relation(fields: [customerId], references: [id])
-  warehouse         Warehouse         @relation(fields: [warehouseId], references: [id])
-  shipments         Shipment[]
+  id          String  @id @default(uuid())
+  companyId   String // ✅ Reference to Supabase Company.id
+  orderNumber String
+  customerId  String
+  warehouseId String? // ✅ ADDED: Which warehouse fulfills this order
 
+  subtotal       Decimal @neonDb.Decimal(12, 2)
+  taxAmount      Decimal @default(0) @neonDb.Decimal(12, 2)
+  shippingCost   Decimal @default(0) @neonDb.Decimal(12, 2)
+  discountAmount Decimal @default(0) @neonDb.Decimal(12, 2) // ✅ ADDED: Order discount
+  totalAmount    Decimal @neonDb.Decimal(12, 2)
+
+  // ✅ Single status per concern (not triple status tracking)
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  orderDate     DateTime  @default(now())
+  shippedDate   DateTime?
+  deliveredDate DateTime?
+
+  // ✅ ADDED: Shipping info (MVP alternative to Shipment table)
+  shippingAddress Json? // Customer shipping address
+  trackingNumber  String? // Carrier tracking number
+  carrier         String? // UPS, FedEx, DHL, etc.
+
+  notes String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String // ✅ Reference to Supabase User.id
+
+  customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items    OrderItem[]
+
+  @@unique([companyId, orderNumber])
+  @@index([companyId, status])
+  @@index([customerId])
+  @@index([orderDate])
   @@map("orders")
 }
 
 model OrderItem {
-  id             String          @id @default(uuid())
-  orderId        String
-  productId      String
-  variantId      String?
-  orderedQty     Int
-  shippedQty     Int             @default(0)
-  remainingQty   Int
-  unitPrice      Decimal
-  totalPrice     Decimal
-  discountAmount Decimal         @default(0)
-  productName    String
-  productSku     String
-  status         OrderItemStatus @default(PENDING)
-  notes          String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product        Product         @relation(fields: [productId], references: [id])
-  variant        ProductVariant? @relation(fields: [variantId], references: [id])
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  variantId String?
 
+  orderedQty Int
+  shippedQty Int     @default(0)
+  unitPrice  Decimal @neonDb.Decimal(12, 2)
+  totalPrice Decimal @neonDb.Decimal(12, 2)
+
+  notes String?
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
-model Shipment {
-  id                String             @id @default(uuid())
-  shipmentNumber    String             @unique
-  orderId           String?
-  warehouseId       String
-  carrier           String
-  service           String?
-  trackingNumber    String?
-  fromAddress       Json
-  toAddress         Json
-  packageCount      Int                @default(1)
-  weight            Decimal?
-  dimensions        Json?
-  shippingCost      Decimal?
-  insuranceValue    Decimal?
-  status            ShipmentStatus     @default(CREATED)
-  shipDate          DateTime?
-  estimatedDelivery DateTime?
-  actualDelivery    DateTime?
-  notes             String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  createdBy         String
-  packages          ShipmentPackage[]
-  tracking          ShipmentTracking[]
-  order             Order?             @relation(fields: [orderId], references: [id])
-  warehouse         Warehouse          @relation(fields: [warehouseId], references: [id])
+// ============================================================================
+// ADDITIONAL TABLES - ADD TO NEON SCHEMA
+// ============================================================================
 
-  @@map("shipments")
-}
-
-model ShipmentPackage {
-  id             String   @id @default(uuid())
-  shipmentId     String
-  packageNumber  String
-  trackingNumber String?
-  weight         Decimal?
-  dimensions     Json?
-  contents       Json?
-  status         String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  shipment       Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-
-  @@map("shipment_packages")
-}
-
-model ShipmentTracking {
-  id          String   @id @default(uuid())
-  shipmentId  String
-  status      String
-  description String?
-  location    String?
-  eventDate   DateTime
-  rawData     Json?
-  createdAt   DateTime @default(now())
-  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-
-  @@map("shipment_tracking")
-}
-
-model StockTransfer {
-  id              String              @id @default(uuid())
-  transferNumber  String              @unique
-  fromWarehouseId String
-  toWarehouseId   String
-  status          TransferStatus      @default(PENDING)
-  requestedDate   DateTime            @default(now())
-  shippedDate     DateTime?
-  receivedDate    DateTime?
-  approvedBy      String?
-  approvedAt      DateTime?
-  reason          String?
-  notes           String?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  createdBy       String
-  items           StockTransferItem[]
-  fromWarehouse   Warehouse           @relation("TransferFrom", fields: [fromWarehouseId], references: [id])
-  toWarehouse     Warehouse           @relation("TransferTo", fields: [toWarehouseId], references: [id])
-
-  @@map("stock_transfers")
-}
-
-model StockTransferItem {
-  id           String             @id @default(uuid())
-  transferId   String
-  productId    String
-  variantId    String?
-  requestedQty Int
-  shippedQty   Int                @default(0)
-  receivedQty  Int                @default(0)
-  productName  String
-  productSku   String
-  lotNumber    String?
-  batchNumber  String?
-  status       TransferItemStatus @default(PENDING)
-  notes        String?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  product      Product            @relation(fields: [productId], references: [id])
-  transfer     StockTransfer      @relation(fields: [transferId], references: [id], onDelete: Cascade)
-  variant      ProductVariant?    @relation(fields: [variantId], references: [id])
-
-  @@map("stock_transfer_items")
-}
-
+// 1. STOCK RESERVATION - Reserve inventory for orders
 model StockReservation {
-  id              String            @id @default(uuid())
+  id              String @id @default(uuid())
   inventoryItemId String
-  reservationType ReservationType
-  referenceType   String
-  referenceId     String
-  quantity        Int
-  status          ReservationStatus @default(ACTIVE)
-  reservedAt      DateTime          @default(now())
-  expiresAt       DateTime?
-  releasedAt      DateTime?
-  reservedBy      String
-  notes           String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  inventoryItem   InventoryItem     @relation(fields: [inventoryItemId], references: [id])
+  productId       String // Denormalized for quick lookup
+  warehouseId     String // Denormalized for quick lookup
 
+  // Reservation details
+  quantity    Int
+  reservedFor String // "ORDER", "TRANSFER", "MANUAL"
+  referenceId String? // Order ID, Transfer ID, etc.
+
+  // Status & lifecycle
+  status    ReservationStatus @default(ACTIVE)
+  expiresAt DateTime? // Auto-release if not fulfilled
+
+  // Notes
+  reason String?
+  notes  String?
+
+  // Audit
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt // ✅ ADDED: For tracking reservation changes
+  createdById  String
+  releasedAt   DateTime?
+  releasedById String?
+
+  // ✅ PROPER RELATIONS
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryItemId, status])
+  @@index([productId, warehouseId])
+  @@index([referenceId])
+  @@index([expiresAt])
   @@map("stock_reservations")
 }
 
-model SupplierInvoice {
-  id               String         @id @default(uuid())
-  invoiceNumber    String         @unique
-  supplierId       String
-  purchaseOrderId  String?
-  subtotal         Decimal
-  taxAmount        Decimal        @default(0)
-  totalAmount      Decimal
-  currency         String         @default("USD")
-  invoiceDate      DateTime
-  dueDate          DateTime
-  paidDate         DateTime?
-  status           InvoiceStatus  @default(PENDING)
-  paymentMethod    String?
-  paymentReference String?
-  notes            String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  purchaseOrder    PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
-  supplier         Supplier       @relation(fields: [supplierId], references: [id])
-
-  @@map("supplier_invoices")
+enum ReservationStatus {
+  ACTIVE // Currently reserved
+  FULFILLED // Released and used
+  CANCELLED // Cancelled/released early
+  EXPIRED // Auto-expired
 }
 
-model CustomerInvoice {
-  id               String        @id @default(uuid())
-  invoiceNumber    String        @unique
-  customerId       String
-  orderId          String?
-  subtotal         Decimal
-  taxAmount        Decimal       @default(0)
-  totalAmount      Decimal
-  paidAmount       Decimal       @default(0)
-  balanceAmount    Decimal
-  currency         String        @default("USD")
-  invoiceDate      DateTime      @default(now())
-  dueDate          DateTime
-  paidDate         DateTime?
-  status           InvoiceStatus @default(PENDING)
-  paymentMethod    String?
-  paymentReference String?
-  notes            String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  customer         Customer      @relation(fields: [customerId], references: [id])
-  order            Order?        @relation(fields: [orderId], references: [id])
+// ============================================================================
 
-  @@map("customer_invoices")
-}
-
+// 2. INVENTORY AUDIT - Cycle counting and physical verification
 model InventoryAudit {
-  id              String               @id @default(uuid())
-  auditNumber     String               @unique
-  warehouseId     String?
-  productId       String?
-  type            AuditType
-  method          AuditMethod          @default(FULL_COUNT)
-  status          AuditStatus          @default(PLANNED)
-  plannedDate     DateTime
-  startedDate     DateTime?
-  completedDate   DateTime?
-  auditedBy       String
-  supervisedBy    String?
-  totalItems      Int?
-  itemsCounted    Int?
-  discrepancies   Int?
-  adjustmentValue Decimal?
-  notes           String?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  items           InventoryAuditItem[]
-  product         Product?             @relation(fields: [productId], references: [id])
-  warehouse       Warehouse?           @relation(fields: [warehouseId], references: [id])
+  id          String  @id @default(uuid())
+  companyId   String
+  warehouseId String? // NULL = all warehouses
 
+  // Audit info
+  auditNumber String
+  auditType   AuditType
+  method      AuditMethod
+
+  // Dates
+  plannedDate DateTime
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  // Status
+  status AuditStatus @default(PLANNED)
+
+  // Results
+  itemsPlanned  Int @default(0)
+  itemsCounted  Int @default(0)
+  discrepancies Int @default(0)
+
+  // Notes
+  notes String?
+
+  // Audit team
+  createdAt   DateTime  @default(now())
+  createdById String
+  conductedBy String?
+  approvedBy  String?
+  approvedAt  DateTime?
+
+  // ✅ PROPER RELATIONS
+  items InventoryAuditItem[]
+
+  @@unique([companyId, auditNumber])
+  @@index([companyId, status])
+  @@index([warehouseId])
   @@map("inventory_audits")
 }
 
 model InventoryAuditItem {
-  id                    String          @id @default(uuid())
-  auditId               String
-  productId             String
-  variantId             String?
-  warehouseId           String
-  systemQty             Int
-  countedQty            Int?
-  adjustmentQty         Int?
-  location              String?
-  lotNumber             String?
-  batchNumber           String?
-  countedBy             String?
-  countedAt             DateTime?
-  verifiedBy            String?
-  verifiedAt            DateTime?
-  status                AuditItemStatus @default(PENDING)
-  discrepancyReason     String?
-  requiresInvestigation Boolean         @default(false)
-  notes                 String?
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-  audit                 InventoryAudit  @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  product               Product         @relation(fields: [productId], references: [id])
-  variant               ProductVariant? @relation(fields: [variantId], references: [id])
-  warehouse             Warehouse       @relation(fields: [warehouseId], references: [id])
+  id              String @id @default(uuid())
+  auditId         String
+  inventoryItemId String
+  productId       String // Denormalized for reporting
+  warehouseId     String // Denormalized for reporting
 
+  // Expected vs Actual
+  expectedQuantity Int
+  countedQuantity  Int?
+  variance         Int? // countedQuantity - expectedQuantity
+
+  // Status
+  status                AuditItemStatus @default(PENDING)
+  requiresInvestigation Boolean         @default(false)
+
+  // Details
+  lotNumber         String?
+  notes             String?
+  discrepancyReason String?
+
+  // Audit trail
+  countedAt    DateTime?
+  countedById  String?
+  verifiedAt   DateTime?
+  verifiedById String?
+  adjustedAt   DateTime?
+  adjustedById String?
+
+  // ✅ PROPER RELATIONS
+  audit         InventoryAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem  @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+
+  @@index([auditId])
+  @@index([inventoryItemId])
+  @@index([status])
   @@map("inventory_audit_items")
 }
 
+enum AuditType {
+  CYCLE_COUNT // Regular cycle counting
+  FULL_COUNT // Complete physical count
+  SPOT_CHECK // Random verification
+  YEAR_END // Annual inventory count
+  INVESTIGATION // Due to discrepancy
+}
+
+enum AuditMethod {
+  MANUAL // Paper-based counting
+  BARCODE // Barcode scanning
+  RFID // RFID tracking
+  ABC_ANALYSIS // Focus on high-value items
+}
+
+enum AuditStatus {
+  PLANNED
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum AuditItemStatus {
+  PENDING // Not counted yet
+  COUNTED // Counted, awaiting verification
+  VERIFIED // Count verified
+  ADJUSTED // Inventory adjusted
+  EXCEPTION // Needs investigation
+}
+
+// ============================================================================
+
+// 3. PRODUCT REVIEW - Customer reviews and ratings
 model ProductReview {
-  id            String   @id @default(uuid())
-  productId     String
-  rating        Int
-  title         String?
-  review        String?
+  id        String @id @default(uuid())
+  productId String
+  companyId String // For multi-tenant filtering
+
+  // Review content
+  rating Int // 1-5 stars
+  title  String?
+  review String?
+
+  // Reviewer info
   reviewerName  String?
   reviewerEmail String?
-  isApproved    Boolean  @default(false)
-  isVisible     Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId        String? // If logged-in user
+  customerId    String? // Link to customer if available
 
+  // Verification
+  isVerifiedPurchase Boolean   @default(false)
+  purchaseDate       DateTime?
+
+  // Moderation
+  isApproved Boolean @default(false)
+  isVisible  Boolean @default(true)
+  isFlagged  Boolean @default(false)
+  flagReason String?
+
+  // Helpfulness
+  helpfulVotes    Int @default(0)
+  notHelpfulVotes Int @default(0)
+
+  // Dates
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  approvedAt   DateTime?
+  approvedById String?
+
+  // ✅ PROPER RELATIONS
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, isVisible])
+  @@index([companyId])
+  @@index([rating])
+  @@index([createdAt])
   @@map("product_reviews")
 }
 
-model SystemConfiguration {
-  id          String   @id @default(uuid())
-  category    String
-  key         String
-  value       Json
-  description String?
-  dataType    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// ============================================================================
 
-  @@unique([category, key])
-  @@map("system_configurations")
+// 4. RAG DOCUMENT - AI/Semantic search embeddings
+model RagDocument {
+  id        String @id @default(uuid())
+  companyId String // Multi-tenant isolation
+
+  // Source info
+  source     String // "product:123", "order:456"
+  sourceType String // "product", "order", "supplier"
+  sourceId   String // ID of source record
+
+  // Content
+  chunkIndex Int // For splitting large docs
+  content    String  @neonDb.Text
+  title      String?
+
+  // Embedding
+  embedding Unsupported("vector(1536)") // OpenAI ada-002 dimensions
+
+  // Metadata
+  metadata Json? // Flexible metadata
+
+  // Versioning
+  version   Int     @default(1)
+  isLatest  Boolean @default(true)
+  isDeleted Boolean @default(false)
+
+  // Dates
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, source, chunkIndex, version])
+  @@index([companyId, sourceType, isLatest])
+  @@index([companyId, isDeleted])
+  // For vector similarity search (requires pgvector extension):
+  // @@index([embedding], type: Hnsw, ops: VectorCosineOps)
+  @@map("rag_documents")
 }
 
-model BundleItems {
-  A               String
-  B               String
-  products        Product       @relation(fields: [A], references: [id], onDelete: Cascade)
-  product_bundles ProductBundle @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@id([A, B], map: "_BundleItems_AB_pkey")
-  @@index([B], map: "_BundleItems_B_index")
-  @@map("_BundleItems")
-}
-
-model BundleProducts {
-  A               String
-  B               String
-  products        Product       @relation(fields: [A], references: [id], onDelete: Cascade)
-  product_bundles ProductBundle @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@id([A, B], map: "_BundleProducts_AB_pkey")
-  @@index([B], map: "_BundleProducts_B_index")
-  @@map("_BundleProducts")
-}
+// ============================================================================
+// ENUMS
+// ============================================================================
 
 enum ProductStatus {
   ACTIVE
@@ -875,13 +791,8 @@ enum WarehouseType {
   STANDARD
   DISTRIBUTION_CENTER
   RETAIL_STORE
-  FULFILLMENT_CENTER
-  CROSS_DOCK
   COLD_STORAGE
-  AUTOMATED
-  BONDED
-  CONSIGNMENT
-  QUARANTINE
+  FULFILLMENT_CENTER
 }
 
 enum InventoryStatus {
@@ -890,93 +801,36 @@ enum InventoryStatus {
   QUARANTINE
   DAMAGED
   EXPIRED
-  RECALLED
-}
-
-enum QualityStatus {
-  PASSED
-  FAILED
-  PENDING
-  QUARANTINE
 }
 
 enum MovementType {
-  RECEIPT
-  SHIPMENT
-  ADJUSTMENT
-  TRANSFER_OUT
-  TRANSFER_IN
-  RETURN
-  DAMAGE
-  EXPIRED
-  PROMOTION
-  SAMPLE
-  THEFT
-  COUNT
-}
-
-enum CompanyType {
-  CORPORATION
-  LLC
-  PARTNERSHIP
-  SOLE_PROPRIETORSHIP
-  NON_PROFIT
-  GOVERNMENT
-  OTHER
+  RECEIPT // Receiving stock
+  SHIPMENT // Shipping out
+  ADJUSTMENT // Manual adjustment
+  TRANSFER_OUT // Transfer to another warehouse
+  TRANSFER_IN // Transfer from another warehouse
+  RETURN // Customer return
+  DAMAGE // Damage/loss
 }
 
 enum SupplierStatus {
   ACTIVE
   INACTIVE
-  PENDING_APPROVAL
   SUSPENDED
-  BLACKLISTED
-}
-
-enum DocumentType {
-  CONTRACT
-  INVOICE
-  CERTIFICATE
-  INSURANCE
-  TAX_FORM
-  COMPLIANCE
-  OTHER
 }
 
 enum PurchaseOrderStatus {
   DRAFT
-  PENDING_APPROVAL
+  PENDING
   APPROVED
-  SENT
-  ACKNOWLEDGED
-  PARTIALLY_RECEIVED
-  RECEIVED
-  INVOICED
-  PAID
-  CANCELLED
-  CLOSED
-}
-
-enum PurchaseItemStatus {
-  PENDING
   PARTIALLY_RECEIVED
   RECEIVED
   CANCELLED
-}
-
-enum ReceiptStatus {
-  PENDING
-  INSPECTING
-  ACCEPTED
-  REJECTED
-  PARTIALLY_ACCEPTED
 }
 
 enum CustomerType {
   INDIVIDUAL
   BUSINESS
-  RESELLER
-  DISTRIBUTOR
 }
 
 enum CustomerStatus {
@@ -984,24 +838,6 @@ enum CustomerStatus {
   INACTIVE
   PROSPECT
   SUSPENDED
-}
-
-enum OrderType {
-  SALES
-  RETURN
-  EXCHANGE
-  SAMPLE
-  REPLACEMENT
-}
-
-enum OrderChannel {
-  DIRECT
-  ONLINE
-  PHONE
-  EMAIL
-  RETAIL
-  WHOLESALE
-  B2B_PORTAL
 }
 
 enum OrderStatus {
@@ -1012,122 +848,12 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   RETURNED
-  COMPLETED
-}
-
-enum FulfillmentStatus {
-  PENDING
-  PICKING
-  PACKED
-  SHIPPED
-  DELIVERED
-  CANCELLED
 }
 
 enum PaymentStatus {
   PENDING
-  PROCESSING
   PAID
   PARTIALLY_PAID
-  REFUNDED
-  CANCELLED
   FAILED
-}
-
-enum OrderPriority {
-  LOW
-  NORMAL
-  HIGH
-  URGENT
-}
-
-enum OrderItemStatus {
-  PENDING
-  RESERVED
-  PICKING
-  PICKED
-  PACKED
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
-enum ShipmentStatus {
-  CREATED
-  PICKED_UP
-  IN_TRANSIT
-  OUT_FOR_DELIVERY
-  DELIVERED
-  EXCEPTION
-  RETURNED
-  CANCELLED
-}
-
-enum TransferStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  IN_TRANSIT
-  RECEIVED
-  CANCELLED
-}
-
-enum TransferItemStatus {
-  PENDING
-  SHIPPED
-  RECEIVED
-  CANCELLED
-}
-
-enum ReservationType {
-  ORDER
-  TRANSFER
-  MANUAL
-  QUALITY_HOLD
-}
-
-enum ReservationStatus {
-  ACTIVE
-  FULFILLED
-  CANCELLED
-  EXPIRED
-}
-
-enum InvoiceStatus {
-  DRAFT
-  PENDING
-  SENT
-  PAID
-  OVERDUE
-  CANCELLED
-}
-
-enum AuditType {
-  CYCLE_COUNT
-  FULL_COUNT
-  SPOT_CHECK
-  ANNUAL_COUNT
-  INVESTIGATION
-}
-
-enum AuditMethod {
-  FULL_COUNT
-  SAMPLE_COUNT
-  ABC_ANALYSIS
-  PERPETUAL
-}
-
-enum AuditStatus {
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
-enum AuditItemStatus {
-  PENDING
-  COUNTED
-  VERIFIED
-  ADJUSTED
-  EXCEPTION
+  REFUNDED
 }

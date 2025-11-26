@@ -1,6 +1,6 @@
 "use server";
 
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 import {
 	createBrandSchema,
 	updateBrandSchema,
@@ -119,27 +119,30 @@ export async function createBrand(
 			name,
 			description,
 			website,
-			contactEmail,
-			contactPhone,
 			isActive,
+			companyId,
 		} = validatedInput;
 
-		// Check if brand already exists
+		// Generate slug from name
+		const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+		// Check if brand already exists for this company
 		const existingBrand = await neonClient.brand.findUnique({
-			where: { name },
+			where: { companyId_slug: { companyId, slug } },
 		});
 
 		if (existingBrand) {
 			return actionError("Brand with this name already exists");
 		}
 
+		// Note: Brand does NOT have contactEmail or contactPhone fields
 		const brand = await neonClient.brand.create({
 			data: {
+				companyId,
 				name,
+				slug,
 				description,
 				website,
-				contactEmail,
-				contactPhone,
 				isActive,
 			},
 		});
@@ -202,23 +205,24 @@ export async function updateBrand(
 		}
 		const updateData: {
 			name?: string;
+			slug?: string;
 			description?: string;
 			logo?: string;
 			website?: string;
-			contactEmail?: string;
-			contactPhone?: string;
 			isActive?: boolean;
 			updatedAt: Date;
 		} = {
 			updatedAt: new Date(),
 		};
 
-		if (name !== undefined) updateData.name = name;
+		if (name !== undefined) {
+			updateData.name = name;
+			updateData.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+		}
 		if (description !== undefined) updateData.description = description;
 		if (logo !== undefined) updateData.logo = logo;
 		if (website !== undefined) updateData.website = website;
-		if (contactEmail !== undefined) updateData.contactEmail = contactEmail;
-		if (contactPhone !== undefined) updateData.contactPhone = contactPhone;
+		// Note: Brand does NOT have contactEmail or contactPhone fields
 		if (isActive !== undefined) updateData.isActive = isActive;
 
 		const brand = await neonClient.brand.update({

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET() {
 	try {
@@ -18,7 +18,7 @@ export async function GET() {
 		const completedThisMonth = await neonClient.inventoryAudit.count({
 			where: {
 				status: "COMPLETED",
-				completedDate: {
+				completedAt: {
 					gte: thisMonth,
 				},
 			},
@@ -28,30 +28,38 @@ export async function GET() {
 		const pendingApproval = await neonClient.inventoryAudit.count({
 			where: {
 				status: "COMPLETED",
-				// Add approval logic when implemented
+				approvedAt: null,
 			},
 		});
 
-		// Get discrepancies found
+		// Get discrepancies found - variance is the field for adjustment quantity
 		const discrepancyItems = await neonClient.inventoryAuditItem.findMany({
 			where: {
-				adjustmentQty: {
+				variance: {
 					not: 0,
 				},
 			},
-			include: {
-				product: {
-					select: { costPrice: true },
-				},
+			select: {
+				variance: true,
+				productId: true,
 			},
 		});
 
+		// Fetch product cost prices for discrepancy value calculation
+		const productIds = [...new Set(discrepancyItems.map(item => item.productId))];
+		const products = productIds.length > 0
+			? await neonClient.product.findMany({
+				where: { id: { in: productIds } },
+				select: { id: true, costPrice: true },
+			})
+			: [];
+		const productMap = new Map(products.map(p => [p.id, p]));
+
 		const discrepanciesFound = discrepancyItems.length;
 		const discrepancyValue = discrepancyItems.reduce((sum: number, item) => {
-			const costPrice = item.product?.costPrice
-				? Number(item.product.costPrice)
-				: 0;
-			const adjustmentValue = (item.adjustmentQty || 0) * costPrice;
+			const product = productMap.get(item.productId);
+			const costPrice = product?.costPrice ? Number(product.costPrice) : 0;
+			const adjustmentValue = (item.variance || 0) * costPrice;
 			return sum + Math.abs(adjustmentValue);
 		}, 0);
 
@@ -64,8 +72,8 @@ export async function GET() {
 		// Get last audit date
 		const lastAudit = await neonClient.inventoryAudit.findFirst({
 			where: { status: "COMPLETED" },
-			orderBy: { completedDate: "desc" },
-			select: { completedDate: true },
+			orderBy: { completedAt: "desc" },
+			select: { completedAt: true },
 		});
 
 		// Get next scheduled audit
@@ -86,7 +94,7 @@ export async function GET() {
 			discrepanciesFound,
 			discrepancyValue,
 			complianceScore,
-			lastAuditDate: lastAudit?.completedDate || null,
+			lastAuditDate: lastAudit?.completedAt || null,
 			nextScheduledAudit: nextAudit?.plannedDate || null,
 			cycleCounts,
 		});
@@ -104,15 +112,15 @@ async function getOnTimeAuditsCount(): Promise<number> {
 		const audits = await neonClient.inventoryAudit.findMany({
 			where: {
 				status: "COMPLETED",
-				completedDate: { not: null },
+				completedAt: { not: null },
 			},
-			select: { plannedDate: true, completedDate: true },
+			select: { plannedDate: true, completedAt: true },
 		});
 
 		const onTimeAudits = audits.filter((audit) => {
-			if (!audit.plannedDate || !audit.completedDate) return false;
+			if (!audit.plannedDate || !audit.completedAt) return false;
 			const plannedDate = new Date(audit.plannedDate);
-			const completedDate = new Date(audit.completedDate);
+			const completedDate = new Date(audit.completedAt);
 			// Consider on-time if completed within 1 day of planned date
 			const diffInDays =
 				Math.abs(completedDate.getTime() - plannedDate.getTime()) /

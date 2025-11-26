@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -15,33 +15,49 @@ export async function GET(request: NextRequest) {
 		const discrepancyItems = await neonClient.inventoryAuditItem.findMany({
 			where: {
 				audit: {
-					completedDate: { gte: dateFrom },
+					completedAt: { gte: dateFrom },
 					status: "COMPLETED",
 				},
-				adjustmentQty: { not: 0 },
+				variance: { not: 0 },
 				discrepancyReason: { not: null },
 			},
 			select: {
 				discrepancyReason: true,
-				adjustmentQty: true,
+				variance: true,
 				requiresInvestigation: true,
-				product: {
-					select: { name: true, sku: true },
-				},
-				warehouse: {
-					select: { name: true },
-				},
+				productId: true,
+				warehouseId: true,
 				audit: {
-					select: { completedDate: true, type: true },
+					select: { completedAt: true, auditType: true },
 				},
 			},
 			take: 1000, // Large sample for analysis
 		});
 
+		// Fetch product and warehouse details separately
+		const productIds = [...new Set(discrepancyItems.map(i => i.productId))];
+		const warehouseIds = [...new Set(discrepancyItems.map(i => i.warehouseId))];
+
+		const [products, warehouses] = await Promise.all([
+			neonClient.product.findMany({
+				where: { id: { in: productIds } },
+				select: { id: true, name: true, sku: true },
+			}),
+			neonClient.warehouse.findMany({
+				where: { id: { in: warehouseIds } },
+				select: { id: true, name: true },
+			}),
+		]);
+
+		const productMap = new Map(products.map(p => [p.id, p]));
+		const warehouseMap = new Map(warehouses.map(w => [w.id, w]));
+
 		// Aggregate root causes
 		const rootCauseStats = discrepancyItems.reduce(
 			(acc, item) => {
 				const reason = item.discrepancyReason || "Unknown";
+				const product = productMap.get(item.productId);
+				const warehouse = warehouseMap.get(item.warehouseId);
 
 				if (!acc[reason]) {
 					acc[reason] = {
@@ -58,20 +74,20 @@ export async function GET(request: NextRequest) {
 				}
 
 				acc[reason].count += 1;
-				acc[reason].totalAdjustment += Math.abs(item.adjustmentQty || 0);
+				acc[reason].totalAdjustment += Math.abs(item.variance || 0);
 
 				if (item.requiresInvestigation) {
 					acc[reason].investigationsRequired += 1;
 				}
 
-				if (item.product?.name) {
-					acc[reason].affectedProducts.add(item.product.name);
+				if (product?.name) {
+					acc[reason].affectedProducts.add(product.name);
 				}
 
-				if (item.warehouse?.name) {
-					acc[reason].affectedWarehouses.add(item.warehouse.name);
+				if (warehouse?.name) {
+					acc[reason].affectedWarehouses.add(warehouse.name);
 				}
-				const auditType = item.audit?.type || "UNKNOWN";
+				const auditType = item.audit?.auditType || "UNKNOWN";
 				acc[reason].auditTypes[auditType] =
 					(acc[reason].auditTypes[auditType] || 0) + 1;
 
@@ -95,7 +111,7 @@ export async function GET(request: NextRequest) {
 				}
 			>,
 		);
-		
+
 		// Calculate averages and determine severity
 		const rootCauses = Object.values(rootCauseStats)
 			.map((cause) => {
@@ -118,13 +134,13 @@ export async function GET(request: NextRequest) {
 				} else {
 					cause.severity = "LOW";
 				}
-				
+
 				// Calculate investigation rate
 				cause.investigationRate =
 					cause.count > 0
 						? Math.round((cause.investigationsRequired / cause.count) * 100)
 						: 0;
-				
+
 				// Remove Sets (not JSON serializable) and return clean object
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const {
@@ -217,11 +233,11 @@ export async function GET(request: NextRequest) {
 				averageInvestigationRate:
 					rootCauses.length > 0
 						? Math.round(
-								rootCauses.reduce(
-									(sum, c) => sum + (c.investigationRate || 0),
-									0,
-								) / rootCauses.length,
-							)
+							rootCauses.reduce(
+								(sum, c) => sum + (c.investigationRate || 0),
+								0,
+							) / rootCauses.length,
+						)
 						: 0,
 			},
 		});

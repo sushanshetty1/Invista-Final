@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -18,10 +18,10 @@ export async function GET(request: NextRequest) {
 		// Build where clause
 		const where: Record<string, unknown> = {
 			audit: {
-				completedDate: { gte: dateFrom },
+				completedAt: { gte: dateFrom },
 				status: "COMPLETED",
 			},
-			adjustmentQty: { not: 0 },
+			variance: { not: 0 },
 		};
 
 		if (warehouseId) {
@@ -32,25 +32,25 @@ export async function GET(request: NextRequest) {
 			where.productId = productId;
 		}
 
-		// Filter by severity (based on adjustment quantity threshold)
+		// Filter by severity (based on variance threshold)
 		if (severity) {
 			switch (severity) {
 				case "HIGH":
 					where.OR = [
-						{ adjustmentQty: { gte: 100 } },
-						{ adjustmentQty: { lte: -100 } },
+						{ variance: { gte: 100 } },
+						{ variance: { lte: -100 } },
 					];
 					break;
 				case "MEDIUM":
 					where.OR = [
-						{ adjustmentQty: { gte: 10, lt: 100 } },
-						{ adjustmentQty: { lte: -10, gt: -100 } },
+						{ variance: { gte: 10, lt: 100 } },
+						{ variance: { lte: -10, gt: -100 } },
 					];
 					break;
 				case "LOW":
 					where.OR = [
-						{ adjustmentQty: { gt: 0, lt: 10 } },
-						{ adjustmentQty: { lt: 0, gt: -10 } },
+						{ variance: { gt: 0, lt: 10 } },
+						{ variance: { lt: 0, gt: -10 } },
 					];
 					break;
 			}
@@ -64,37 +64,23 @@ export async function GET(request: NextRequest) {
 						select: {
 							id: true,
 							auditNumber: true,
-							type: true,
-							completedDate: true,
-							auditedBy: true,
+							auditType: true,
+							completedAt: true,
+							conductedBy: true,
 						},
 					},
-					product: {
+					inventoryItem: {
 						select: {
 							id: true,
-							name: true,
-							sku: true,
-							description: true,
-						},
-					},
-					variant: {
-						select: {
-							id: true,
-							name: true,
-							sku: true,
-						},
-					},
-					warehouse: {
-						select: {
-							id: true,
-							name: true,
-							code: true,
+							zone: true,
+							aisle: true,
+							shelf: true,
+							bin: true,
 						},
 					},
 				},
 				orderBy: [
-					{ adjustmentQty: "desc" }, // Largest discrepancies first
-					{ audit: { completedDate: "desc" } },
+					{ variance: "desc" }, // Largest discrepancies first
 				],
 				skip: offset,
 				take: limit,
@@ -102,44 +88,68 @@ export async function GET(request: NextRequest) {
 			neonClient.inventoryAuditItem.count({ where }),
 		]);
 
+		// Fetch product and warehouse details separately
+		const productIds = [...new Set(discrepancies.map(d => d.productId))];
+		const warehouseIds = [...new Set(discrepancies.map(d => d.warehouseId))];
+
+		const [products, warehouses] = await Promise.all([
+			neonClient.product.findMany({
+				where: { id: { in: productIds } },
+				select: { id: true, name: true, sku: true, description: true },
+			}),
+			neonClient.warehouse.findMany({
+				where: { id: { in: warehouseIds } },
+				select: { id: true, name: true, code: true },
+			}),
+		]);
+
+		const productMap = new Map(products.map(p => [p.id, p]));
+		const warehouseMap = new Map(warehouses.map(w => [w.id, w]));
+
 		// Transform and add calculated fields
 		const enrichedDiscrepancies = discrepancies.map((item) => {
-			const adjustmentQty = item.adjustmentQty || 0;
-			const systemQty = item.systemQty || 0;
-			const countedQty = item.countedQty || 0;
+			const variance = item.variance || 0;
+			const expectedQuantity = item.expectedQuantity || 0;
+			const countedQuantity = item.countedQuantity || 0;
+			const product = productMap.get(item.productId);
+			const warehouse = warehouseMap.get(item.warehouseId);
 
 			// Calculate severity
 			let severityLevel = "LOW";
-			const absAdjustment = Math.abs(adjustmentQty);
-			if (absAdjustment >= 100) {
+			const absVariance = Math.abs(variance);
+			if (absVariance >= 100) {
 				severityLevel = "HIGH";
-			} else if (absAdjustment >= 10) {
+			} else if (absVariance >= 10) {
 				severityLevel = "MEDIUM";
 			}
 
 			// Calculate variance percentage
 			const variancePercentage =
-				systemQty > 0
-					? Math.round((adjustmentQty / systemQty) * 100 * 100) / 100
+				expectedQuantity > 0
+					? Math.round((variance / expectedQuantity) * 100 * 100) / 100
 					: 0;
+
+			// Build location string from inventoryItem
+			const location = item.inventoryItem
+				? [item.inventoryItem.zone, item.inventoryItem.aisle, item.inventoryItem.shelf, item.inventoryItem.bin].filter(Boolean).join("-")
+				: null;
 
 			return {
 				id: item.id,
 				audit: item.audit,
-				product: item.product,
-				variant: item.variant,
-				warehouse: item.warehouse,
-				location: item.location,
-				systemQty,
-				countedQty,
-				adjustmentQty,
+				product,
+				warehouse,
+				location,
+				systemQty: expectedQuantity,
+				countedQty: countedQuantity,
+				adjustmentQty: variance,
 				variancePercentage,
 				severity: severityLevel,
 				discrepancyReason: item.discrepancyReason,
 				requiresInvestigation: item.requiresInvestigation,
-				countedBy: item.countedBy,
+				countedById: item.countedById,
 				countedAt: item.countedAt,
-				verifiedBy: item.verifiedBy,
+				verifiedById: item.verifiedById,
 				verifiedAt: item.verifiedAt,
 				status: item.status,
 				notes: item.notes,

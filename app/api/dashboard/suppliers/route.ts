@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 import { createClient } from "@/lib/supabaseServer";
 
 export async function GET(_request: NextRequest) {
@@ -35,7 +35,8 @@ export async function GET(_request: NextRequest) {
 
 		const companyId = companyUser.companyId;
 
-		// Fetch supplier performance data
+		// Fetch supplier data - these performance fields don't exist on Supplier model
+		// so we'll calculate based on purchase orders
 		const suppliers = await neonClient.supplier.findMany({
 			where: {
 				companyId,
@@ -44,27 +45,44 @@ export async function GET(_request: NextRequest) {
 			select: {
 				id: true,
 				name: true,
-				onTimeDelivery: true,
-				qualityRating: true,
-				rating: true,
-				_count: {
+				purchaseOrders: {
 					select: {
-						purchaseOrders: true,
+						id: true,
+						status: true,
+						expectedDate: true,
+						receivedDate: true,
 					},
 				},
-			},
-			orderBy: {
-				rating: "desc",
 			},
 			take: 10,
 		});
 
-		const formattedSuppliers = suppliers.map((supplier) => ({
-			name: supplier.name,
-			orders: supplier._count.purchaseOrders,
-			reliability: Number(supplier.onTimeDelivery || 95),
-			rating: Number(supplier.rating || 4.5),
-		}));
+		const formattedSuppliers = suppliers.map((supplier) => {
+			const orders = supplier.purchaseOrders.length;
+
+			// Calculate on-time delivery rate from purchase orders
+			const completedOrders = supplier.purchaseOrders.filter(
+				po => po.status === "RECEIVED" && po.expectedDate && po.receivedDate
+			);
+			const onTimeOrders = completedOrders.filter(po => {
+				const expected = new Date(po.expectedDate!);
+				const received = new Date(po.receivedDate!);
+				return received <= expected;
+			});
+			const reliability = completedOrders.length > 0
+				? Math.round((onTimeOrders.length / completedOrders.length) * 100)
+				: 95; // Default if no completed orders
+
+			return {
+				name: supplier.name,
+				orders,
+				reliability,
+				rating: 4.5, // Default rating since it's not in schema
+			};
+		});
+
+		// Sort by orders count descending
+		formattedSuppliers.sort((a, b) => b.orders - a.orders);
 
 		return NextResponse.json(formattedSuppliers);
 	} catch (error) {

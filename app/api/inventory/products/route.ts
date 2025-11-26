@@ -13,7 +13,7 @@ import {
 	type CreateProductInput,
 } from "@/lib/validations/product";
 import { getProducts, createProduct } from "@/lib/actions/products";
-import { supabaseClient } from "@/lib/db";
+import { supabaseClient } from "@/lib/prisma";
 
 // Rate limiting: 100 requests per minute per IP
 const RATE_LIMIT = 100;
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
 		console.log("Looking up company for userId:", userId);
 
 		try {
-			const companyUser = await supabaseClient.companyUser.findFirst({
+			const companyMember = await supabaseClient.companyMember.findFirst({
 				where: {
 					userId: userId,
 					isActive: true,
@@ -122,9 +122,9 @@ export async function POST(request: NextRequest) {
 				},
 			});
 
-			console.log("Company lookup result:", companyUser);
+			console.log("Company lookup result:", companyMember);
 
-			if (!companyUser) {
+			if (!companyMember) {
 				return errorResponse("User not associated with any company", 403);
 			}
 
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
 			const createInput: CreateProductInput = {
 				...body,
 				createdBy: userId,
-				companyId: companyUser.companyId, // Add the companyId from lookup
+				companyId: companyMember.companyId, // Add the companyId from lookup
 			}; // Validate input
 			const validatedInput = createProductSchema.parse(createInput);
 

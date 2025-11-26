@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(
 	request: NextRequest,
@@ -12,30 +12,34 @@ export async function GET(
 				auditId: id,
 			},
 			include: {
-				product: {
-					select: {
-						id: true,
-						name: true,
-						sku: true,
-						description: true,
-					},
-				},
-				variant: {
-					select: {
-						id: true,
-						name: true,
-						sku: true,
-					},
-				},
-				warehouse: {
-					select: {
-						id: true,
-						name: true,
-						code: true,
+				inventoryItem: {
+					include: {
+						product: {
+							select: {
+								id: true,
+								name: true,
+								sku: true,
+								description: true,
+							},
+						},
+						variant: {
+							select: {
+								id: true,
+								name: true,
+								sku: true,
+							},
+						},
+						warehouse: {
+							select: {
+								id: true,
+								name: true,
+								code: true,
+							},
+						},
 					},
 				},
 			},
-			orderBy: [{ product: { name: "asc" } }, { variant: { name: "asc" } }],
+			orderBy: { countedAt: "asc" },
 		});
 
 		return NextResponse.json({ items });

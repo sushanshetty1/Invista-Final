@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(
 	request: NextRequest,
@@ -11,40 +11,55 @@ export async function GET(
 		const auditItems = await neonClient.inventoryAuditItem.findMany({
 			where: { auditId: id },
 			include: {
-				product: {
-					select: {
-						name: true,
-						sku: true,
-					},
-				},
-				warehouse: {
-					select: {
-						name: true,
+				inventoryItem: {
+					include: {
+						product: {
+							select: {
+								name: true,
+								sku: true,
+							},
+						},
+						warehouse: {
+							select: {
+								name: true,
+							},
+						},
 					},
 				},
 			},
-			orderBy: { createdAt: "asc" },
+			orderBy: { countedAt: "asc" },
 		});
 
-		const transformedItems = auditItems.map((item) => ({
-			id: item.id,
-			productId: item.productId,
-			productName: item.product.name,
-			sku: item.product.sku,
-			warehouseId: item.warehouseId,
-			warehouseName: item.warehouse.name,
-			location: item.location,
-			systemQty: item.systemQty,
-			countedQty: item.countedQty,
-			adjustmentQty: item.adjustmentQty,
-			status: item.status,
-			countedBy: item.countedBy,
-			countedAt: item.countedAt,
-			verifiedBy: item.verifiedBy,
-			verifiedAt: item.verifiedAt,
-			discrepancyReason: item.discrepancyReason,
-			notes: item.notes,
-		}));
+		const transformedItems = auditItems.map((item) => {
+			// Build location string from inventoryItem fields
+			const locationParts = [
+				item.inventoryItem.zone,
+				item.inventoryItem.aisle,
+				item.inventoryItem.shelf,
+				item.inventoryItem.bin,
+			].filter(Boolean);
+			const location = locationParts.length > 0 ? locationParts.join("-") : null;
+
+			return {
+				id: item.id,
+				productId: item.productId,
+				productName: item.inventoryItem.product.name,
+				sku: item.inventoryItem.product.sku,
+				warehouseId: item.warehouseId,
+				warehouseName: item.inventoryItem.warehouse.name,
+				location,
+				expectedQuantity: item.expectedQuantity,
+				countedQuantity: item.countedQuantity,
+				variance: item.variance,
+				status: item.status,
+				countedById: item.countedById,
+				countedAt: item.countedAt,
+				verifiedById: item.verifiedById,
+				verifiedAt: item.verifiedAt,
+				discrepancyReason: item.discrepancyReason,
+				notes: item.notes,
+			};
+		});
 
 		return NextResponse.json({
 			items: transformedItems,

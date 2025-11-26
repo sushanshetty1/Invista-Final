@@ -1,675 +1,639 @@
+// ============================================================================
+// SUPABASE DATABASE SCHEMA V2 - PROPER VERSION
+// ============================================================================
+// Purpose: Authentication, User Management, Company/Tenant Management
+// NO business data (products, inventory, orders) - those go in Neon
+// ============================================================================
+
 generator supabaseClient {
-  provider        = "prisma-client-js"
-  output          = "./generated/supabase"
-  previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+    provider      = "prisma-client-js"
+    output        = "./generated/supabase"
+    binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource supabaseDb {
-  provider = "postgresql"
-  url      = env("SUPABASE_DATABASE_URL")
+    provider = "postgresql"
+    url      = env("SUPABASE_DATABASE_URL")
 }
 
-model Company {
-  id                    String               @id @default(uuid())
-  name                  String
-  displayName           String?
-  description           String?
-  website               String?
-  industry              String?
-  size                  CompanySize          @default(SMALL)
-  email                 String?
-  phone                 String?
-  address               Json?
-  registrationNumber    String?              @unique
-  taxId                 String?              @unique
-  vatNumber             String?
-  businessType          BusinessType         @default(PRIVATE)
-  logo                  String?
-  primaryColor          String?
-  theme                 Json?
-  subscriptionPlan      SubscriptionPlan     @default(FREE)
-  subscriptionStatus    SubscriptionStatus   @default(ACTIVE)
-  billingEmail          String?
-  paymentMethodId       String?
-  maxUsers              Int                  @default(5)
-  maxWarehouses         Int                  @default(1)
-  maxProducts           Int                  @default(100)
-  features              Json?
-  enforceSSO            Boolean              @default(false)
-  requireTwoFactor      Boolean              @default(false)
-  passwordPolicy        Json?
-  sessionTimeoutMinutes Int                  @default(480)
-  isActive              Boolean              @default(true)
-  isSuspended           Boolean              @default(false)
-  isDeleted             Boolean              @default(false)
-  trialEndsAt           DateTime?
-  onboardingStep        String?
-  setupComplete         Boolean              @default(false)
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @updatedAt
-  createdBy             String
-  billingHistory        BillingHistory[]
-  auditLogs             CompanyAuditLog[]
-  integrations          CompanyIntegration[]
-  locations             CompanyLocation[]
-  companyUsers          CompanyUser[]
-  departments           Department[]
-  companyInvites        CompanyInvite[]
-
-  @@map("companies")
-}
-
-model CompanyUser {
-  id           String      @id @default(uuid())
-  companyId    String
-  userId       String
-  role         CompanyRole @default(EMPLOYEE)
-  title        String?
-  departmentId String?
-  employeeId   String?
-
-  // Location Assignment - Users first belong to company, then assigned to locations
-  primaryLocationId  String? // Primary work location
-  allowedLocationIds Json? // Array of location IDs user can access
-
-  startDate        DateTime         @default(now())
-  endDate          DateTime?
-  permissions      Json?
-  isActive         Boolean          @default(true)
-  isOwner          Boolean          @default(false)
-  canInvite        Boolean          @default(false)
-  canManageBilling Boolean          @default(false)
-  managerId        String?
-  directReports    Json?
-  status           EmploymentStatus @default(ACTIVE)
-  invitedBy        String?
-  invitedAt        DateTime?
-  joinedAt         DateTime         @default(now())
-  lastActiveAt     DateTime?
-
-  // Relations
-  company         Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  department      Department?          @relation(fields: [departmentId], references: [id])
-  primaryLocation CompanyLocation?     @relation("PrimaryLocation", fields: [primaryLocationId], references: [id])
-  manager         CompanyUser?         @relation("CompanyHierarchy", fields: [managerId], references: [id])
-  reports         CompanyUser[]        @relation("CompanyHierarchy")
-  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  locationAccess  UserLocationAccess[]
-
-  @@unique([companyId, userId])
-  @@map("company_users")
-}
-
-model Department {
-  id               String        @id @default(uuid())
-  companyId        String
-  name             String
-  description      String?
-  code             String?
-  parentId         String?
-  level            Int           @default(0)
-  headOfDepartment String?
-  budget           Decimal?
-  costCenter       String?
-  isActive         Boolean       @default(true)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  employees        CompanyUser[]
-  company          Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  parent           Department?   @relation("DepartmentHierarchy", fields: [parentId], references: [id])
-  children         Department[]  @relation("DepartmentHierarchy")
-
-  @@unique([companyId, name])
-  @@map("departments")
-}
-
-model CompanyInvite {
-  id            String           @id @default(uuid())
-  companyId     String
-  email         String
-  role          CompanyRole      @default(EMPLOYEE)
-  invitedById   String
-  invitedByName String?
-  message       String?
-  status        InvitationStatus @default(PENDING)
-  token         String           @unique
-  expiresAt     DateTime
-  sentAt        DateTime?
-  acceptedAt    DateTime?
-  declinedAt    DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  company       Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  invitedBy     User             @relation("CompanyInvitedBy", fields: [invitedById], references: [id])
-
-  @@unique([companyId, email])
-  @@map("company_invites")
-}
-
-model CompanyLocation {
-  id          String       @id @default(uuid())
-  companyId   String
-  name        String
-  description String?
-  code        String? // Unique identifier for the location
-  type        LocationType @default(OFFICE)
-
-  // Physical Address
-  address     Json // {street, city, state, country, zip, etc.}
-  coordinates Json? // {lat, lng}
-  timezone    String @default("UTC")
-
-  // Contact Information
-  phone         String?
-  email         String?
-  managerName   String?
-  managerUserId String? // Reference to CompanyUser who manages this location
-
-  // Business Configuration
-  businessHours Json? // Operating hours configuration
-  isPrimary     Boolean @default(false)
-  isActive      Boolean @default(true)
-
-  // Warehouse/Store Specific Configuration
-  capacity Json? // {volume, weight, pallets, floor_space, etc.}
-  features Json? // {rfid, barcode, temperature_control, security_level, etc.}
-
-  // Retail Store Specific
-  storeFormat   String? // "flagship", "outlet", "pop-up", etc.
-  salesChannels Json? // ["walk-in", "online", "phone", etc.]
-
-  // Operational Settings
-  allowsInventory Boolean @default(true) // Can store inventory
-  allowsOrders    Boolean @default(true) // Can process orders
-  allowsReturns   Boolean @default(true) // Can handle returns
-  allowsTransfers Boolean @default(true) // Can participate in transfers
-
-  // Metadata
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  company      Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  primaryUsers CompanyUser[]        @relation("PrimaryLocation")
-  userAccess   UserLocationAccess[]
-
-  @@unique([companyId, code])
-  @@map("company_locations")
-}
-
-model CompanyIntegration {
-  id           String            @id @default(uuid())
-  companyId    String
-  name         String
-  type         IntegrationType
-  provider     String
-  config       Json
-  credentials  Json
-  mappings     Json?
-  autoSync     Boolean           @default(true)
-  syncInterval Int               @default(60)
-  lastSyncAt   DateTime?
-  nextSyncAt   DateTime?
-  status       IntegrationStatus @default(DISCONNECTED)
-  isActive     Boolean           @default(true)
-  lastError    String?
-  errorCount   Int               @default(0)
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  company      Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@unique([companyId, name])
-  @@map("company_integrations")
-}
-
-model CompanyAuditLog {
-  id         String        @id @default(uuid())
-  companyId  String
-  userId     String?
-  userEmail  String?
-  action     String
-  resource   String
-  resourceId String?
-  oldValues  Json?
-  newValues  Json?
-  changes    Json?
-  ipAddress  String?
-  userAgent  String?
-  metadata   Json?
-  severity   AuditSeverity @default(INFO)
-  timestamp  DateTime      @default(now())
-  company    Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@map("company_audit_logs")
-}
-
-model BillingHistory {
-  id            String               @id @default(uuid())
-  companyId     String
-  periodStart   DateTime
-  periodEnd     DateTime
-  amount        Decimal
-  tax           Decimal              @default(0)
-  total         Decimal
-  currency      String               @default("USD")
-  description   String?
-  invoiceNumber String?              @unique
-  paymentStatus BillingPaymentStatus @default(PENDING)
-  paymentMethod String?
-  paidAt        DateTime?
-  metadata      Json?
-  createdAt     DateTime             @default(now())
-  company       Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@map("billing_history")
-}
+// ============================================================================
+// USER MANAGEMENT
+// ============================================================================
 
 model User {
-  id               String             @id @default(uuid())
-  email            String             @unique
-  emailVerified    Boolean            @default(false)
-  firstName        String?
-  lastName         String?
-  displayName      String?
-  avatar           String?
-  phone            String?
-  password         String?
-  twoFactorEnabled Boolean            @default(false)
-  twoFactorSecret  String?
-  timezone         String             @default("UTC")
-  language         String             @default("en")
-  theme            String             @default("system")
-  isActive         Boolean            @default(true)
-  isVerified       Boolean            @default(false)
-  isSuspended      Boolean            @default(false)
-  suspendedReason  String?
-  lastLoginAt      DateTime?
-  lastLoginIp      String?
-  failedLoginCount Int                @default(0)
-  lockedUntil      DateTime?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  apiKeys          ApiKey[]
-  auditLogs        AuditLog[]
-  companyUsers     CompanyUser[]
-  loginHistory     LoginHistory[]
-  passwordResets   PasswordReset[]
-  invitations      UserInvitation[]   @relation("InvitedBy")
-  receivedInvites  UserInvitation[]   @relation("InvitedUser")
-  notifications    UserNotification[]
-  preferences      UserPreference[]
-  userRoles        UserRole[]
-  sessions         UserSession[]
-  companyInvites   CompanyInvite[]    @relation("CompanyInvitedBy")
+    id            String  @id @default(uuid())
+    email         String  @unique
+    emailVerified Boolean @default(false)
+    firstName     String?
+    lastName      String?
+    displayName   String?
+    avatar        String?
+    phone         String?
+    passwordHash  String?
 
-  @@map("users")
+    // Security
+    twoFactorEnabled Boolean   @default(false)
+    twoFactorSecret  String?
+    isActive         Boolean   @default(true)
+    isSuspended      Boolean   @default(false)
+    suspendedReason  String?
+    lastLoginAt      DateTime?
+
+    // Audit
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    companyMemberships CompanyMember[]
+    sessions           UserSession[]
+    createdCompanies   Company[]          @relation("CompanyCreator")
+    loginHistory       LoginHistory[]
+    // ✅ ADDED: Missing inverse relations
+    preferences        UserPreference?
+    notifications      UserNotification[]
+    sentInvitations    UserInvitation[]   @relation("UserInviter")
+    companyInvites     CompanyInvite[]    @relation("CompanyInviter")
+
+    @@map("users")
 }
 
-model Role {
-  id          String     @id @default(uuid())
-  name        String     @unique
-  displayName String
-  description String?
-  color       String?
-  permissions Json
-  level       Int        @default(0)
-  isSystem    Boolean    @default(false)
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  userRoles   UserRole[]
+// ============================================================================
+// COMPANY MANAGEMENT (Multi-Tenancy)
+// ============================================================================
 
-  @@map("roles")
+model Company {
+    id          String  @id @default(uuid())
+    name        String
+    slug        String  @unique
+    displayName String?
+    description String?
+
+    // Contact
+    email   String?
+    phone   String?
+    website String?
+
+    // ✅ Structured Address (NO JSON!)
+    address1   String?
+    address2   String?
+    city       String?
+    state      String?
+    postalCode String?
+    country    String? @default("US")
+
+    // Business Info
+    industry           String?
+    taxId              String?       @unique
+    registrationNumber String?       @unique
+    businessType       BusinessType?
+
+    // Branding
+    logo         String?
+    primaryColor String?
+
+    // Subscription & Limits
+    plan          SubscriptionPlan   @default(FREE)
+    planStatus    SubscriptionStatus @default(TRIAL)
+    trialEndsAt   DateTime?
+    maxUsers      Int                @default(5)
+    maxProducts   Int                @default(100)
+    maxWarehouses Int                @default(1)
+
+    // Status
+    isActive    Boolean @default(true)
+    isSuspended Boolean @default(false)
+
+    // Audit
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    createdById String
+
+    // Relations
+    createdBy      User                 @relation("CompanyCreator", fields: [createdById], references: [id])
+    members        CompanyMember[]
+    // ✅ ADDED: Missing inverse relations
+    locations      CompanyLocation[]
+    integrations   CompanyIntegration[]
+    billingHistory BillingHistory[]
+    invitations    UserInvitation[]
+
+    @@index([slug])
+    @@index([createdById])
+    @@index([isActive])
+    @@map("companies")
 }
 
-model UserRole {
-  id         String    @id @default(uuid())
-  userId     String
-  roleId     String
-  assignedBy String?
-  assignedAt DateTime  @default(now())
-  expiresAt  DateTime?
-  isActive   Boolean   @default(true)
-  role       Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+model CompanyMember {
+    id           String      @id @default(uuid())
+    companyId    String
+    userId       String
+    role         CompanyRole @default(EMPLOYEE)
+    title        String?
+    departmentId String?
 
-  @@unique([userId, roleId])
-  @@map("user_roles")
+    // Access control
+    isActive  Boolean @default(true)
+    isOwner   Boolean @default(false)
+    canInvite Boolean @default(false)
+
+    // Dates
+    joinedAt    DateTime  @default(now())
+    invitedAt   DateTime?
+    invitedById String?
+
+    // Relations
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([companyId, userId])
+    @@index([userId])
+    @@index([companyId, isActive])
+    @@map("company_members")
 }
+
+// ============================================================================
+// SESSION MANAGEMENT
+// ============================================================================
 
 model UserSession {
-  id           String    @id @default(uuid())
-  userId       String
-  token        String    @unique
-  refreshToken String?   @unique
-  userAgent    String?
-  ipAddress    String?
-  deviceId     String?
-  deviceType   String?
-  browser      String?
-  location     String?
-  lastActivity DateTime  @default(now())
-  expiresAt    DateTime
-  isActive     Boolean   @default(true)
-  isRevoked    Boolean   @default(false)
-  revokedAt    DateTime?
-  revokedBy    String?
-  createdAt    DateTime  @default(now())
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id           String  @id @default(uuid())
+    userId       String
+    token        String  @unique
+    refreshToken String? @unique
 
-  @@map("user_sessions")
+    // Device tracking
+    userAgent  String?
+    ipAddress  String?
+    deviceType String?
+    browser    String?
+
+    // Lifecycle
+    lastActivity DateTime  @default(now())
+    expiresAt    DateTime
+    isActive     Boolean   @default(true)
+    isRevoked    Boolean   @default(false)
+    revokedAt    DateTime?
+
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([token])
+    @@index([expiresAt])
+    @@map("user_sessions")
 }
 
 model LoginHistory {
-  id          String   @id @default(uuid())
-  userId      String
-  successful  Boolean
-  failReason  String?
-  ipAddress   String
-  userAgent   String?
-  location    String?
-  deviceType  String?
-  attemptedAt DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id          String   @id @default(uuid())
+    userId      String
+    successful  Boolean
+    failReason  String?
+    ipAddress   String
+    userAgent   String?
+    location    String?
+    attemptedAt DateTime @default(now())
 
-  @@map("login_history")
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([attemptedAt])
+    @@map("login_history")
 }
 
-model PasswordReset {
-  id        String    @id @default(uuid())
-  userId    String
-  token     String    @unique
-  expiresAt DateTime
-  isUsed    Boolean   @default(false)
-  usedAt    DateTime?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("password_resets")
-}
-
-model UserInvitation {
-  id            String           @id @default(uuid())
-  email         String
-  roleId        String?
-  token         String           @unique
-  invitedById   String
-  invitedByName String
-  invitedUserId String?
-  message       String?
-  status        InvitationStatus @default(PENDING)
-  expiresAt     DateTime
-  sentAt        DateTime?
-  acceptedAt    DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  invitedBy     User             @relation("InvitedBy", fields: [invitedById], references: [id])
-  invitedUser   User?            @relation("InvitedUser", fields: [invitedUserId], references: [id])
-
-  @@map("user_invitations")
-}
-
-model UserPreference {
-  id        String   @id @default(uuid())
-  userId    String
-  category  String
-  key       String
-  value     Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, category, key])
-  @@map("user_preferences")
-}
-
-model UserNotification {
-  id          String               @id @default(uuid())
-  userId      String
-  title       String
-  message     String
-  type        NotificationType
-  category    String?
-  priority    NotificationPriority @default(MEDIUM)
-  icon        String?
-  color       String?
-  actionUrl   String?
-  actionText  String?
-  isRead      Boolean              @default(false)
-  readAt      DateTime?
-  channels    Json?
-  sentAt      DateTime?
-  deliveredAt DateTime?
-  metadata    Json?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("user_notifications")
-}
+// ============================================================================
+// AUDIT & COMPLIANCE
+// ============================================================================
 
 model AuditLog {
-  id         String        @id @default(uuid())
-  userId     String?
-  userEmail  String?
-  action     String
-  resource   String
-  resourceId String?
-  oldValues  Json?
-  newValues  Json?
-  changes    Json?
-  ipAddress  String?
-  userAgent  String?
-  sessionId  String?
-  metadata   Json?
-  severity   AuditSeverity @default(INFO)
-  timestamp  DateTime      @default(now())
-  user       User?         @relation(fields: [userId], references: [id])
+    id        String  @id @default(uuid())
+    companyId String? // NULL for system-level events
+    userId    String?
+    userEmail String?
 
-  @@map("audit_logs")
+    action     String
+    resource   String
+    resourceId String?
+
+    oldValues Json?
+    newValues Json?
+
+    ipAddress String?
+    userAgent String?
+
+    severity  AuditSeverity @default(INFO)
+    timestamp DateTime      @default(now())
+
+    @@index([companyId, timestamp])
+    @@index([userId, timestamp])
+    @@index([resource, timestamp])
+    @@map("audit_logs")
 }
 
-model SystemSetting {
-  id          String   @id @default(uuid())
-  category    String
-  key         String
-  value       Json
-  description String?
-  isPublic    Boolean  @default(false)
-  isSystem    Boolean  @default(false)
-  dataType    String?
-  validation  Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// ============================================================================
+// ADDITIONAL TABLES - ADD TO SUPABASE SCHEMA
+// ============================================================================
 
-  @@unique([category, key])
-  @@map("system_settings")
+// 1. COMPANY INVITE - Invite companies/businesses to join platform
+model CompanyInvite {
+    id          String  @id @default(uuid())
+    email       String
+    companyName String?
+
+    // Invitation details
+    invitedByUserId String
+    role            CompanyRole @default(ADMIN)
+    message         String?
+
+    // Token
+    token     String   @unique
+    expiresAt DateTime
+
+    // Status
+    status           InviteStatus @default(PENDING)
+    acceptedAt       DateTime?
+    createdCompanyId String? // Set when invite is accepted
+
+    // Audit
+    createdAt DateTime @default(now())
+
+    // ✅ RELATIONS
+    invitedBy User @relation("CompanyInviter", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+    @@index([email, status])
+    @@index([token])
+    @@index([expiresAt])
+    @@map("company_invites")
 }
 
-model ApiKey {
-  id         String    @id @default(uuid())
-  userId     String?
-  name       String
-  keyHash    String    @unique
-  keyPrefix  String    @unique
-  scopes     Json
-  lastUsedAt DateTime?
-  usageCount Int       @default(0)
-  rateLimit  Int?
-  expiresAt  DateTime?
-  isActive   Boolean   @default(true)
-  isRevoked  Boolean   @default(false)
-  revokedAt  DateTime?
-  revokedBy  String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("api_keys")
+enum InviteStatus {
+    PENDING
+    ACCEPTED
+    EXPIRED
+    REVOKED
 }
 
-enum CompanySize {
-  STARTUP
-  SMALL
-  MEDIUM
-  LARGE
-  ENTERPRISE
-}
+// ============================================================================
 
-enum BusinessType {
-  PRIVATE
-  PUBLIC
-  NONPROFIT
-  GOVERNMENT
-  PARTNERSHIP
-  SOLE_PROPRIETORSHIP
-}
+// 2. COMPANY LOCATION - Multiple offices/branches per company
+model CompanyLocation {
+    id        String  @id @default(uuid())
+    companyId String
+    name      String
+    code      String?
 
-enum SubscriptionPlan {
-  FREE
-  BASIC
-  PROFESSIONAL
-  ENTERPRISE
-  CUSTOM
-}
+    // Type
+    type      LocationType @default(HEAD_OFFICE)
+    isPrimary Boolean      @default(false)
 
-enum SubscriptionStatus {
-  ACTIVE
-  TRIAL
-  PAST_DUE
-  CANCELLED
-  SUSPENDED
-  EXPIRED
-}
+    // Structured address
+    address1   String?
+    address2   String?
+    city       String?
+    state      String?
+    postalCode String?
+    country    String?
 
-enum CompanyRole {
-  OWNER
-  ADMIN
-  MANAGER
-  SUPERVISOR
-  EMPLOYEE
-  CONTRACTOR
-  VIEWER
-}
+    // Coordinates
+    latitude  Decimal? @supabaseDb.Decimal(10, 8)
+    longitude Decimal? @supabaseDb.Decimal(11, 8)
 
-enum EmploymentStatus {
-  ACTIVE
-  INACTIVE
-  TERMINATED
-  SUSPENDED
-  ON_LEAVE
+    // Contact
+    phone         String?
+    email         String?
+    managerUserId String?
+
+    // Status
+    isActive   Boolean   @default(true)
+    openedDate DateTime?
+    closedDate DateTime?
+
+    // Audit
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // ✅ RELATIONS
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@unique([companyId, code])
+    @@index([companyId, isActive])
+    @@map("company_locations")
 }
 
 enum LocationType {
-  HEADQUARTERS // Main company office
-  OFFICE // Branch office
-  WAREHOUSE // Storage facility
-  DISTRIBUTION_CENTER // Distribution hub
-  RETAIL_STORE // Physical retail location
-  FLAGSHIP_STORE // Main retail showcase
-  OUTLET_STORE // Discount retail location
-  POP_UP_STORE // Temporary retail location
-  KIOSK // Small retail point
-  SHOWROOM // Display and demo center
-  FACTORY // Manufacturing facility
-  FULFILLMENT_CENTER // E-commerce fulfillment
-  CROSS_DOCK // Transfer facility
-  COLD_STORAGE // Temperature-controlled storage
-  REMOTE // Remote work location
-  VENDOR_LOCATION // External vendor facility
-  OTHER // Other type of location
+    HEAD_OFFICE
+    BRANCH_OFFICE
+    WAREHOUSE
+    RETAIL_STORE
+    DISTRIBUTION_CENTER
+    FACTORY
+    REMOTE
 }
 
-enum IntegrationType {
-  ECOMMERCE
-  ACCOUNTING
-  CRM
-  ERP
-  SHIPPING
-  PAYMENT
-  EMAIL
-  OTHER
+// ============================================================================
+
+// 3. COMPANY INTEGRATION - Third-party integrations (Shopify, QuickBooks, etc.)
+model CompanyIntegration {
+    id        String @id @default(uuid())
+    companyId String
+
+    // Integration details
+    provider     String // "shopify", "quickbooks", "stripe"
+    providerName String // Display name
+
+    // Configuration
+    config        Json // API keys, settings (encrypted!)
+    webhookUrl    String?
+    webhookSecret String?
+
+    // OAuth tokens (if applicable)
+    accessToken    String?
+    refreshToken   String?
+    tokenExpiresAt DateTime?
+
+    // Status
+    status     IntegrationStatus @default(PENDING)
+    isActive   Boolean           @default(true)
+    lastSyncAt DateTime?
+    lastError  String?
+
+    // Sync settings
+    syncEnabled   Boolean @default(true)
+    syncFrequency String? // "hourly", "daily", "realtime"
+
+    // Audit
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    createdById String
+
+    // ✅ RELATIONS
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@unique([companyId, provider])
+    @@index([companyId, isActive])
+    @@map("company_integrations")
 }
 
 enum IntegrationStatus {
-  CONNECTED
-  DISCONNECTED
-  ERROR
-  SYNCING
-  PAUSED
+    PENDING // Not configured yet
+    CONNECTED // Active and working
+    ERROR // Has errors
+    DISCONNECTED // Manually disconnected
 }
 
-enum BillingPaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-  CANCELLED
+// ============================================================================
+
+// 4. USER INVITATION - Invite users to join company
+model UserInvitation {
+    id        String @id @default(uuid())
+    companyId String
+    email     String
+
+    // Invitation details
+    firstName String?
+    lastName  String?
+    role      CompanyRole @default(EMPLOYEE)
+    title     String?
+
+    // Token
+    token     String   @unique
+    expiresAt DateTime
+
+    // Status
+    status     InviteStatus @default(PENDING)
+    acceptedAt DateTime?
+    userId     String? // Set when user accepts
+
+    // Audit
+    createdAt   DateTime @default(now())
+    invitedById String
+
+    // ✅ RELATIONS
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    invitedBy User    @relation("UserInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+
+    @@unique([companyId, email])
+    @@index([email, status])
+    @@index([token])
+    @@index([expiresAt])
+    @@map("user_invitations")
 }
 
-enum InvitationStatus {
-  PENDING
-  SENT
-  ACCEPTED
-  DECLINED
-  EXPIRED
-  CANCELLED
+// ============================================================================
+
+// 5. USER PREFERENCE - User settings and preferences
+model UserPreference {
+    id     String @id @default(uuid())
+    userId String @unique
+
+    // Display preferences
+    theme      String @default("light") // "light", "dark", "auto"
+    language   String @default("en")
+    timezone   String @default("UTC")
+    dateFormat String @default("MM/DD/YYYY")
+
+    // Notification preferences
+    emailNotifications Boolean @default(true)
+    pushNotifications  Boolean @default(true)
+    smsNotifications   Boolean @default(false)
+
+    // Notification types
+    notifyLowStock      Boolean @default(true)
+    notifyOrderShipped  Boolean @default(true)
+    notifyNewOrder      Boolean @default(true)
+    notifySystemUpdates Boolean @default(false)
+
+    // UI preferences
+    sidebarCollapsed Boolean @default(false)
+    defaultDashboard String? // Path to default dashboard
+    itemsPerPage     Int     @default(25)
+
+    // Custom preferences (flexible)
+    customSettings Json?
+
+    // Audit
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // ✅ RELATIONS
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("user_preferences")
+}
+
+// ============================================================================
+
+// 6. USER NOTIFICATION - In-app notifications
+model UserNotification {
+    id        String  @id @default(uuid())
+    userId    String
+    companyId String? // For company-specific notifications
+
+    // Notification content
+    type    NotificationType
+    title   String
+    message String
+
+    // Additional info
+    icon       String?
+    color      String?
+    actionUrl  String?
+    actionText String?
+
+    // Priority
+    priority NotificationPriority @default(NORMAL)
+
+    // Reference
+    referenceType String? // "order", "product", "inventory"
+    referenceId   String?
+
+    // Status
+    isRead      Boolean   @default(false)
+    readAt      DateTime?
+    isDismissed Boolean   @default(false)
+    dismissedAt DateTime?
+
+    // Delivery
+    sentAt    DateTime  @default(now())
+    expiresAt DateTime?
+
+    // Audit
+    createdAt DateTime @default(now())
+
+    // ✅ RELATIONS
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId, isRead])
+    @@index([userId, createdAt])
+    @@index([expiresAt])
+    @@map("user_notifications")
 }
 
 enum NotificationType {
-  INFO
-  SUCCESS
-  WARNING
-  ERROR
-  ALERT
-  REMINDER
+    INFO
+    SUCCESS
+    WARNING
+    ERROR
+    SYSTEM
+    ORDER
+    INVENTORY
+    PAYMENT
 }
 
 enum NotificationPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
+    LOW
+    NORMAL
+    HIGH
+    URGENT
+}
+
+// ============================================================================
+
+// 7. BILLING HISTORY - Subscription payment tracking
+model BillingHistory {
+    id        String @id @default(uuid())
+    companyId String
+
+    // Billing period
+    periodStart DateTime
+    periodEnd   DateTime
+
+    // Amount
+    amount   Decimal @supabaseDb.Decimal(12, 2)
+    currency String  @default("USD")
+
+    // Plan
+    plan         SubscriptionPlan
+    billingCycle BillingCycle
+
+    // Payment
+    status        PaymentStatus
+    paymentMethod String? // "card", "bank_transfer", "invoice"
+    transactionId String? // Stripe payment ID
+    invoiceUrl    String?
+    receiptUrl    String?
+
+    // Dates
+    dueDate DateTime
+    paidAt  DateTime?
+
+    // Failure handling
+    failureReason String?
+    retryCount    Int       @default(0)
+    nextRetryAt   DateTime?
+
+    // Audit
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // ✅ RELATIONS
+    company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@index([companyId, status])
+    @@index([companyId, periodStart])
+    @@index([transactionId])
+    @@map("billing_history")
+}
+
+enum BillingCycle {
+    MONTHLY
+    QUARTERLY
+    YEARLY
+    ONE_TIME
+}
+
+enum PaymentStatus {
+    PENDING
+    PROCESSING
+    PAID
+    FAILED
+    REFUNDED
+    CANCELLED
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum BusinessType {
+    PRIVATE
+    PUBLIC
+    NONPROFIT
+    GOVERNMENT
+    PARTNERSHIP
+    SOLE_PROPRIETORSHIP
+}
+
+enum SubscriptionPlan {
+    FREE
+    BASIC
+    PROFESSIONAL
+    ENTERPRISE
+    CUSTOM
+}
+
+enum SubscriptionStatus {
+    TRIAL
+    ACTIVE
+    PAST_DUE
+    CANCELLED
+    SUSPENDED
+    EXPIRED
+}
+
+enum CompanyRole {
+    OWNER
+    ADMIN
+    MANAGER
+    SUPERVISOR
+    EMPLOYEE
+    CONTRACTOR
+    VIEWER
 }
 
 enum AuditSeverity {
-  INFO
-  WARNING
-  ERROR
-  CRITICAL
-}
-
-// ===================================================================
-// USER LOCATION ACCESS MANAGEMENT
-// ===================================================================
-
-model UserLocationAccess {
-  id          String              @id @default(uuid())
-  userId      String
-  companyId   String
-  locationId  String
-  accessLevel LocationAccessLevel @default(READ_ONLY)
-  canManage   Boolean             @default(false)
-  startDate   DateTime            @default(now())
-  endDate     DateTime?
-  isActive    Boolean             @default(true)
-  grantedBy   String? // User ID who granted access
-  grantedAt   DateTime            @default(now())
-  // Relations
-  companyUser CompanyUser         @relation(fields: [userId, companyId], references: [userId, companyId])
-  location    CompanyLocation     @relation(fields: [locationId], references: [id])
-
-  @@unique([userId, locationId])
-  @@map("user_location_access")
-}
-
-enum LocationAccessLevel {
-  READ_ONLY // Can view location data
-  STANDARD // Can perform standard operations
-  SUPERVISOR // Can supervise operations
-  MANAGER // Can manage location settings
-  ADMIN // Full administrative access
+    INFO
+    WARNING
+    ERROR
+    CRITICAL
 }

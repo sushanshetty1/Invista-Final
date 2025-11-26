@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function PATCH(
 	request: NextRequest,
@@ -13,47 +13,25 @@ export async function PATCH(
 		const audit = await neonClient.inventoryAudit.update({
 			where: {
 				id: id,
-				type: "CYCLE_COUNT",
 			},
 			data: {
 				...(status && { status }),
 				...(notes && { notes }),
 				...(plannedDate && { plannedDate: new Date(plannedDate) }),
-				updatedAt: new Date(),
-			},
-			include: {
-				warehouse: {
-					select: {
-						id: true,
-						name: true,
-						code: true,
-					},
-				},
-				product: {
-					select: {
-						id: true,
-						name: true,
-						sku: true,
-					},
-				},
 			},
 		});
 
 		// Transform to schedule format
 		const schedule = {
 			id: audit.id,
-			name: `Cycle Count - ${audit.warehouse?.name || audit.product?.name || "All Products"}`,
+			name: `Cycle Count - ${audit.warehouseId || "All Warehouses"}`,
 			auditNumber: audit.auditNumber,
 			warehouseId: audit.warehouseId,
-			productId: audit.productId,
-			warehouse: audit.warehouse,
-			product: audit.product,
 			status: audit.status,
 			plannedDate: audit.plannedDate,
 			nextCountDate: audit.plannedDate,
-			type: "CYCLE_COUNT",
+			auditType: audit.auditType,
 			createdAt: audit.createdAt,
-			updatedAt: audit.updatedAt,
 		};
 
 		return NextResponse.json(schedule);
@@ -75,7 +53,6 @@ export async function DELETE(
 		await neonClient.inventoryAudit.delete({
 			where: {
 				id: id,
-				type: "CYCLE_COUNT",
 			},
 		});
 

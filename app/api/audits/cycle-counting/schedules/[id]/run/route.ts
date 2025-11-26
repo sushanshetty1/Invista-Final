@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function POST(
 	request: NextRequest,
@@ -12,11 +12,6 @@ export async function POST(
 		const audit = await neonClient.inventoryAudit.findUnique({
 			where: {
 				id,
-				type: "CYCLE_COUNT",
-			},
-			include: {
-				warehouse: true,
-				product: true,
 			},
 		});
 
@@ -32,30 +27,21 @@ export async function POST(
 				{ error: "Cycle count can only be started from PLANNED status" },
 				{ status: 400 },
 			);
-		} // Update audit status
+		}
+
+		// Update audit status
 		await neonClient.inventoryAudit.update({
 			where: { id },
 			data: {
 				status: "IN_PROGRESS",
-				startedDate: new Date(),
+				startedAt: new Date(),
 			},
-		}); // Generate audit items based on warehouse and/or product selection
-		let inventoryItems: Record<string, unknown>[] = [];
+		});
 
-		if (audit.productId) {
-			// Product-specific audit
-			inventoryItems = await neonClient.inventoryItem.findMany({
-				where: {
-					productId: audit.productId,
-					...(audit.warehouseId && { warehouseId: audit.warehouseId }),
-				},
-				include: {
-					product: true,
-					variant: true,
-					warehouse: true,
-				},
-			});
-		} else if (audit.warehouseId) {
+		// Generate audit items based on warehouse selection
+		let inventoryItems;
+
+		if (audit.warehouseId) {
 			// Warehouse-specific audit (limit to ABC items for cycle counting)
 			inventoryItems = await neonClient.inventoryItem.findMany({
 				where: {
@@ -82,20 +68,15 @@ export async function POST(
 				},
 				take: 50, // Very limited for cycle counts
 			});
-		} // Create audit items
+		}
+
+		// Create audit items
 		const auditItemsData = inventoryItems.map((item) => ({
 			auditId: id,
-			productId: item.productId as string,
-			variantId: item.variantId as string | null,
-			warehouseId: item.warehouseId as string,
-			systemQty: item.quantity as number,
-			location:
-				(item.locationCode as string | null) ||
-				`${(item.zone as string) || ""}-${(item.aisle as string) || ""}-${(item.shelf as string) || ""}`.replace(
-					/^-+|-+$/g,
-					"",
-				) ||
-				null,
+			inventoryItemId: item.id,
+			productId: item.productId,
+			warehouseId: item.warehouseId,
+			expectedQuantity: item.quantity,
 			status: "PENDING" as const,
 		}));
 
@@ -109,7 +90,7 @@ export async function POST(
 		await neonClient.inventoryAudit.update({
 			where: { id },
 			data: {
-				totalItems: auditItemsData.length,
+				itemsPlanned: auditItemsData.length,
 				itemsCounted: 0,
 			},
 		});

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-// import { supabaseClient } from "@/lib/db"; // DISABLED
+// import { supabaseClient } from "@/lib/prisma"; // DISABLED
 
 export async function POST(_request: NextRequest) {
     // DISABLED: This endpoint is temporarily disabled to prevent system overload

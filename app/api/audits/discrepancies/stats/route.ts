@@ -1,12 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
 	try {
 		const { searchParams } = new URL(request.url);
 		const period = searchParams.get("period") || "30";
 		const warehouseId = searchParams.get("warehouseId");
-		const productId = searchParams.get("productId");
 
 		const periodDays = parseInt(period);
 		const dateFrom = new Date();
@@ -14,7 +13,7 @@ export async function GET(request: NextRequest) {
 
 		// Build where clause for filtering
 		const where: Record<string, unknown> = {
-			completedDate: {
+			completedAt: {
 				gte: dateFrom,
 			},
 			status: "COMPLETED",
@@ -25,36 +24,45 @@ export async function GET(request: NextRequest) {
 			where.warehouseId = warehouseId;
 		}
 
-		if (productId) {
-			where.productId = productId;
-		}
-
 		// Get audits with discrepancies
 		const auditsWithDiscrepancies = await neonClient.inventoryAudit.findMany({
 			where,
 			include: {
-				warehouse: {
-					select: { id: true, name: true, code: true },
-				},
-				product: {
-					select: { id: true, name: true, sku: true },
-				},
 				items: {
 					where: {
-						adjustmentQty: { not: 0 },
+						variance: { not: 0 },
 					},
-					include: {
-						product: {
-							select: { id: true, name: true, sku: true },
-						},
-						variant: {
-							select: { id: true, name: true, sku: true },
-						},
+					select: {
+						id: true,
+						productId: true,
+						variance: true,
 					},
 				},
 			},
-			orderBy: { completedDate: "desc" },
+			orderBy: { completedAt: "desc" },
 		});
+
+		// Get warehouse and product details separately
+		const warehouseIds = [...new Set(auditsWithDiscrepancies.map(a => a.warehouseId).filter(Boolean))] as string[];
+		const productIds = [...new Set(auditsWithDiscrepancies.flatMap(a => a.items.map(i => i.productId)))];
+
+		const [warehouses, products] = await Promise.all([
+			warehouseIds.length > 0
+				? neonClient.warehouse.findMany({
+					where: { id: { in: warehouseIds } },
+					select: { id: true, name: true, code: true },
+				})
+				: [],
+			productIds.length > 0
+				? neonClient.product.findMany({
+					where: { id: { in: productIds } },
+					select: { id: true, name: true, sku: true },
+				})
+				: [],
+		]);
+
+		const warehouseMap = new Map(warehouses.map(w => [w.id, w]));
+		const productMap = new Map(products.map(p => [p.id, p]));
 
 		// Calculate summary stats
 		const totalDiscrepancies = auditsWithDiscrepancies.reduce(
@@ -62,8 +70,14 @@ export async function GET(request: NextRequest) {
 			0,
 		);
 
+		// Calculate total value impact from items variance
 		const totalValueImpact = auditsWithDiscrepancies.reduce(
-			(sum, audit) => sum + Number(audit.adjustmentValue || 0),
+			(sum, audit) => {
+				const auditValueImpact = audit.items.reduce((itemSum, item) => {
+					return itemSum + Math.abs(item.variance || 0);
+				}, 0);
+				return sum + auditValueImpact;
+			},
 			0,
 		);
 
@@ -75,7 +89,8 @@ export async function GET(request: NextRequest) {
 		// Group by warehouse
 		const warehouseStats = auditsWithDiscrepancies.reduce(
 			(acc, audit) => {
-				const warehouseName = audit.warehouse?.name || "Unknown";
+				const warehouse = audit.warehouseId ? warehouseMap.get(audit.warehouseId) : null;
+				const warehouseName = warehouse?.name || "Unknown";
 				if (!acc[warehouseName]) {
 					acc[warehouseName] = {
 						name: warehouseName,
@@ -86,7 +101,8 @@ export async function GET(request: NextRequest) {
 				}
 				acc[warehouseName].audits += 1;
 				acc[warehouseName].discrepancies += audit.discrepancies || 0;
-				acc[warehouseName].valueImpact += Number(audit.adjustmentValue || 0);
+				const auditValueImpact = audit.items.reduce((sum, item) => sum + Math.abs(item.variance || 0), 0);
+				acc[warehouseName].valueImpact += auditValueImpact;
 				return acc;
 			},
 			{} as Record<
@@ -100,22 +116,23 @@ export async function GET(request: NextRequest) {
 			>,
 		);
 
-		// Group by product category (simplified)
+		// Group by product
 		const productStats = auditsWithDiscrepancies.reduce(
 			(acc, audit) => {
 				audit.items.forEach((item) => {
-					const productName = item.product?.name || "Unknown";
+					const product = productMap.get(item.productId);
+					const productName = product?.name || "Unknown";
 					if (!acc[productName]) {
 						acc[productName] = {
 							name: productName,
-							sku: item.product?.sku,
+							sku: product?.sku,
 							discrepancies: 0,
 							totalAdjustment: 0,
 						};
 					}
-					if (item.adjustmentQty !== 0) {
+					if (item.variance !== 0) {
 						acc[productName].discrepancies += 1;
-						acc[productName].totalAdjustment += item.adjustmentQty || 0;
+						acc[productName].totalAdjustment += item.variance || 0;
 					}
 				});
 				return acc;
@@ -134,8 +151,8 @@ export async function GET(request: NextRequest) {
 		// Time series data (daily aggregation)
 		const timeSeriesData = auditsWithDiscrepancies.reduce(
 			(acc, audit) => {
-				if (audit.completedDate) {
-					const date = audit.completedDate.toISOString().split("T")[0];
+				if (audit.completedAt) {
+					const date = audit.completedAt.toISOString().split("T")[0];
 					if (!acc[date]) {
 						acc[date] = {
 							date,
@@ -146,7 +163,8 @@ export async function GET(request: NextRequest) {
 					}
 					acc[date].audits += 1;
 					acc[date].discrepancies += audit.discrepancies || 0;
-					acc[date].valueImpact += Number(audit.adjustmentValue || 0);
+					const auditValueImpact = audit.items.reduce((sum, item) => sum + Math.abs(item.variance || 0), 0);
+					acc[date].valueImpact += auditValueImpact;
 				}
 				return acc;
 			},
@@ -178,16 +196,19 @@ export async function GET(request: NextRequest) {
 			),
 			recentDiscrepancies: auditsWithDiscrepancies
 				.slice(0, 10)
-				.map((audit) => ({
-					id: audit.id,
-					auditNumber: audit.auditNumber,
-					warehouse: audit.warehouse?.name,
-					product: audit.product?.name,
-					discrepancies: audit.discrepancies,
-					valueImpact: audit.adjustmentValue,
-					completedDate: audit.completedDate,
-					itemCount: audit.items.length,
-				})),
+				.map((audit) => {
+					const warehouse = audit.warehouseId ? warehouseMap.get(audit.warehouseId) : null;
+					const auditValueImpact = audit.items.reduce((sum, item) => sum + Math.abs(item.variance || 0), 0);
+					return {
+						id: audit.id,
+						auditNumber: audit.auditNumber,
+						warehouse: warehouse?.name,
+						discrepancies: audit.discrepancies,
+						valueImpact: auditValueImpact,
+						completedDate: audit.completedAt,
+						itemCount: audit.items.length,
+					};
+				}),
 		});
 	} catch (error) {
 		console.error("Error fetching discrepancy stats:", error);

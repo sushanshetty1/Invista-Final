@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { neonClient } from "@/lib/db";
+import { neonClient } from "@/lib/prisma";
 
 export async function PATCH(
 	request: NextRequest,
@@ -48,22 +48,22 @@ export async function PATCH(
 		if (status && status !== existingAudit.status) {
 			updateData.status = status;
 
-			if (status === "IN_PROGRESS" && !existingAudit.startedDate) {
-				updateData.startedDate = new Date();
+			if (status === "IN_PROGRESS" && !existingAudit.startedAt) {
+				updateData.startedAt = new Date();
 			}
 
 			if (status === "COMPLETED") {
-				updateData.completedDate = new Date();
+				updateData.completedAt = new Date();
 				// Calculate final statistics
 				const auditItems = await neonClient.inventoryAuditItem.findMany({
 					where: { auditId },
 				});
 
 				const itemsCounted = auditItems.filter(
-					(item) => item.countedQty !== null,
+					(item) => item.countedQuantity !== null,
 				).length;
 				const discrepancies = auditItems.filter(
-					(item) => item.adjustmentQty !== null && item.adjustmentQty !== 0,
+					(item) => item.variance !== null && item.variance !== 0,
 				).length;
 
 				updateData.itemsCounted = itemsCounted;
