@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Base brand schema
+// Base brand schema (aligned with Neon Brand model)
 export const baseBrandSchema = z.object({
 	name: z
 		.string()
@@ -9,13 +9,14 @@ export const baseBrandSchema = z.object({
 	description: z.string().optional(),
 	logo: z.string().url().optional(),
 	website: z.string().url().optional(),
-	contactEmail: z.string().email().optional(),
-	contactPhone: z.string().optional(),
+	// Note: Brand model does NOT have contactEmail/contactPhone - removed
 	isActive: z.boolean().default(true),
 });
 
-// Create brand schema (no createdBy field as it's not in the DB schema)
-export const createBrandSchema = baseBrandSchema;
+// Create brand schema (requires companyId for multi-tenancy)
+export const createBrandSchema = baseBrandSchema.extend({
+	companyId: z.string().uuid("Invalid company ID"),
+});
 
 // Update brand schema
 export const updateBrandSchema = baseBrandSchema.partial().extend({

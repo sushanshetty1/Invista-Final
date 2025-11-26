@@ -7,12 +7,11 @@ import {
 } from "@/lib/api-utils";
 import { authenticate } from "@/lib/auth";
 import {
-	warehouseQuerySchema,
-	createWarehouseSchema,
+	getWarehouses,
+	createWarehouse,
 	type WarehouseQueryInput,
 	type CreateWarehouseInput,
-} from "@/lib/validations/warehouse";
-import { getWarehouses, createWarehouse } from "@/lib/actions/warehouses";
+} from "@/lib/actions/warehouses";
 
 // Rate limiting: 100 requests per minute per IP
 const RATE_LIMIT = 100;
@@ -42,14 +41,14 @@ export async function GET(request: NextRequest) {
 			page: parseInt(searchParams.get("page") || "1"),
 			limit: Math.min(parseInt(searchParams.get("limit") || "20"), 100), // Max 100 items
 			search: searchParams.get("search") || undefined,
+			companyId: searchParams.get("companyId") || undefined,
 			type:
 				(searchParams.get("type") as
-					| "WAREHOUSE"
+					| "STANDARD"
 					| "DISTRIBUTION_CENTER"
 					| "RETAIL_STORE"
-					| "FULFILLMENT_CENTER"
-					| "CROSS_DOCK"
-					| "COLD_STORAGE") || undefined,
+					| "COLD_STORAGE"
+					| "FULFILLMENT_CENTER") || undefined,
 			isActive: searchParams.get("isActive")
 				? searchParams.get("isActive") === "true"
 				: undefined,
@@ -63,11 +62,8 @@ export async function GET(request: NextRequest) {
 			sortOrder: (searchParams.get("sortOrder") as "asc" | "desc") || "asc",
 		};
 
-		// Validate query parameters
-		const validatedQuery = warehouseQuerySchema.parse(queryInput);
-
 		// Fetch warehouses using server action
-		const result = await getWarehouses(validatedQuery);
+		const result = await getWarehouses(queryInput);
 
 		if (!result.success) {
 			return errorResponse(result.error!, 400);
@@ -86,7 +82,9 @@ export async function POST(request: NextRequest) {
 		const clientId = getClientIdentifier(request);
 		if (!checkRateLimit(`${clientId}:write`, 20, RATE_WINDOW)) {
 			return errorResponse("Rate limit exceeded for write operations", 429);
-		} // Parse request body
+		}
+
+		// Parse request body
 		const body = await request.json();
 
 		// Authentication check
@@ -95,13 +93,8 @@ export async function POST(request: NextRequest) {
 			return errorResponse("Unauthorized", 401);
 		}
 
-		const createInput: CreateWarehouseInput = body;
-
-		// Validate input
-		const validatedInput = createWarehouseSchema.parse(createInput);
-
-		// Create warehouse using server action
-		const result = await createWarehouse(validatedInput);
+		// Create warehouse using server action (validation happens in the action)
+		const result = await createWarehouse(body as CreateWarehouseInput);
 
 		if (!result.success) {
 			return errorResponse(result.error!, 400);

@@ -2,8 +2,9 @@
 
 > **Purpose:** This document provides complete context for any AI assistant (Claude, GPT, etc.) to understand the project state and continue work seamlessly.
 > 
-> **Last Updated:** November 26, 2025
+> **Last Updated:** November 26, 2025 (Session 2 - Quick Fixes Complete)
 > **Updated By:** Claude Opus 4.5 (GitHub Copilot)
+> **Status:** ✅ All quick fixes done, 6 files need rebuild (177 errors remaining)
 
 ---
 
@@ -100,7 +101,7 @@ import { neonClient } from "@/lib/prisma";
 import { supabaseClient } from "@/lib/prisma";
 ```
 
-### Phase 3: API Routes ✅ COMPLETE (27+ files)
+### Phase 3: API Routes ✅ COMPLETE (29+ files)
 
 **ALL API routes in `app/api/` are now fixed and have ZERO TypeScript errors.**
 
@@ -135,20 +136,22 @@ Fixed routes include:
 - ✅ `products/route.ts` - Products list
 - ✅ `stock/alerts/route.ts` - Stock alerts
 - ✅ `stock/movements/route.ts` - Stock movements
+- ✅ `warehouses/route.ts` - Warehouses list & create
+- ✅ `warehouses/[id]/route.ts` - Single warehouse CRUD
 
 #### Other APIs
 - ✅ `app/api/product-suppliers/route.ts`
 - ✅ `app/api/user/industry/route.ts`
 
-### Phase 4: Lib Actions ⚠️ PARTIALLY COMPLETE
+### Phase 4: Lib Actions ✅ QUICK FIXES COMPLETE, ⚠️ REBUILDS PENDING
 
 | File | Errors | Lines | Status |
 |------|--------|-------|--------|
 | `lib/actions/customers.ts` | 0 | ~400 | ✅ Fixed |
-| `lib/actions/brands.ts` | 1 | ~250 | ❌ Quick fix needed |
-| `lib/actions/warehouses.ts` | 1 | ~300 | ❌ Quick fix needed |
-| `lib/actions/categories.ts` | 2 | ~270 | ❌ Quick fix needed |
-| `lib/chat-query-handlers.ts` | 3 | ~1100 | ❌ Quick fix needed |
+| `lib/actions/warehouses.ts` | 0 | ~350 | ✅ Fixed (rewrote to use neonClient.warehouse) |
+| `lib/actions/brands.ts` | 0 | ~250 | ✅ Fixed (added companyId, removed invalid fields) |
+| `lib/actions/categories.ts` | 0 | ~270 | ✅ Fixed (added companyId, icon, removed image) |
+| `lib/chat-query-handlers.ts` | 0 | ~1100 | ✅ Fixed (inventory → inventoryItems relation name) |
 | `lib/actions/suppliers.ts` | 16 | ~600 | ❌ REBUILD |
 | `lib/actions/products.ts` | 22 | ~650 | ❌ REBUILD |
 | `lib/actions/purchase-orders.ts` | 27 | ~650 | ❌ REBUILD |
@@ -160,16 +163,15 @@ Fixed routes include:
 
 ## 🔴 WHAT REMAINS TO DO
 
-### Priority 1: Quick Fixes (4 files, ~7 errors total)
+### ~~Priority 1: Quick Fixes~~ ✅ ALL COMPLETE
 
-These files have minor errors and can be fixed in minutes:
+All quick fix files have been fixed:
+- ✅ `lib/actions/brands.ts` - Fixed
+- ✅ `lib/actions/warehouses.ts` - Fixed (completely rewritten)
+- ✅ `lib/actions/categories.ts` - Fixed
+- ✅ `lib/chat-query-handlers.ts` - Fixed
 
-1. **`lib/actions/brands.ts`** - 1 error
-2. **`lib/actions/warehouses.ts`** - 1 error
-3. **`lib/actions/categories.ts`** - 2 errors
-4. **`lib/chat-query-handlers.ts`** - 3 errors
-
-### Priority 2: Major Rebuilds (5 files, ~147 errors total)
+### Priority 2: Major Rebuilds (6 files, ~177 errors total)
 
 These files need complete rewrites to match new schema:
 
@@ -228,16 +230,18 @@ Invista/
 │   │   ├── neon.ts             # Neon client singleton
 │   │   ├── supabase.ts         # Supabase client singleton
 │   │   └── sync.ts             # Cross-DB sync utilities
-│   ├── actions/                # Server actions (NEEDS WORK)
-│   │   ├── brands.ts
-│   │   ├── categories.ts
+│   ├── actions/                # Server actions
+│   │   ├── brands.ts           # ✅ Fixed
+│   │   ├── categories.ts       # ✅ Fixed
 │   │   ├── customers.ts        # ✅ Fixed
-│   │   ├── inventory.ts        # ❌ 28 errors
-│   │   ├── orders.ts           # ❌ 54 errors
-│   │   ├── products.ts         # ❌ 22 errors
-│   │   ├── purchase-orders.ts  # ❌ 27 errors
-│   │   ├── suppliers.ts        # ❌ 16 errors
-│   │   └── warehouses.ts
+│   │   ├── warehouses.ts       # ✅ Fixed (rewrote entirely)
+│   │   ├── inventory.ts        # ❌ 28 errors - REBUILD
+│   │   ├── orders.ts           # ❌ 54 errors - REBUILD
+│   │   ├── orders-new.ts       # ❌ DELETE (duplicate)
+│   │   ├── products.ts         # ❌ 22 errors - REBUILD
+│   │   ├── purchase-orders.ts  # ❌ 27 errors - REBUILD
+│   │   └── suppliers.ts        # ❌ 16 errors - REBUILD
+│   ├── chat-query-handlers.ts  # ✅ Fixed
 │   └── ...
 ├── app/
 │   ├── api/                    # ✅ ALL FIXED
@@ -586,26 +590,16 @@ When continuing this work:
 
 ### For Human Developers
 
-1. **Quick fixes first:**
-   ```bash
-   # Run TypeScript check to see current errors
-   npx tsc --noEmit 2>&1 | findstr "error TS"
-   ```
+1. **~~Quick fixes first~~** ✅ ALL DONE - brands, warehouses, categories, chat-query-handlers are fixed
 
-2. **Fix in order:**
-   - `lib/actions/brands.ts` (1 error)
-   - `lib/actions/warehouses.ts` (1 error)
-   - `lib/actions/categories.ts` (2 errors)
-   - `lib/chat-query-handlers.ts` (3 errors)
+2. **Rebuild major files** (use schema as reference):
+   - `lib/actions/suppliers.ts` - 16 errors
+   - `lib/actions/products.ts` - 22 errors
+   - `lib/actions/purchase-orders.ts` - 27 errors
+   - `lib/actions/inventory.ts` - 28 errors
+   - `lib/actions/orders.ts` - 54 errors
 
-3. **Rebuild major files** (use schema as reference):
-   - `lib/actions/suppliers.ts`
-   - `lib/actions/products.ts`
-   - `lib/actions/purchase-orders.ts`
-   - `lib/actions/inventory.ts`
-   - `lib/actions/orders.ts`
-
-4. **Delete duplicate:**
+3. **Delete duplicate:**
    - Remove `lib/actions/orders-new.ts`
 
 ### Verification Commands
@@ -632,10 +626,22 @@ npx prisma db push --schema=prisma/schema-supabase.prisma
 
 | Category | Total | Fixed | Remaining |
 |----------|-------|-------|-----------|
-| API Routes | 27+ | 27+ | 0 |
+| API Routes | 29+ | 29+ | 0 |
 | Lib/Prisma | 4 | 4 | 0 |
-| Lib/Actions | 11 | 1 | 10 |
-| **Total Errors** | **184** | **~30** | **~154** |
+| Lib/Actions (Quick Fixes) | 4 | 4 | 0 |
+| Lib/Actions (Rebuilds) | 6 | 0 | 6 |
+| Lib/Chat Query Handlers | 1 | 1 | 0 |
+| **Total Errors** | **184** | **~7** | **~177** |
+
+### Files Still Needing Rebuild (177 errors total):
+| File | Errors |
+|------|--------|
+| `lib/actions/orders.ts` | 54 |
+| `lib/actions/orders-new.ts` | 30 (DELETE) |
+| `lib/actions/inventory.ts` | 28 |
+| `lib/actions/purchase-orders.ts` | 27 |
+| `lib/actions/products.ts` | 22 |
+| `lib/actions/suppliers.ts` | 16 |
 
 ---
 

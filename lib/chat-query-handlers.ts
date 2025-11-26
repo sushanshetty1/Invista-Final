@@ -23,7 +23,7 @@ export async function handleInventoryLookup(
 ): Promise<QueryResult> {
   try {
     const { getInventory } = await import("@/lib/actions/inventory");
-    
+
     const result = await getInventory({
       page: 1,
       limit: 10,
@@ -40,7 +40,7 @@ export async function handleInventoryLookup(
     }
 
     const inventory = (result.data as any).items || [];
-    
+
     if (inventory.length === 0) {
       return {
         success: true,
@@ -69,7 +69,7 @@ export async function handleInventoryLookup(
 export async function handleLowStockQuery(companyId: string): Promise<QueryResult> {
   try {
     const { getLowStockAlerts } = await import("@/lib/actions/inventory");
-    
+
     const result = await getLowStockAlerts();
 
     if (!result.success || !result.data) {
@@ -80,7 +80,7 @@ export async function handleLowStockQuery(companyId: string): Promise<QueryResul
     }
 
     const items = result.data as any[];
-    
+
     if (items.length === 0) {
       return {
         success: true,
@@ -112,7 +112,7 @@ export async function handleInventoryMovements(
 ): Promise<QueryResult> {
   try {
     const { getStockMovements } = await import("@/lib/actions/inventory");
-    
+
     const result = await getStockMovements({
       page: 1,
       limit: 20,
@@ -129,7 +129,7 @@ export async function handleInventoryMovements(
 
     const movements = (result.data as any).movements || [];
     const formatted = formatStockMovements(movements);
-    
+
     return {
       success: true,
       data: movements,
@@ -164,7 +164,7 @@ export async function handleProductsList(
 ): Promise<QueryResult> {
   try {
     const { getProducts } = await import("@/lib/actions/products");
-    
+
     const result = await getProducts({
       page: 1,
       limit: 20,
@@ -183,13 +183,13 @@ export async function handleProductsList(
 
     const products = (result.data as any).products || [];
     const pagination = (result.data as any).pagination;
-    
+
     console.log("[handleProductsList] Found products:", products.length);
-    
+
     const formatted = formatProductsList(products, pagination);
-    
+
     console.log("[handleProductsList] Formatted response length:", formatted.length);
-    
+
     return {
       success: true,
       data: { products, pagination },
@@ -213,7 +213,7 @@ export async function handleProductsSearch(
 ): Promise<QueryResult> {
   try {
     const { getProducts } = await import("@/lib/actions/products");
-    
+
     const result = await getProducts({
       page: 1,
       limit: 10,
@@ -230,7 +230,7 @@ export async function handleProductsSearch(
     }
 
     const products = (result.data as any).products || [];
-    
+
     if (products.length === 0) {
       return {
         success: true,
@@ -240,7 +240,7 @@ export async function handleProductsSearch(
     }
 
     const formatted = formatProductsList(products);
-    
+
     return {
       success: true,
       data: products,
@@ -263,7 +263,7 @@ export async function handleProductDetails(
 ): Promise<QueryResult> {
   try {
     const productId = String(parameters.productId || parameters.id || "");
-    
+
     if (!productId) {
       return {
         success: false,
@@ -283,7 +283,7 @@ export async function handleProductDetails(
 
     const product = result.data;
     const formatted = formatProductDetails(product);
-    
+
     return {
       success: true,
       data: product,
@@ -303,7 +303,7 @@ export async function handleProductDetails(
 export async function handleProductCount(companyId: string): Promise<QueryResult> {
   try {
     const { getProducts } = await import("@/lib/actions/products");
-    
+
     const result = await getProducts({
       page: 1,
       limit: 1,
@@ -319,7 +319,7 @@ export async function handleProductCount(companyId: string): Promise<QueryResult
     }
 
     const total = (result.data as any).pagination?.total || 0;
-    
+
     return {
       success: true,
       data: { count: total },
@@ -346,7 +346,7 @@ export async function handleOrderStatus(
 ): Promise<QueryResult> {
   try {
     const orderNumber = parameters.orderNumber || parameters.orderId || parameters.id || "";
-    
+
     if (!orderNumber) {
       return {
         success: false,
@@ -369,7 +369,7 @@ export async function handleOrderStatus(
     }
 
     const orders = (result.data as any).orders || [];
-    
+
     if (orders.length === 0) {
       return {
         success: true,
@@ -380,7 +380,7 @@ export async function handleOrderStatus(
 
     const order = orders[0];
     const formatted = formatOrderDetails(order);
-    
+
     return {
       success: true,
       data: order,
@@ -400,10 +400,10 @@ export async function handleOrderStatus(
 export async function handleRecentOrders(companyId: string): Promise<QueryResult> {
   try {
     const { getOrders } = await import("@/lib/actions/orders");
-    
+
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
+
     const result = await getOrders({
       page: 1,
       limit: 10,
@@ -418,7 +418,7 @@ export async function handleRecentOrders(companyId: string): Promise<QueryResult
     }
 
     const orders = (result.data as any).orders || [];
-    
+
     if (orders.length === 0) {
       return {
         success: true,
@@ -428,7 +428,7 @@ export async function handleRecentOrders(companyId: string): Promise<QueryResult
     }
 
     const formatted = formatRecentOrders(orders);
-    
+
     return {
       success: true,
       data: orders,
@@ -462,7 +462,7 @@ export async function handleOrderCount(
 ): Promise<QueryResult> {
   try {
     const { getOrders } = await import("@/lib/actions/orders");
-    
+
     const result = await getOrders({
       page: 1,
       limit: 1,
@@ -476,7 +476,7 @@ export async function handleOrderCount(
     }
 
     const total = (result.data as any).pagination?.total || 0;
-    
+
     return {
       success: true,
       data: { count: total },
@@ -503,7 +503,7 @@ export async function handlePurchaseOrdersList(
 ): Promise<QueryResult> {
   try {
     const { getPurchaseOrders } = await import("@/lib/actions/purchase-orders");
-    
+
     const result = await getPurchaseOrders({});
 
     if (!result.success || !result.data) {
@@ -515,7 +515,7 @@ export async function handlePurchaseOrdersList(
 
     const pos = result.data as any[];
     const formatted = formatPurchaseOrdersList(pos);
-    
+
     return {
       success: true,
       data: pos,
@@ -538,7 +538,7 @@ export async function handlePurchaseOrderStatus(
 ): Promise<QueryResult> {
   try {
     const poId = String(parameters.poId || parameters.id || "");
-    
+
     if (!poId) {
       return {
         success: false,
@@ -558,7 +558,7 @@ export async function handlePurchaseOrderStatus(
 
     const po = result.data;
     const formatted = formatPurchaseOrderDetails(po);
-    
+
     return {
       success: true,
       data: po,
@@ -578,7 +578,7 @@ export async function handlePurchaseOrderStatus(
 export async function handlePurchaseOrderStats(companyId: string): Promise<QueryResult> {
   try {
     const { getPurchaseOrderStats } = await import("@/lib/actions/purchase-orders");
-    
+
     const result = await getPurchaseOrderStats();
 
     if (!result.success || !result.data) {
@@ -590,7 +590,7 @@ export async function handlePurchaseOrderStats(companyId: string): Promise<Query
 
     const stats = result.data;
     const formatted = formatPurchaseOrderStats(stats);
-    
+
     return {
       success: true,
       data: stats,
@@ -610,7 +610,7 @@ export async function handlePurchaseOrderStats(companyId: string): Promise<Query
 export async function handleReorderSuggestions(companyId: string): Promise<QueryResult> {
   try {
     const { getReorderSuggestions } = await import("@/lib/actions/purchase-orders");
-    
+
     const result = await getReorderSuggestions();
 
     if (!result.success || !result.data) {
@@ -623,7 +623,7 @@ export async function handleReorderSuggestions(companyId: string): Promise<Query
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const suggestions = result.data as any;
     const suggestionList = Array.isArray(suggestions) ? suggestions : suggestions.suggestions || [];
-    
+
     if (suggestionList.length === 0) {
       return {
         success: true,
@@ -633,7 +633,7 @@ export async function handleReorderSuggestions(companyId: string): Promise<Query
     }
 
     const formatted = formatReorderSuggestions(suggestionList);
-    
+
     return {
       success: true,
       data: suggestionList,
@@ -684,7 +684,7 @@ export async function handleRecentAudits(companyId: string): Promise<QueryResult
     }
 
     const formatted = formatRecentAudits(audits);
-    
+
     return {
       success: true,
       data: audits,
@@ -707,7 +707,7 @@ export async function handleAuditStatus(
 ): Promise<QueryResult> {
   try {
     const auditNumber = parameters.auditNumber || parameters.auditId || parameters.id || "";
-    
+
     if (!auditNumber) {
       // If no specific audit requested, show recent audits
       return handleRecentAudits(companyId);
@@ -731,7 +731,7 @@ export async function handleAuditStatus(
 
     const data = await response.json();
     const audits = data.audits || [];
-    const audit = audits.find((a: any) => 
+    const audit = audits.find((a: any) =>
       a.auditNumber === auditNumber || a.id === auditNumber
     );
 
@@ -744,7 +744,7 @@ export async function handleAuditStatus(
     }
 
     const formatted = formatAuditDetails(audit);
-    
+
     return {
       success: true,
       data: audit,
@@ -781,7 +781,7 @@ export async function handleAuditStats(companyId: string): Promise<QueryResult> 
 
     const stats = await response.json();
     const formatted = formatAuditStats(stats);
-    
+
     return {
       success: true,
       data: stats,
@@ -828,7 +828,7 @@ export async function handleAuditDiscrepancies(companyId: string): Promise<Query
     }
 
     const formatted = formatAuditDiscrepancies(discrepancies);
-    
+
     return {
       success: true,
       data: discrepancies,
@@ -855,7 +855,7 @@ export async function handleSuppliersList(
 ): Promise<QueryResult> {
   try {
     const { getSuppliers } = await import("@/lib/actions/suppliers");
-    
+
     const result = await getSuppliers({
       page: 1,
       limit: 20,
@@ -872,9 +872,9 @@ export async function handleSuppliersList(
 
     const suppliers = (result.data as any).suppliers || [];
     const pagination = (result.data as any).pagination;
-    
+
     const formatted = formatSuppliersList(suppliers, pagination);
-    
+
     return {
       success: true,
       data: { suppliers, pagination },
@@ -897,7 +897,7 @@ export async function handleSupplierDetails(
 ): Promise<QueryResult> {
   try {
     const supplierId = String(parameters.supplierId || parameters.id || "");
-    
+
     if (!supplierId) {
       return {
         success: false,
@@ -917,7 +917,7 @@ export async function handleSupplierDetails(
 
     const supplier = result.data;
     const formatted = formatSupplierDetails(supplier);
-    
+
     return {
       success: true,
       data: supplier,
@@ -937,7 +937,7 @@ export async function handleSupplierDetails(
 export async function handleSupplierCount(companyId: string): Promise<QueryResult> {
   try {
     const { getSuppliers } = await import("@/lib/actions/suppliers");
-    
+
     const result = await getSuppliers({
       page: 1,
       limit: 1,
@@ -953,7 +953,7 @@ export async function handleSupplierCount(companyId: string): Promise<QueryResul
     }
 
     const total = (result.data as any).pagination?.total || 0;
-    
+
     return {
       success: true,
       data: { count: total },
@@ -981,7 +981,7 @@ export async function handleWarehousesList(
   try {
     const { getWarehouses } = await import("@/lib/actions/warehouses");
     const { neonClient } = await import("@/lib/prisma");
-    
+
     const result = await getWarehouses({
       page: 1,
       limit: 20,
@@ -998,13 +998,13 @@ export async function handleWarehousesList(
 
     const warehouses = (result.data as any).warehouses || [];
     const pagination = (result.data as any).pagination;
-    
+
     console.log("[handleWarehousesList] CompanyLocations from Supabase:", warehouses.map((w: any) => ({ id: w.id, name: w.name })));
-    
+
     // Get inventory counts from Neon database
     // Try multiple approaches: by locationId and by companyId
     let inventoryCounts: Record<string, number> = {};
-    
+
     try {
       // First, get all Neon warehouses for this company
       const neonWarehouses = await neonClient.warehouse.findMany({
@@ -1014,23 +1014,22 @@ export async function handleWarehousesList(
         include: {
           _count: {
             select: {
-              inventoryItems: true,
+              inventory: true,
             },
           },
         },
       });
-      
-      console.log("[handleWarehousesList] Neon Warehouses:", neonWarehouses.map((w: any) => ({ 
-        id: w.id, 
-        name: w.name, 
-        locationId: w.locationId,
-        itemCount: w._count?.inventoryItems 
+
+      console.log("[handleWarehousesList] Neon Warehouses:", neonWarehouses.map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        itemCount: w._count?.inventory
       })));
-      
+
       // If no warehouses in Neon, count total inventory items without warehouse assignment
       if (neonWarehouses.length === 0) {
         console.log("[handleWarehousesList] No Neon warehouses found, checking for products/inventory");
-        
+
         // Check total products for this company
         const totalProducts = await neonClient.product.count({
           where: {
@@ -1038,31 +1037,31 @@ export async function handleWarehousesList(
           },
         });
         console.log("[handleWarehousesList] Total products in Neon:", totalProducts);
-        
+
         // Since products contain stock info directly, show product count as "items"
         if (totalProducts > 0 && warehouses.length > 0) {
           inventoryCounts[warehouses[0].id] = totalProducts;
           console.log(`[handleWarehousesList] Showing ${totalProducts} products as warehouse items`);
         }
       } else {
-        // Map by locationId if available
+        // Map warehouse inventory counts by id
         neonWarehouses.forEach((warehouse: any) => {
-          if (warehouse.locationId && warehouse._count?.inventoryItems) {
-            inventoryCounts[warehouse.locationId] = warehouse._count.inventoryItems;
+          if (warehouse.id && warehouse._count?.inventory) {
+            inventoryCounts[warehouse.id] = warehouse._count.inventory;
           }
         });
-        
-        // If no locationId match, try matching by name or code
+
+        // If no direct match, try matching by name or code
         if (Object.keys(inventoryCounts).length === 0 && neonWarehouses.length > 0) {
-          console.log("[handleWarehousesList] No locationId matches, trying name/code matching");
+          console.log("[handleWarehousesList] No direct matches, trying name/code matching");
           warehouses.forEach((supabaseWarehouse: any) => {
-            const match = neonWarehouses.find((neonWh: any) => 
-              neonWh.name === supabaseWarehouse.name || 
+            const match = neonWarehouses.find((neonWh: any) =>
+              neonWh.name === supabaseWarehouse.name ||
               neonWh.code === supabaseWarehouse.code
             );
             if (match) {
-              inventoryCounts[supabaseWarehouse.id] = match._count?.inventoryItems || 0;
-              console.log(`[handleWarehousesList] Matched ${supabaseWarehouse.name} with ${match.name}: ${match._count?.inventoryItems} items`);
+              inventoryCounts[supabaseWarehouse.id] = match._count?.inventory || 0;
+              console.log(`[handleWarehousesList] Matched ${supabaseWarehouse.name} with ${match.name}: ${match._count?.inventory} items`);
             }
           });
         }
@@ -1070,17 +1069,17 @@ export async function handleWarehousesList(
     } catch (error) {
       console.error("[handleWarehousesList] Error fetching inventory counts:", error);
     }
-    
+
     // Merge inventory counts with warehouse data
     const warehousesWithCounts = warehouses.map((warehouse: any) => ({
       ...warehouse,
       _count: {
-        inventoryItems: inventoryCounts[warehouse.id] || 0,
+        inventory: inventoryCounts[warehouse.id] || 0,
       },
     }));
-    
+
     const formatted = formatWarehousesList(warehousesWithCounts, pagination);
-    
+
     return {
       success: true,
       data: { warehouses: warehousesWithCounts, pagination },
@@ -1104,7 +1103,7 @@ export async function handleWarehouseDetails(
   try {
     const warehouseId = String(parameters.warehouseId || parameters.id || "");
     const warehouseName = String(parameters.warehouseName || parameters.name || parameters.query || "");
-    
+
     if (!warehouseId && !warehouseName) {
       return {
         success: false,
@@ -1113,9 +1112,9 @@ export async function handleWarehouseDetails(
     }
 
     const { getWarehouses, getWarehouse } = await import("@/lib/actions/warehouses");
-    
+
     let warehouse;
-    
+
     // If we have an ID, fetch directly
     if (warehouseId) {
       const result = await getWarehouse(warehouseId);
@@ -1135,23 +1134,23 @@ export async function handleWarehouseDetails(
         sortBy: "name",
         sortOrder: "asc",
       });
-      
+
       if (!result.success || !result.data) {
         return {
           success: false,
           error: "Failed to search warehouses",
         };
       }
-      
+
       const warehouses = (result.data as any).locations || [];
       const lowerName = warehouseName.toLowerCase();
-      
+
       // Find warehouse by name (case-insensitive, partial match)
-      warehouse = warehouses.find((w: any) => 
+      warehouse = warehouses.find((w: any) =>
         w.name?.toLowerCase().includes(lowerName) ||
         w.code?.toLowerCase().includes(lowerName)
       );
-      
+
       if (!warehouse) {
         return {
           success: false,
@@ -1161,7 +1160,7 @@ export async function handleWarehouseDetails(
     }
 
     const formatted = formatWarehouseDetails(warehouse);
-    
+
     return {
       success: true,
       data: warehouse,
@@ -1184,7 +1183,7 @@ export async function handleWarehouseStock(
 ): Promise<QueryResult> {
   try {
     const warehouseId = String(parameters.warehouseId || parameters.id || "");
-    
+
     if (!warehouseId) {
       return {
         success: false,
@@ -1210,7 +1209,7 @@ export async function handleWarehouseStock(
 
     const items = (result.data as any).items || [];
     const formatted = formatWarehouseStock(items, warehouseId);
-    
+
     return {
       success: true,
       data: items,
@@ -1237,7 +1236,7 @@ export async function handleCustomersList(
 ): Promise<QueryResult> {
   try {
     const { getCustomers } = await import("@/lib/actions/customers");
-    
+
     const result = await getCustomers({
       companyId,
       limit: 20,
@@ -1253,7 +1252,7 @@ export async function handleCustomersList(
 
     const customers = result.data as any[];
     const formatted = formatCustomersList(customers);
-    
+
     return {
       success: true,
       data: customers,
@@ -1276,7 +1275,7 @@ export async function handleCustomerDetails(
 ): Promise<QueryResult> {
   try {
     const customerId = String(parameters.customerId || parameters.id || "");
-    
+
     if (!customerId) {
       return {
         success: false,
@@ -1296,7 +1295,7 @@ export async function handleCustomerDetails(
 
     const customer = result.data;
     const formatted = formatCustomerDetails(customer);
-    
+
     return {
       success: true,
       data: customer,
@@ -1316,7 +1315,7 @@ export async function handleCustomerDetails(
 export async function handleCustomerCount(companyId: string): Promise<QueryResult> {
   try {
     const { getCustomers } = await import("@/lib/actions/customers");
-    
+
     const result = await getCustomers({ companyId });
 
     if (!result.success || !result.data) {
@@ -1328,7 +1327,7 @@ export async function handleCustomerCount(companyId: string): Promise<QueryResul
 
     const customers = result.data as any[];
     const total = customers.length;
-    
+
     return {
       success: true,
       data: { count: total },
@@ -1355,7 +1354,7 @@ export async function handleCategoriesList(
 ): Promise<QueryResult> {
   try {
     const { getCategories } = await import("@/lib/actions/categories");
-    
+
     const result = await getCategories({
       page: 1,
       limit: 50,
@@ -1370,7 +1369,7 @@ export async function handleCategoriesList(
 
     const categories = (result.data as any).categories || [];
     const formatted = formatCategoriesList(categories);
-    
+
     return {
       success: true,
       data: categories,
@@ -1393,7 +1392,7 @@ export async function handleBrandsList(
 ): Promise<QueryResult> {
   try {
     const { getBrands } = await import("@/lib/actions/brands");
-    
+
     const result = await getBrands({
       page: 1,
       limit: 50,
@@ -1410,7 +1409,7 @@ export async function handleBrandsList(
 
     const brands = (result.data as any).brands || [];
     const formatted = formatBrandsList(brands);
-    
+
     return {
       success: true,
       data: brands,
@@ -1434,10 +1433,10 @@ export async function handleBrandsList(
 export async function handleAnalyticsOverview(companyId: string): Promise<QueryResult> {
   try {
     const { getOrders } = await import("@/lib/actions/orders");
-    
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     const result = await getOrders({
       page: 1,
       limit: 1000,
@@ -1453,7 +1452,7 @@ export async function handleAnalyticsOverview(companyId: string): Promise<QueryR
 
     const orders = (result.data as any).orders || [];
     const formatted = formatAnalyticsOverview(orders);
-    
+
     return {
       success: true,
       data: { orders },
@@ -1473,7 +1472,7 @@ export async function handleAnalyticsOverview(companyId: string): Promise<QueryR
 export async function handleRevenueQuery(companyId: string): Promise<QueryResult> {
   try {
     const { getOrders } = await import("@/lib/actions/orders");
-    
+
     const result = await getOrders({
       page: 1,
       limit: 1000,
@@ -1488,7 +1487,7 @@ export async function handleRevenueQuery(companyId: string): Promise<QueryResult
 
     const orders = (result.data as any).orders || [];
     const formatted = formatRevenueData(orders);
-    
+
     return {
       success: true,
       data: { orders },
@@ -1508,7 +1507,7 @@ export async function handleRevenueQuery(companyId: string): Promise<QueryResult
 export async function handleCustomerMetrics(companyId: string): Promise<QueryResult> {
   try {
     const { getCustomers } = await import("@/lib/actions/customers");
-    
+
     const result = await getCustomers({ companyId });
 
     if (!result.success || !result.data) {
@@ -1520,7 +1519,7 @@ export async function handleCustomerMetrics(companyId: string): Promise<QueryRes
 
     const customers = result.data as any[];
     const formatted = formatCustomerMetrics(customers);
-    
+
     return {
       success: true,
       data: { customers },
@@ -1540,7 +1539,7 @@ export async function handleCustomerMetrics(companyId: string): Promise<QueryRes
 export async function handleProductMetrics(companyId: string): Promise<QueryResult> {
   try {
     const { getProducts } = await import("@/lib/actions/products");
-    
+
     const result = await getProducts({
       page: 1,
       limit: 1000,
@@ -1558,7 +1557,7 @@ export async function handleProductMetrics(companyId: string): Promise<QueryResu
     const products = (result.data as any).products || [];
     const pagination = (result.data as any).pagination;
     const formatted = formatProductMetrics(products, pagination);
-    
+
     return {
       success: true,
       data: { products, pagination },
@@ -1586,7 +1585,7 @@ export async function handleOrderAnalytics(companyId: string): Promise<QueryResu
 export async function handleInventoryAnalytics(companyId: string): Promise<QueryResult> {
   try {
     const { getInventory } = await import("@/lib/actions/inventory");
-    
+
     const result = await getInventory({
       page: 1,
       limit: 1000,
@@ -1603,7 +1602,7 @@ export async function handleInventoryAnalytics(companyId: string): Promise<Query
 
     const items = (result.data as any).items || [];
     const formatted = formatInventoryAnalytics(items);
-    
+
     return {
       success: true,
       data: { items },
@@ -1639,7 +1638,7 @@ export async function handleLiveDataQuery(
       return handleInventoryMovements(parameters, companyId);
     case "inventory.alerts":
       return handleInventoryAlerts(companyId);
-    
+
     // Products
     case "products.list":
       return handleProductsList(parameters, companyId);
@@ -1649,7 +1648,7 @@ export async function handleLiveDataQuery(
       return handleProductDetails(parameters, companyId);
     case "products.count":
       return handleProductCount(companyId);
-    
+
     // Orders
     case "orders.status":
       return handleOrderStatus(parameters, companyId);
@@ -1659,7 +1658,7 @@ export async function handleLiveDataQuery(
       return handleOrderDetails(parameters, companyId);
     case "orders.count":
       return handleOrderCount(parameters, companyId);
-    
+
     // Purchase orders
     case "purchaseorders.list":
       return handlePurchaseOrdersList(parameters, companyId);
@@ -1669,7 +1668,7 @@ export async function handleLiveDataQuery(
       return handlePurchaseOrderStats(companyId);
     case "purchaseorders.reorder":
       return handleReorderSuggestions(companyId);
-    
+
     // Audits
     case "audits.recent":
       return handleRecentAudits(companyId);
@@ -1679,7 +1678,7 @@ export async function handleLiveDataQuery(
       return handleAuditStats(companyId);
     case "audits.discrepancies":
       return handleAuditDiscrepancies(companyId);
-    
+
     // Suppliers
     case "suppliers.list":
       return handleSuppliersList(parameters, companyId);
@@ -1687,7 +1686,7 @@ export async function handleLiveDataQuery(
       return handleSupplierDetails(parameters, companyId);
     case "suppliers.count":
       return handleSupplierCount(companyId);
-    
+
     // Warehouses
     case "warehouses.list":
       return handleWarehousesList(parameters, companyId);
@@ -1695,7 +1694,7 @@ export async function handleLiveDataQuery(
       return handleWarehouseDetails(parameters, companyId);
     case "warehouses.stock":
       return handleWarehouseStock(parameters, companyId);
-    
+
     // Customers
     case "customers.list":
       return handleCustomersList(parameters, companyId);
@@ -1703,13 +1702,13 @@ export async function handleLiveDataQuery(
       return handleCustomerDetails(parameters, companyId);
     case "customers.count":
       return handleCustomerCount(companyId);
-    
+
     // Categories & Brands
     case "categories.list":
       return handleCategoriesList(parameters, companyId);
     case "brands.list":
       return handleBrandsList(parameters, companyId);
-    
+
     // Analytics
     case "analytics.overview":
       return handleAnalyticsOverview(companyId);
@@ -1723,7 +1722,7 @@ export async function handleLiveDataQuery(
       return handleOrderAnalytics(companyId);
     case "analytics.inventory":
       return handleInventoryAnalytics(companyId);
-    
+
     default:
       return {
         success: false,
@@ -1777,19 +1776,19 @@ function formatProductsList(products: any[], pagination?: any): string {
 
   const total = pagination?.total || products.length;
   const showing = Math.min(15, products.length);
-  
+
   const productsData = products.slice(0, 15).map((product: any) => {
     const price = product.sellingPrice || product.price || 0;
-    
+
     // Use reorderPoint as stock display (matching products page logic)
     const stock = product.reorderPoint || 0;
     const minStock = product.minStockLevel || 0;
-    
+
     // Out of stock condition from products page: reorderPoint < minStockLevel
     const isOutOfStock = stock < minStock;
-    
+
     console.log(`[formatProductsList] Product ${product.name}: reorderPoint=${stock}, minStockLevel=${minStock}, isOutOfStock=${isOutOfStock}`);
-    
+
     return {
       name: product.name,
       sku: product.sku,
@@ -1802,9 +1801,9 @@ function formatProductsList(products: any[], pagination?: any): string {
       isOutOfStock: isOutOfStock,
     };
   });
-  
+
   console.log("[formatProductsList] Formatted products data:", JSON.stringify(productsData, null, 2));
-  
+
   // Return as special JSON marker that UI can detect and render as cards
   const result = `__PRODUCT_CARDS__${JSON.stringify({ products: productsData, total, showing })}__END_PRODUCT_CARDS__`;
   console.log("[formatProductsList] Final result:", result);
@@ -1906,7 +1905,7 @@ function formatReorderSuggestions(suggestions: any[]): string {
 function formatSuppliersList(suppliers: any[], pagination?: any): string {
   const total = pagination?.total || suppliers.length;
   const showing = Math.min(15, suppliers.length);
-  
+
   const suppliersData = suppliers.slice(0, 15).map((supplier: any) => ({
     name: supplier.name || "Unknown Supplier",
     code: supplier.code || "N/A",
@@ -1952,7 +1951,7 @@ function formatWarehousesList(warehouses: any[], pagination?: any): string {
 
   const total = pagination?.total || warehouses.length;
   const showing = Math.min(15, warehouses.length);
-  
+
   const warehousesData = warehouses.slice(0, 15).map((warehouse: any) => {
     // Format address object into string
     let addressStr = "Address not specified";
@@ -1971,7 +1970,7 @@ function formatWarehousesList(warehouses: any[], pagination?: any): string {
         addressStr = parts.join(', ') || "Address not specified";
       }
     }
-    
+
     return {
       name: warehouse.name,
       code: warehouse.code,
@@ -1981,7 +1980,7 @@ function formatWarehousesList(warehouses: any[], pagination?: any): string {
       itemCount: warehouse._count?.inventoryItems || 0,
     };
   });
-  
+
   // Return as special JSON marker for UI card rendering
   return `__WAREHOUSE_CARDS__${JSON.stringify({ warehouses: warehousesData, total, showing })}__END_WAREHOUSE_CARDS__`;
 }
@@ -2055,7 +2054,7 @@ function formatBrandsList(brands: any[]): string {
 function formatAnalyticsOverview(orders: any[]): string {
   const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.totalAmount) || 0), 0);
   const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
-  
+
   const statusCounts: Record<string, number> = {};
   orders.forEach(order => {
     statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
@@ -2100,8 +2099,8 @@ Recent customers are doing well!`;
 function formatProductMetrics(products: any[], pagination?: any): string {
   const total = pagination?.total || products.length;
   const active = products.filter(p => p.status === "ACTIVE").length;
-  const avgPrice = products.length > 0 
-    ? products.reduce((sum, p) => sum + (Number(p.sellingPrice) || 0), 0) / products.length 
+  const avgPrice = products.length > 0
+    ? products.reduce((sum, p) => sum + (Number(p.sellingPrice) || 0), 0) / products.length
     : 0;
 
   return `📦 **Product Metrics**
@@ -2130,10 +2129,10 @@ Inventory health looks good!`;
 
 function formatRecentAudits(audits: any[]): string {
   const lines = audits.slice(0, 10).map((audit: any) => {
-    const statusEmoji = audit.status === "COMPLETED" ? "✅" : 
-                       audit.status === "IN_PROGRESS" ? "🔄" : 
-                       audit.status === "PLANNED" ? "📅" : "⏸️";
-    
+    const statusEmoji = audit.status === "COMPLETED" ? "✅" :
+      audit.status === "IN_PROGRESS" ? "🔄" :
+        audit.status === "PLANNED" ? "📅" : "⏸️";
+
     return `${statusEmoji} **${audit.auditNumber}** - ${audit.type || "UNKNOWN"}
   Status: ${audit.status} | Warehouse: ${audit.warehouseName || "N/A"}
   ${audit.completedDate ? `Completed: ${new Date(audit.completedDate).toLocaleDateString()}` : `Planned: ${new Date(audit.plannedDate).toLocaleDateString()}`}

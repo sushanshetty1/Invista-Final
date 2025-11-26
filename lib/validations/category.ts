@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Base category schema
+// Base category schema (aligned with Neon Category model)
 export const baseCategorySchema = z.object({
 	name: z
 		.string()
@@ -9,17 +9,20 @@ export const baseCategorySchema = z.object({
 	description: z.string().optional(),
 	slug: z.string().min(1, "Slug is required").max(100, "Slug too long"),
 	parentId: z.string().uuid().optional(),
+	displayOrder: z.number().int().default(0),
 	icon: z.string().optional(),
 	color: z
 		.string()
 		.regex(/^#[0-9A-F]{6}$/i, "Invalid color format")
 		.optional(),
-	image: z.string().url().optional(),
+	// Note: Category model does NOT have 'image' field - removed
 	isActive: z.boolean().default(true),
 });
 
-// Create category schema (no createdBy field as it's not in the DB schema)
-export const createCategorySchema = baseCategorySchema;
+// Create category schema (requires companyId for multi-tenancy)
+export const createCategorySchema = baseCategorySchema.extend({
+	companyId: z.string().uuid("Invalid company ID"),
+});
 
 // Update category schema
 export const updateCategorySchema = baseCategorySchema.partial().extend({

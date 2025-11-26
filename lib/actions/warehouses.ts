@@ -1,19 +1,72 @@
 "use server";
 
-import { supabaseClient } from "@/lib/prisma";
-import {
-	createWarehouseSchema,
-	updateWarehouseSchema,
-	warehouseQuerySchema,
-	type CreateWarehouseInput,
-	type UpdateWarehouseInput,
-	type WarehouseQueryInput,
-} from "@/lib/validations/warehouse";
+import { neonClient } from "@/lib/prisma";
+import { WarehouseType } from "@/prisma/generated/neon";
 import {
 	actionSuccess,
 	actionError,
 	type ActionResponse,
 } from "@/lib/api-utils";
+import { z } from "zod";
+
+// ============================================================================
+// VALIDATION SCHEMAS (aligned with Neon Warehouse model)
+// ============================================================================
+
+// Warehouse types from Neon schema
+const warehouseTypeEnum = z.enum([
+	"STANDARD",
+	"DISTRIBUTION_CENTER",
+	"RETAIL_STORE",
+	"COLD_STORAGE",
+	"FULFILLMENT_CENTER",
+]);
+
+// Create warehouse schema
+const createWarehouseSchema = z.object({
+	companyId: z.string().uuid("Invalid company ID"),
+	name: z.string().min(1, "Warehouse name is required").max(100),
+	code: z.string().min(1, "Warehouse code is required").max(20),
+	description: z.string().optional(),
+	type: warehouseTypeEnum.default("STANDARD"),
+	// Structured address fields
+	address1: z.string().optional(),
+	address2: z.string().optional(),
+	city: z.string().optional(),
+	state: z.string().optional(),
+	postalCode: z.string().optional(),
+	country: z.string().optional(),
+	// Coordinates
+	latitude: z.number().optional(),
+	longitude: z.number().optional(),
+	isActive: z.boolean().default(true),
+});
+
+// Update warehouse schema
+const updateWarehouseSchema = createWarehouseSchema.partial().extend({
+	id: z.string().uuid(),
+});
+
+// Query warehouses schema
+const warehouseQuerySchema = z.object({
+	companyId: z.string().uuid().optional(),
+	page: z.number().int().min(1).default(1),
+	limit: z.number().int().min(1).max(100).default(20),
+	search: z.string().optional(),
+	type: warehouseTypeEnum.optional(),
+	isActive: z.boolean().optional(),
+	sortBy: z.enum(["name", "code", "type", "createdAt", "updatedAt"]).default("name"),
+	sortOrder: z.enum(["asc", "desc"]).default("asc"),
+});
+
+// Export types
+export type CreateWarehouseInput = z.infer<typeof createWarehouseSchema>;
+export type UpdateWarehouseInput = z.infer<typeof updateWarehouseSchema>;
+export type WarehouseQueryInput = z.infer<typeof warehouseQuerySchema>;
+
+// ============================================================================
+// SERVER ACTIONS
+// ============================================================================
 
 // Get warehouses with filtering and pagination
 export async function getWarehouses(input: WarehouseQueryInput): Promise<
@@ -29,16 +82,17 @@ export async function getWarehouses(input: WarehouseQueryInput): Promise<
 > {
 	try {
 		const validatedInput = warehouseQuerySchema.parse(input);
-		const { page, limit, search, type, isActive, sortBy, sortOrder } =
+		const { page, limit, search, type, isActive, sortBy, sortOrder, companyId } =
 			validatedInput;
 
-		const skip = (page - 1) * limit; // Build where clause
+		const skip = (page - 1) * limit;
+
+		// Build where clause
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const where: any = {};
 
-		// Add companyId filter if provided
-		if (validatedInput.companyId) {
-			where.companyId = validatedInput.companyId;
+		if (companyId) {
+			where.companyId = companyId;
 		}
 
 		if (search) {
@@ -46,6 +100,7 @@ export async function getWarehouses(input: WarehouseQueryInput): Promise<
 				{ name: { contains: search, mode: "insensitive" } },
 				{ code: { contains: search, mode: "insensitive" } },
 				{ description: { contains: search, mode: "insensitive" } },
+				{ city: { contains: search, mode: "insensitive" } },
 			];
 		}
 
@@ -55,30 +110,22 @@ export async function getWarehouses(input: WarehouseQueryInput): Promise<
 
 		if (isActive !== undefined) {
 			where.isActive = isActive;
-		} // Build orderBy clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const orderBy: any = {};
-		if (sortBy === "name") {
-			orderBy.name = sortOrder;
-		} else if (sortBy === "code") {
-			orderBy.code = sortOrder;
-		} else if (sortBy === "type") {
-			orderBy.type = sortOrder;
-		} else if (sortBy === "createdAt") {
-			orderBy.createdAt = sortOrder;
-		} else if (sortBy === "updatedAt") {
-			orderBy.updatedAt = sortOrder;
 		}
 
-		// Execute queries
+		// Build orderBy clause
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const orderBy: any = {};
+		orderBy[sortBy] = sortOrder;
+
+		// Execute queries using Neon client
 		const [warehouses, total] = await Promise.all([
-			supabaseClient.companyLocation.findMany({
+			neonClient.warehouse.findMany({
 				where,
 				orderBy,
 				skip,
 				take: limit,
 			}),
-			supabaseClient.companyLocation.count({ where }),
+			neonClient.warehouse.count({ where }),
 		]);
 
 		const totalPages = Math.ceil(total / limit);
@@ -90,7 +137,8 @@ export async function getWarehouses(input: WarehouseQueryInput): Promise<
 			},
 			`Retrieved ${warehouses.length} warehouses`,
 		);
-	} catch {
+	} catch (error) {
+		console.error("Error fetching warehouses:", error);
 		return actionError("Failed to fetch warehouses");
 	}
 }
@@ -101,13 +149,28 @@ export async function getWarehouse(
 	companyId?: string,
 ): Promise<ActionResponse<unknown>> {
 	try {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const where: any = { id };
 		if (companyId) {
 			where.companyId = companyId;
 		}
 
-		const warehouse = await supabaseClient.companyLocation.findFirst({
+		const warehouse = await neonClient.warehouse.findFirst({
 			where,
+			include: {
+				inventory: {
+					take: 10,
+					include: {
+						product: {
+							select: {
+								id: true,
+								name: true,
+								sku: true,
+							},
+						},
+					},
+				},
+			},
 		});
 
 		if (!warehouse) {
@@ -115,7 +178,31 @@ export async function getWarehouse(
 		}
 
 		return actionSuccess(warehouse, "Warehouse retrieved successfully");
-	} catch {
+	} catch (error) {
+		console.error("Error fetching warehouse:", error);
+		return actionError("Failed to fetch warehouse");
+	}
+}
+
+// Get warehouse by code
+export async function getWarehouseByCode(
+	code: string,
+	companyId: string,
+): Promise<ActionResponse<unknown>> {
+	try {
+		const warehouse = await neonClient.warehouse.findUnique({
+			where: {
+				companyId_code: { companyId, code },
+			},
+		});
+
+		if (!warehouse) {
+			return actionError("Warehouse not found");
+		}
+
+		return actionSuccess(warehouse, "Warehouse retrieved successfully");
+	} catch (error) {
+		console.error("Error fetching warehouse by code:", error);
 		return actionError("Failed to fetch warehouse");
 	}
 }
@@ -126,45 +213,43 @@ export async function createWarehouse(
 ): Promise<ActionResponse<unknown>> {
 	try {
 		const validatedInput = createWarehouseSchema.parse(input);
-		const {
-			name,
-			code,
-			description,
-			type,
-			address,
-			contactName,
-			contactEmail,
-			contactPhone,
-			isActive,
-			companyId,
-		} = validatedInput;
 
-		// Check if warehouse code already exists
-		const existingWarehouse = await supabaseClient.companyLocation.findFirst({
-			where: { code, companyId },
+		// Check if warehouse code already exists for this company
+		const existingWarehouse = await neonClient.warehouse.findUnique({
+			where: {
+				companyId_code: {
+					companyId: validatedInput.companyId,
+					code: validatedInput.code,
+				},
+			},
 		});
 
 		if (existingWarehouse) {
 			return actionError("Warehouse code already exists for this company");
 		}
 
-		const warehouse = await supabaseClient.companyLocation.create({
+		const warehouse = await neonClient.warehouse.create({
 			data: {
-				companyId,
-				name,
-				code,
-				description,
-				type,
-				address,
-				managerName: contactName,
-				email: contactEmail,
-				phone: contactPhone,
-				isActive,
+				companyId: validatedInput.companyId,
+				name: validatedInput.name,
+				code: validatedInput.code,
+				description: validatedInput.description,
+				type: validatedInput.type as WarehouseType,
+				address1: validatedInput.address1,
+				address2: validatedInput.address2,
+				city: validatedInput.city,
+				state: validatedInput.state,
+				postalCode: validatedInput.postalCode,
+				country: validatedInput.country,
+				latitude: validatedInput.latitude,
+				longitude: validatedInput.longitude,
+				isActive: validatedInput.isActive,
 			},
 		});
 
 		return actionSuccess(warehouse, "Warehouse created successfully");
 	} catch (error) {
+		console.error("Error creating warehouse:", error);
 		if (
 			error &&
 			typeof error === "object" &&
@@ -173,7 +258,6 @@ export async function createWarehouse(
 		) {
 			return actionError("Warehouse with this code already exists");
 		}
-
 		return actionError("Failed to create warehouse");
 	}
 }
@@ -184,21 +268,10 @@ export async function updateWarehouse(
 ): Promise<ActionResponse<unknown>> {
 	try {
 		const validatedInput = updateWarehouseSchema.parse(input);
-		const {
-			id,
-			name,
-			code,
-			description,
-			type,
-			address,
-			contactName,
-			contactEmail,
-			contactPhone,
-			isActive,
-		} = validatedInput;
+		const { id, ...updateFields } = validatedInput;
 
 		// Check if warehouse exists
-		const existingWarehouse = await supabaseClient.companyLocation.findUnique({
+		const existingWarehouse = await neonClient.warehouse.findUnique({
 			where: { id },
 		});
 
@@ -207,12 +280,12 @@ export async function updateWarehouse(
 		}
 
 		// Check if code change conflicts with existing warehouse
-		if (code && code !== existingWarehouse.code) {
-			const conflictingWarehouse = await supabaseClient.companyLocation.findFirst({
+		if (updateFields.code && updateFields.code !== existingWarehouse.code) {
+			const conflictingWarehouse = await neonClient.warehouse.findFirst({
 				where: {
-					code,
-					id: { not: id },
+					code: updateFields.code,
 					companyId: existingWarehouse.companyId,
+					id: { not: id },
 				},
 			});
 
@@ -221,26 +294,32 @@ export async function updateWarehouse(
 			}
 		}
 
+		// Build update data
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const updateData: any = {};
-		if (name !== undefined) updateData.name = name;
-		if (code !== undefined) updateData.code = code;
-		if (description !== undefined) updateData.description = description;
-		if (type !== undefined) updateData.type = type;
-		if (address !== undefined) updateData.address = address;
-		if (contactName !== undefined) updateData.managerName = contactName;
-		if (contactEmail !== undefined) updateData.email = contactEmail;
-		if (contactPhone !== undefined) updateData.phone = contactPhone;
-		if (isActive !== undefined) updateData.isActive = isActive;
-		updateData.updatedAt = new Date();
 
-		const warehouse = await supabaseClient.companyLocation.update({
+		if (updateFields.name !== undefined) updateData.name = updateFields.name;
+		if (updateFields.code !== undefined) updateData.code = updateFields.code;
+		if (updateFields.description !== undefined) updateData.description = updateFields.description;
+		if (updateFields.type !== undefined) updateData.type = updateFields.type;
+		if (updateFields.address1 !== undefined) updateData.address1 = updateFields.address1;
+		if (updateFields.address2 !== undefined) updateData.address2 = updateFields.address2;
+		if (updateFields.city !== undefined) updateData.city = updateFields.city;
+		if (updateFields.state !== undefined) updateData.state = updateFields.state;
+		if (updateFields.postalCode !== undefined) updateData.postalCode = updateFields.postalCode;
+		if (updateFields.country !== undefined) updateData.country = updateFields.country;
+		if (updateFields.latitude !== undefined) updateData.latitude = updateFields.latitude;
+		if (updateFields.longitude !== undefined) updateData.longitude = updateFields.longitude;
+		if (updateFields.isActive !== undefined) updateData.isActive = updateFields.isActive;
+
+		const warehouse = await neonClient.warehouse.update({
 			where: { id },
 			data: updateData,
 		});
 
 		return actionSuccess(warehouse, "Warehouse updated successfully");
 	} catch (error) {
+		console.error("Error updating warehouse:", error);
 		if (
 			error &&
 			typeof error === "object" &&
@@ -249,7 +328,6 @@ export async function updateWarehouse(
 		) {
 			return actionError("Warehouse with this code already exists");
 		}
-
 		return actionError("Failed to update warehouse");
 	}
 }
@@ -260,7 +338,7 @@ export async function deleteWarehouse(
 ): Promise<ActionResponse<unknown>> {
 	try {
 		// Check if warehouse exists
-		const existingWarehouse = await supabaseClient.companyLocation.findUnique({
+		const existingWarehouse = await neonClient.warehouse.findUnique({
 			where: { id },
 		});
 
@@ -268,15 +346,24 @@ export async function deleteWarehouse(
 			return actionError("Warehouse not found");
 		}
 
-		// Note: Inventory items are in Neon DB, so we can't check the relation directly
-		// The cascade delete will be handled at the database level if configured
+		// Check if warehouse has inventory items
+		const inventoryCount = await neonClient.inventoryItem.count({
+			where: { warehouseId: id },
+		});
 
-		await supabaseClient.companyLocation.delete({
+		if (inventoryCount > 0) {
+			return actionError(
+				`Cannot delete warehouse: ${inventoryCount} inventory items exist. Please transfer or remove inventory first.`,
+			);
+		}
+
+		await neonClient.warehouse.delete({
 			where: { id },
 		});
 
 		return actionSuccess(undefined, "Warehouse deleted successfully");
 	} catch (error) {
+		console.error("Error deleting warehouse:", error);
 		if (
 			error &&
 			typeof error === "object" &&
@@ -284,10 +371,86 @@ export async function deleteWarehouse(
 			error.code === "P2003"
 		) {
 			return actionError(
-				"Warehouse cannot be deleted due to existing references",
+				"Warehouse cannot be deleted due to existing inventory references",
 			);
 		}
-
 		return actionError("Failed to delete warehouse");
+	}
+}
+
+// Get warehouse statistics
+export async function getWarehouseStats(
+	warehouseId: string,
+): Promise<ActionResponse<unknown>> {
+	try {
+		const warehouse = await neonClient.warehouse.findUnique({
+			where: { id: warehouseId },
+		});
+
+		if (!warehouse) {
+			return actionError("Warehouse not found");
+		}
+
+		// Get inventory statistics
+		const [
+			totalItems,
+			totalQuantity,
+			outOfStockItems,
+		] = await Promise.all([
+			neonClient.inventoryItem.count({
+				where: { warehouseId },
+			}),
+			neonClient.inventoryItem.aggregate({
+				where: { warehouseId },
+				_sum: { quantity: true },
+			}),
+			neonClient.inventoryItem.count({
+				where: {
+					warehouseId,
+					quantity: 0,
+				},
+			}),
+		]);
+
+		const stats = {
+			warehouse,
+			totalItems,
+			totalQuantity: totalQuantity._sum.quantity || 0,
+			outOfStockItems,
+		};
+
+		return actionSuccess(stats, "Warehouse statistics retrieved successfully");
+	} catch (error) {
+		console.error("Error fetching warehouse stats:", error);
+		return actionError("Failed to fetch warehouse statistics");
+	}
+}
+
+// Get all warehouses for a company (simple list)
+export async function getCompanyWarehouses(
+	companyId: string,
+): Promise<ActionResponse<unknown[]>> {
+	try {
+		const warehouses = await neonClient.warehouse.findMany({
+			where: {
+				companyId,
+				isActive: true,
+			},
+			orderBy: { name: "asc" },
+			select: {
+				id: true,
+				name: true,
+				code: true,
+				type: true,
+				city: true,
+				state: true,
+				isActive: true,
+			},
+		});
+
+		return actionSuccess(warehouses, `Retrieved ${warehouses.length} warehouses`);
+	} catch (error) {
+		console.error("Error fetching company warehouses:", error);
+		return actionError("Failed to fetch warehouses");
 	}
 }

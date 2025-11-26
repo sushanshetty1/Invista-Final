@@ -176,8 +176,6 @@ export async function updateBrand(
 			description,
 			logo,
 			website,
-			contactEmail,
-			contactPhone,
 			isActive,
 		} = validatedInput;
 

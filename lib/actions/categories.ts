@@ -6,18 +6,22 @@ import { neonClient } from "@/lib/prisma";
 import { actionError, actionSuccess, type ActionResponse } from "@/lib/api-utils";
 import type { Prisma } from "../../prisma/generated/neon";
 
-// Validation schemas
+// Validation schemas (aligned with Neon Category model)
 export const createCategorySchema = z.object({
+	companyId: z.string().uuid("Invalid company ID"),
 	name: z.string().min(1, "Category name is required"),
 	description: z.string().optional(),
 	slug: z.string().min(1, "Slug is required"),
 	parentId: z.string().optional(),
+	displayOrder: z.number().int().default(0),
+	icon: z.string().optional(),
 	color: z.string().optional(),
-	image: z.string().optional(),
 	isActive: z.boolean().default(true),
 });
 
-export const updateCategorySchema = createCategorySchema.partial();
+export const updateCategorySchema = createCategorySchema.partial().extend({
+	id: z.string().uuid(),
+});
 
 // Export types that might be used elsewhere
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;

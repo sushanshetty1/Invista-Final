@@ -7,13 +7,10 @@ import {
 } from "@/lib/api-utils";
 import { authenticate } from "@/lib/auth";
 import {
-	updateWarehouseSchema,
-	type UpdateWarehouseInput,
-} from "@/lib/validations/warehouse";
-import {
 	getWarehouse,
 	updateWarehouse,
 	deleteWarehouse,
+	type UpdateWarehouseInput,
 } from "@/lib/actions/warehouses";
 
 // Rate limiting
@@ -108,7 +105,7 @@ export async function PUT(
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 		if (!uuidRegex.test(id)) {
 			return errorResponse("Invalid warehouse ID format", 400);
-		} // Parse request body
+		} 		// Parse request body
 		const body = await request.json();
 
 		// Authentication check
@@ -122,11 +119,8 @@ export async function PUT(
 			...body,
 		};
 
-		// Validate input
-		const validatedInput = updateWarehouseSchema.parse(updateInput);
-
-		// Update warehouse using server action
-		const result = await updateWarehouse(validatedInput);
+		// Update warehouse using server action (validation happens in the action)
+		const result = await updateWarehouse(updateInput);
 
 		if (!result.success) {
 			return errorResponse(
