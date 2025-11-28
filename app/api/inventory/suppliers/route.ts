@@ -49,30 +49,16 @@ export async function GET(request: NextRequest) {
 		const statusParam = searchParams.get("status");
 		const status = statusParam
 			? (statusParam as
-					| "ACTIVE"
-					| "INACTIVE"
-					| "PENDING_APPROVAL"
-					| "SUSPENDED"
-					| "BLACKLISTED")
-			: undefined;
-		const companyTypeParam = searchParams.get("companyType");
-		const companyType = companyTypeParam
-			? (companyTypeParam as
-					| "CORPORATION"
-					| "LLC"
-					| "PARTNERSHIP"
-					| "SOLE_PROPRIETORSHIP"
-					| "NON_PROFIT"
-					| "GOVERNMENT"
-					| "OTHER")
+				| "ACTIVE"
+				| "INACTIVE"
+				| "SUSPENDED")
 			: undefined;
 		const sortBy =
 			(searchParams.get("sortBy") as
 				| "name"
 				| "code"
 				| "createdAt"
-				| "updatedAt"
-				| "rating") || "createdAt";
+				| "updatedAt") || "createdAt";
 		const sortOrder =
 			(searchParams.get("sortOrder") as "asc" | "desc") || "desc";
 
@@ -90,7 +76,6 @@ export async function GET(request: NextRequest) {
 			"code",
 			"createdAt",
 			"updatedAt",
-			"rating",
 		];
 		if (sortBy && !validSortFields.includes(sortBy)) {
 			return errorResponse(
@@ -105,7 +90,6 @@ export async function GET(request: NextRequest) {
 			limit,
 			search,
 			status,
-			companyType,
 			sortBy,
 			sortOrder,
 		});

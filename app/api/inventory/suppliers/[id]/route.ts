@@ -92,16 +92,11 @@ export async function PUT(
 			return errorResponse("Unauthorized", 401);
 		}
 
-		const updateInput: UpdateSupplierInput = {
-			id,
-			...body,
-		};
-
 		// Validate input
-		const validatedInput = updateSupplierSchema.parse(updateInput);
+		const validatedInput = updateSupplierSchema.parse(body);
 
-		// Update supplier using server action
-		const result = await updateSupplier(validatedInput);
+		// Update supplier using server action (id, data, context)
+		const result = await updateSupplier(id, validatedInput);
 
 		if (!result.success) {
 			return errorResponse(

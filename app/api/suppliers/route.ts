@@ -8,14 +8,14 @@ export async function GET(request: NextRequest) {
 		// Create Supabase server client to get user's company
 		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-		
+
 		if (!supabaseUrl || !supabaseAnonKey) {
 			return NextResponse.json(
 				{ error: "Server configuration error" },
 				{ status: 500 },
 			);
 		}
-		
+
 		const cookieStore = await cookies();
 		const supabase = createServerClient(
 			supabaseUrl,
@@ -70,14 +70,13 @@ export async function GET(request: NextRequest) {
 		const page = pageParam ? parseInt(pageParam) : 1;
 		const limitParam = searchParams.get("limit");
 		const limit = limitParam ? parseInt(limitParam) : 50;
-		
+
 		const result = await getSuppliers({
 			page,
 			limit,
 			search,
 			sortBy: "name",
 			sortOrder: "asc",
-			companyId: companyUserData.companyId,
 		});
 
 		if (!result.success) {
@@ -100,17 +99,17 @@ export async function POST(request: NextRequest) {
 		// Create Supabase server client with cookies for server-side auth
 		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-		
+
 		if (!supabaseUrl || !supabaseAnonKey) {
 			return NextResponse.json(
 				{ error: "Server configuration error" },
 				{ status: 500 },
 			);
 		}
-		
+
 		// Get cookie store
 		const cookieStore = await cookies();
-		
+
 		// Create Supabase client using SSR pattern (same as middleware)
 		const supabase = createServerClient(
 			supabaseUrl,

@@ -99,13 +99,15 @@ export async function createProduct(
 
 		// AUTO-CREATE CATEGORY: If categoryName is provided, create/find the category
 		let finalCategoryId = categoryId || null;
+		const categoryName = _categoryName;
+		const slug = validatedData.slug;
 
 		if (categoryName && slug) {
 			console.log("🏷️ Auto-creating category from product data...");
 
 			// Check if category with this slug already exists for this company
 			const existingCategory = await neonClient.category.findFirst({
-				where: { 
+				where: {
 					slug: slug,
 					companyId: productData.companyId,
 				},
@@ -144,10 +146,10 @@ export async function createProduct(
 				categoryId: finalCategoryId,
 				brandId: brandId || null,
 				// Dimensions - use structured fields (not JSON)
-				weightKg: weight ? weight : undefined,
-				lengthCm: dimensions?.length ? dimensions.length : undefined,
-				widthCm: dimensions?.width ? dimensions.width : undefined,
-				heightCm: dimensions?.height ? dimensions.height : undefined,
+				weightKg: productData.weight ? productData.weight : undefined,
+				lengthCm: productData.dimensions?.length ? productData.dimensions.length : undefined,
+				widthCm: productData.dimensions?.width ? productData.dimensions.width : undefined,
+				heightCm: productData.dimensions?.height ? productData.dimensions.height : undefined,
 				// Pricing
 				costPrice: productData.costPrice,
 				sellingPrice: productData.sellingPrice,
@@ -197,7 +199,7 @@ export async function createProduct(
 					isPrimary: false,
 					order: index + 1,
 				}));
-			
+
 			if (imageData.length > 0) {
 				await neonClient.productImage.createMany({
 					data: imageData,
@@ -209,10 +211,10 @@ export async function createProduct(
 		if (productData.tags && productData.tags.length > 0) {
 			for (const tagName of productData.tags) {
 				const tagSlug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-				
+
 				// Find or create tag
 				let tag = await neonClient.tag.findFirst({
-					where: { 
+					where: {
 						slug: tagSlug,
 						companyId: productData.companyId,
 					},
@@ -316,10 +318,10 @@ export async function updateProduct(
 				// slug: updateData.slug, // Removed to avoid type error
 				categoryId: updateData.categoryId,
 				brandId: updateData.brandId,
-				weightKg: updateData.weight,
-				lengthCm: updateData.dimensions?.length,
-				widthCm: updateData.dimensions?.width,
-				heightCm: updateData.dimensions?.height,
+				weightKg: weight,
+				lengthCm: dimensions?.length,
+				widthCm: dimensions?.width,
+				heightCm: dimensions?.height,
 				minStock: updateData.minStockLevel,
 				reorderPoint: updateData.reorderPoint,
 				status: updateData.status,
@@ -420,7 +422,7 @@ export async function getProducts(
 		const skip = (page - 1) * limit;
 
 		console.log("🔍 getProducts: Query params:", { page, limit, skip, search, categoryId, brandId, status });
-		
+
 		// Build where clause
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const where: any = {};
@@ -568,6 +570,12 @@ export async function getProduct(id: string): Promise<ActionResponse> {
 			include: {
 				category: true,
 				brand: true,
+				images: true,
+				supplierProducts: {
+					include: {
+						supplier: true,
+					},
+				},
 				variants: {
 					include: {
 						attributes: true,
@@ -587,18 +595,6 @@ export async function getProduct(id: string): Promise<ActionResponse> {
 						},
 					},
 				},
-				// suppliers: {
-				// 	include: {
-				// 		supplier: true,
-				// 	},
-				// },
-				// movements: {
-				// 	orderBy: { occurredAt: "desc" },
-				// 	take: 10,
-				// 	include: {
-				// 		warehouse: true,
-				// 	},
-				// },
 			},
 		});
 
@@ -610,7 +606,7 @@ export async function getProduct(id: string): Promise<ActionResponse> {
 		const transformedProduct = {
 			...product,
 			// Get primary image
-			primaryImage: product.images.find(img => img.isPrimary)?.url || product.images[0]?.url || null,
+			primaryImage: product.images.find((img: { isPrimary: boolean }) => img.isPrimary)?.url || product.images[0]?.url || null,
 			// Convert dimensions
 			weight: product.weightKg ? Number(product.weightKg) : null,
 			dimensions: (product.lengthCm || product.widthCm || product.heightCm) ? {
