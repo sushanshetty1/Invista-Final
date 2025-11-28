@@ -651,7 +651,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\SHAUN RODRIGUES\\OneDrive\\Desktop\\cybersprinters\\Invista\\prisma\\generated\\neon",
+      "value": "C:\\Users\\yashv\\Desktop\\New folder\\Invista-Final\\prisma\\generated\\neon",
       "fromEnvVar": null
     },
     "config": {
@@ -671,7 +671,7 @@ const config = {
     "previewFeatures": [
       "postgresqlExtensions"
     ],
-    "sourceFilePath": "C:\\Users\\SHAUN RODRIGUES\\OneDrive\\Desktop\\cybersprinters\\Invista\\prisma\\schema-neon.prisma",
+    "sourceFilePath": "C:\\Users\\yashv\\Desktop\\New folder\\Invista-Final\\prisma\\schema-neon.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -685,6 +685,7 @@ const config = {
     "neonDb"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "neonDb": {
       "url": {
