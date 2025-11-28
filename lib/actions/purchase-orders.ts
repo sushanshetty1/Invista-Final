@@ -24,16 +24,11 @@ export interface UpdatePurchaseOrderStatusData {
 	purchaseOrderId: string;
 	status:
 		| "DRAFT"
-		| "PENDING_APPROVAL"
+		| "PENDING"
 		| "APPROVED"
-		| "SENT"
-		| "ACKNOWLEDGED"
 		| "PARTIALLY_RECEIVED"
 		| "RECEIVED"
-		| "INVOICED"
-		| "PAID"
-		| "CANCELLED"
-		| "CLOSED";
+		| "CANCELLED";
 	deliveryDate?: Date;
 	trackingNumber?: string;
 	carrier?: string;
@@ -111,19 +106,30 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderData) {
 			subtotal += item.quantity * item.unitCost;
 		});
 
+		// Fetch supplier to get companyId
+		const supplier = await neonClient.supplier.findUnique({
+			where: { id: data.supplierId },
+			select: { companyId: true },
+		});
+
+		if (!supplier) {
+			return { success: false, error: "Supplier not found" };
+		}
+
 		// Create purchase order first
 		const purchaseOrder = await neonClient.purchaseOrder.create({
 			data: {
+				companyId: supplier.companyId, // Added
 				orderNumber,
 				supplierId: data.supplierId,
-				...(data.warehouseId && { warehouseId: data.warehouseId }),
+				// ...(data.warehouseId && { warehouseId: data.warehouseId }), // Removed
 				subtotal,
 				totalAmount: subtotal,
 				expectedDate: data.expectedDate,
-				paymentTerms: data.paymentTerms,
-				shippingTerms: data.shippingTerms,
+				// paymentTerms: data.paymentTerms, // Removed
+				// shippingTerms: data.shippingTerms, // Removed
 				notes: data.notes,
-				createdBy: "system",
+				createdById: "system", // createdBy -> createdById
 			},
 		});
 
@@ -141,13 +147,13 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderData) {
 						productId: item.productId,
 						variantId: item.variantId,
 						orderedQty: item.quantity,
-						remainingQty: item.quantity,
+						// remainingQty: item.quantity, // Removed
 						unitCost: item.unitCost,
 						totalCost: itemTotal,
-						productName: product.name,
-						productSku: product.sku,
-						supplierSku: item.supplierSku,
-						expectedDate: item.expectedDate,
+						// productName: product.name, // Removed
+						// productSku: product.sku, // Removed
+						// supplierSku: item.supplierSku, // Removed
+						// expectedDate: item.expectedDate, // Removed
 					},
 				});
 			}
@@ -209,7 +215,7 @@ export async function getPurchaseOrders(filters: PurchaseOrderFilters = {}) {
 			where,
 			include: {
 				supplier: true,
-				warehouse: true,
+				// warehouse: true, // Removed
 				items: {
 					include: {
 						product: true,
@@ -236,15 +242,15 @@ export async function getPurchaseOrderById(id: string) {
 			where: { id },
 			include: {
 				supplier: true,
-				warehouse: true,
+				// warehouse: true, // Removed
 				items: {
 					include: {
 						product: true,
 						variant: true,
 					},
 				},
-				receipts: true,
-				invoices: true,
+				// receipts: true, // Removed
+				// invoices: true, // Removed
 			},
 		});
 
@@ -270,21 +276,21 @@ export async function updatePurchaseOrderStatus(
 			updatedAt: new Date(),
 		};
 
-		if (data.deliveryDate) {
-			updateData.deliveryDate = data.deliveryDate;
-		}
+		// if (data.deliveryDate) {
+		// 	updateData.deliveryDate = data.deliveryDate;
+		// }
 
-		if (data.trackingNumber) {
-			updateData.trackingNumber = data.trackingNumber;
-		}
+		// if (data.trackingNumber) {
+		// 	updateData.trackingNumber = data.trackingNumber;
+		// }
 
-		if (data.carrier) {
-			updateData.carrier = data.carrier;
-		}
+		// if (data.carrier) {
+		// 	updateData.carrier = data.carrier;
+		// }
 
 		if (data.approvedBy && data.status === "APPROVED") {
-			updateData.approvedBy = data.approvedBy;
-			updateData.approvedAt = new Date();
+			// updateData.approvedBy = data.approvedBy; // Removed
+			// updateData.approvedAt = new Date(); // Removed
 		}
 
 		const purchaseOrder = await neonClient.purchaseOrder.update({
@@ -292,7 +298,7 @@ export async function updatePurchaseOrderStatus(
 			data: updateData,
 			include: {
 				supplier: true,
-				warehouse: true,
+				// warehouse: true, // Removed
 				items: true,
 			},
 		});
@@ -315,13 +321,13 @@ export async function approvePurchaseOrder(
 			where: { id: purchaseOrderId },
 			data: {
 				status: "APPROVED",
-				approvedBy,
-				approvedAt: new Date(),
+				// approvedBy, // Removed
+				// approvedAt: new Date(), // Removed
 				updatedAt: new Date(),
 			},
 			include: {
 				supplier: true,
-				warehouse: true,
+				// warehouse: true, // Removed
 				items: true,
 			},
 		});
@@ -335,173 +341,9 @@ export async function approvePurchaseOrder(
 }
 
 // Create goods receipt
+// createGoodsReceipt removed as GoodsReceipt model does not exist
 export async function createGoodsReceipt(data: GoodsReceiptData) {
-	try {
-		// Generate receipt number
-		const year = new Date().getFullYear();
-		const lastReceipt = await neonClient.goodsReceipt.findFirst({
-			where: {
-				receiptNumber: {
-					startsWith: `GR-${year}-`,
-				},
-			},
-			orderBy: {
-				receiptNumber: "desc",
-			},
-		});
-
-		let nextNumber = 1;
-		if (lastReceipt) {
-			const lastNumber = parseInt(lastReceipt.receiptNumber.split("-")[2]);
-			nextNumber = lastNumber + 1;
-		}
-
-		const receiptNumber = `GR-${year}-${nextNumber.toString().padStart(3, "0")}`; // Create goods receipt
-		const goodsReceipt = await neonClient.goodsReceipt.create({
-			data: {
-				receiptNumber,
-				purchaseOrderId: data.purchaseOrderId,
-				warehouseId: data.warehouseId,
-				qcNotes: data.qcNotes,
-				notes: data.notes,
-				receivedBy: "system",
-			},
-		});
-
-		// Process each received item
-		for (const item of data.items) {
-			// Get the purchase order item
-			const poItem = await neonClient.purchaseOrderItem.findUnique({
-				where: { id: item.purchaseOrderItemId },
-			});
-
-			if (!poItem) continue; // Create goods receipt item
-			await neonClient.goodsReceiptItem.create({
-				data: {
-					goodsReceiptId: goodsReceipt.id,
-					productId: poItem.productId,
-					variantId: poItem.variantId,
-					expectedQty: poItem.orderedQty,
-					receivedQty: item.receivedQty,
-					acceptedQty: item.qcStatus === "PASSED" ? item.receivedQty : 0,
-					rejectedQty: item.qcStatus === "FAILED" ? item.receivedQty : 0,
-					qcStatus: item.qcStatus,
-					lotNumber: item.lotNumber,
-					batchNumber: item.batchNumber,
-					expiryDate: item.expiryDate,
-				},
-			});
-
-			// Update purchase order item
-			await neonClient.purchaseOrderItem.update({
-				where: { id: item.purchaseOrderItemId },
-				data: {
-					receivedQty: poItem.receivedQty + item.receivedQty,
-					remainingQty: poItem.remainingQty - item.receivedQty,
-					status:
-						poItem.remainingQty - item.receivedQty <= 0
-							? "RECEIVED"
-							: "PARTIALLY_RECEIVED",
-				},
-			});
-
-			// Update inventory if QC passed
-			if (item.qcStatus === "PASSED") {
-				// Find or create inventory item
-				let inventoryItem = await neonClient.inventoryItem.findFirst({
-					where: {
-						productId: poItem.productId,
-						variantId: poItem.variantId,
-						warehouseId: data.warehouseId,
-						lotNumber: item.lotNumber || null,
-					},
-				});
-
-				if (inventoryItem) {
-					// Update existing inventory
-					await neonClient.inventoryItem.update({
-						where: { id: inventoryItem.id },
-						data: {
-							quantity: inventoryItem.quantity + item.receivedQty,
-							availableQuantity:
-								inventoryItem.availableQuantity + item.receivedQty,
-							lastMovement: new Date(),
-							updatedAt: new Date(),
-						},
-					});
-				} else {
-					// Create new inventory item
-					inventoryItem = await neonClient.inventoryItem.create({
-						data: {
-							productId: poItem.productId,
-							variantId: poItem.variantId,
-							warehouseId: data.warehouseId,
-							quantity: item.receivedQty,
-							availableQuantity: item.receivedQty,
-							lotNumber: item.lotNumber,
-							batchNumber: item.batchNumber,
-							expiryDate: item.expiryDate,
-							qcStatus: item.qcStatus,
-							lastMovement: new Date(),
-						},
-					});
-				}
-
-				// Create inventory movement
-				await neonClient.inventoryMovement.create({
-					data: {
-						type: "RECEIPT",
-						productId: poItem.productId,
-						variantId: poItem.variantId,
-						warehouseId: data.warehouseId,
-						inventoryItemId: inventoryItem.id,
-						quantity: item.receivedQty,
-						quantityBefore: inventoryItem.quantity - item.receivedQty,
-						quantityAfter: inventoryItem.quantity,
-						unitCost: poItem.unitCost,
-						totalCost: Number(poItem.unitCost) * item.receivedQty,
-						referenceType: "PURCHASE_ORDER",
-						referenceId: data.purchaseOrderId,
-						reason: `Goods receipt: ${receiptNumber}`,
-						userId: "system",
-					},
-				});
-			}
-		}
-
-		// Update purchase order status
-		const purchaseOrder = await neonClient.purchaseOrder.findUnique({
-			where: { id: data.purchaseOrderId },
-			include: { items: true },
-		});
-
-		if (purchaseOrder) {
-			const allReceived = purchaseOrder.items.every(
-				(item) => item.remainingQty <= 0,
-			);
-			const partiallyReceived = purchaseOrder.items.some(
-				(item) => item.receivedQty > 0,
-			);
-
-			let newStatus = purchaseOrder.status;
-			if (allReceived) {
-				newStatus = "RECEIVED";
-			} else if (partiallyReceived) {
-				newStatus = "PARTIALLY_RECEIVED";
-			}
-
-			await neonClient.purchaseOrder.update({
-				where: { id: data.purchaseOrderId },
-				data: { status: newStatus },
-			});
-		}
-
-		revalidatePath("/purchase-orders");
-		return { success: true, data: goodsReceipt };
-	} catch {
-		// Error handled silently in production
-		return { success: false, error: "Failed to create goods receipt" };
-	}
+	return { success: false, error: "Goods Receipt functionality is currently disabled" };
 }
 
 // Get reorder suggestions
@@ -529,7 +371,7 @@ export async function getReorderSuggestions(companyId?: string): Promise<{
 						warehouseId: true,
 					},
 				},
-				suppliers: {
+				supplierProducts: { // suppliers -> supplierProducts
 					include: {
 						supplier: true,
 					},
@@ -548,9 +390,9 @@ export async function getReorderSuggestions(companyId?: string): Promise<{
 
 			if (totalStock <= (product.reorderPoint || 0)) {
 				const preferredSupplier =
-					product.suppliers[0]?.supplier.name || "No supplier";
+					product.supplierProducts[0]?.supplier.name || "No supplier"; // suppliers -> supplierProducts
 				const suggestedQty =
-					product.reorderQuantity || Math.max(product.reorderPoint || 0, 10);
+					Math.max(product.reorderPoint || 0, 10); // reorderQuantity removed
 				const estimatedCost = Number(product.costPrice || 0) * suggestedQty;
 
 				suggestions.push({
@@ -627,14 +469,14 @@ export async function getPurchaseOrderStats(companyId?: string) {
 				neonClient.purchaseOrder.count({
 					where: {
 						...baseWhere,
-						status: "PENDING_APPROVAL",
+						status: "PENDING", // PENDING_APPROVAL -> PENDING
 					},
 				}),
 				neonClient.purchaseOrder.count({
 					where: {
 						...baseWhere,
 						status: {
-							in: ["APPROVED", "SENT", "ACKNOWLEDGED", "PARTIALLY_RECEIVED"],
+							in: ["APPROVED", "PARTIALLY_RECEIVED"], // Removed SENT, ACKNOWLEDGED
 						},
 					},
 				}),

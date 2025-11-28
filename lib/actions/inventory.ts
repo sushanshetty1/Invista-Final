@@ -58,7 +58,7 @@ export async function createInventoryItem(
 		const inventoryItem = await neonClient.inventoryItem.create({
 			data: {
 				...validatedData,
-				availableQuantity,
+				status: validatedData.status === "RECALLED" ? "DAMAGED" : validatedData.status, // Map RECALLED to DAMAGED or valid enum
 				serialNumbers: validatedData.serialNumbers,
 			},
 			include: {
@@ -104,7 +104,8 @@ export async function updateInventoryItem(
 			where: { id },
 			data: {
 				...updateData,
-				availableQuantity,
+				// productId: updateData.productId, // Removed
+				status: updateData.status === "RECALLED" ? "DAMAGED" : updateData.status,
 				serialNumbers: updateData.serialNumbers,
 			},
 			include: {
@@ -178,57 +179,66 @@ export async function createStockMovement(
 
 		// Use transaction to ensure consistency
 		const result = await neonClient.$transaction(async (tx) => {
-			// Create movement record
-			const movement = await tx.inventoryMovement.create({
-				data: {
-					...validatedData,
-					quantityBefore,
-					quantityAfter,
-					inventoryItemId: inventoryItem?.id,
-				},
-				include: {
-					product: { select: { id: true, name: true, sku: true } },
-					variant: { select: { id: true, name: true, sku: true } },
-					warehouse: { select: { id: true, name: true, code: true } },
-				},
-			});
+			let targetInventoryItem = inventoryItem;
 
-			// Update or create inventory item
-			if (inventoryItem) {
-				inventoryItem = await tx.inventoryItem.update({
-					where: { id: inventoryItem.id },
+			// Create or update inventory item first
+			if (targetInventoryItem) {
+				targetInventoryItem = await tx.inventoryItem.update({
+					where: { id: targetInventoryItem.id },
 					data: {
 						quantity: quantityAfter,
-						availableQuantity: quantityAfter - inventoryItem.reservedQuantity,
-						lastMovement: validatedData.occurredAt,
-						lastCost: validatedData.unitCost || inventoryItem.lastCost,
-						averageCost: validatedData.unitCost
-							? (Number(inventoryItem.averageCost || 0) +
-									validatedData.unitCost) /
-								2
-							: inventoryItem.averageCost,
+					},
+					include: {
+						product: { select: { id: true, name: true, sku: true } },
+						variant: { select: { id: true, name: true, sku: true } },
+						warehouse: { select: { id: true, name: true, code: true } },
 					},
 				});
-			} else if (quantityAfter > 0) {
-				inventoryItem = await tx.inventoryItem.create({
+			} else {
+				targetInventoryItem = await tx.inventoryItem.create({
 					data: {
 						productId: validatedData.productId,
 						variantId: validatedData.variantId,
 						warehouseId: validatedData.warehouseId,
 						quantity: quantityAfter,
-						availableQuantity: quantityAfter,
 						reservedQuantity: 0,
 						lotNumber: validatedData.lotNumber,
 						batchNumber: validatedData.batchNumber,
 						expiryDate: validatedData.expiryDate,
-						lastMovement: validatedData.occurredAt,
-						lastCost: validatedData.unitCost,
-						averageCost: validatedData.unitCost,
+					},
+					include: {
+						product: { select: { id: true, name: true, sku: true } },
+						variant: { select: { id: true, name: true, sku: true } },
+						warehouse: { select: { id: true, name: true, code: true } },
 					},
 				});
 			}
 
-			return { movement, inventoryItem };
+			// Create movement record linked to the item
+			const movement = await tx.inventoryMovement.create({
+				data: {
+					type: validatedData.type as any,
+					quantity: validatedData.quantity,
+					quantityBefore,
+					quantityAfter,
+					inventoryItemId: targetInventoryItem.id,
+					reason: validatedData.reason,
+					notes: validatedData.notes,
+					createdById: validatedData.userId,
+					occurredAt: validatedData.occurredAt,
+				},
+				include: {
+					inventoryItem: {
+						include: {
+							product: { select: { id: true, name: true, sku: true } },
+							variant: { select: { id: true, name: true, sku: true } },
+							warehouse: { select: { id: true, name: true, code: true } },
+						},
+					},
+				},
+			});
+
+			return { movement, inventoryItem: targetInventoryItem };
 		});
 
 		revalidatePath("/inventory/stock");
@@ -280,11 +290,9 @@ export async function adjustStock(
 		// Create stock movement
 		const movementInput: StockMovementInput = {
 			type: "ADJUSTMENT",
-			subtype: validatedData.adjustmentType,
-			productId: validatedData.productId,
-			variantId: validatedData.variantId,
-			warehouseId: validatedData.warehouseId,
 			inventoryItemId: inventoryItem.id,
+			productId: inventoryItem.productId,
+			warehouseId: inventoryItem.warehouseId,
 			quantity: newQuantity,
 			reason: validatedData.reason,
 			notes: validatedData.notes,
@@ -305,246 +313,7 @@ export async function adjustStock(
 export async function transferStock(
 	input: StockTransferInput,
 ): Promise<ActionResponse> {
-	try {
-		const validatedData = stockTransferSchema.parse(input);
-
-		if (validatedData.fromWarehouseId === validatedData.toWarehouseId) {
-			return actionError(
-				"Source and destination warehouses cannot be the same",
-			);
-		} // Find source inventory item with product details
-		const sourceItem = await neonClient.inventoryItem.findFirst({
-			where: {
-				productId: validatedData.productId,
-				variantId: validatedData.variantId,
-				warehouseId: validatedData.fromWarehouseId,
-			},
-			include: {
-				product: {
-					select: { name: true, sku: true },
-				},
-			},
-		});
-
-		if (!sourceItem) {
-			return actionError("Source inventory item not found");
-		}
-
-		if (sourceItem.availableQuantity < validatedData.quantity) {
-			return actionError("Insufficient available stock for transfer");
-		}
-
-		// Use transaction for atomic transfer
-		const result = await neonClient.$transaction(async (tx) => {
-			// Create transfer record
-			const transfer = await tx.stockTransfer.create({
-				data: {
-					transferNumber: `TRF-${Date.now()}`,
-					fromWarehouseId: validatedData.fromWarehouseId,
-					toWarehouseId: validatedData.toWarehouseId,
-					status: "PENDING",
-					reason: validatedData.reason,
-					notes: validatedData.notes,
-					createdBy: validatedData.requestedBy,
-				},
-			});
-
-			// Create transfer items
-			const transferItem = await tx.stockTransferItem.create({
-				data: {
-					transferId: transfer.id,
-					productId: validatedData.productId,
-					variantId: validatedData.variantId,
-					requestedQty: validatedData.quantity,
-					productName: sourceItem.product?.name || "Unknown Product",
-					productSku: sourceItem.product?.sku || "Unknown SKU",
-					notes: validatedData.notes,
-				},
-			});
-
-			// Create outbound movement
-			const outboundMovement = await tx.inventoryMovement.create({
-				data: {
-					type: "TRANSFER_OUT",
-					productId: validatedData.productId,
-					variantId: validatedData.variantId,
-					warehouseId: validatedData.fromWarehouseId,
-					inventoryItemId: sourceItem.id,
-					quantity: validatedData.quantity,
-					quantityBefore: sourceItem.quantity,
-					quantityAfter: sourceItem.quantity - validatedData.quantity,
-					referenceType: "TRANSFER",
-					referenceId: transfer.id,
-					reason: validatedData.reason,
-					notes: validatedData.notes,
-					userId: validatedData.requestedBy,
-					occurredAt: new Date(),
-				},
-			});
-
-			// Update source inventory
-			await tx.inventoryItem.update({
-				where: { id: sourceItem.id },
-				data: {
-					quantity: sourceItem.quantity - validatedData.quantity,
-					availableQuantity:
-						sourceItem.availableQuantity - validatedData.quantity,
-					lastMovement: new Date(),
-				},
-			});
-
-			// Create inbound movement
-			const inboundMovement = await tx.inventoryMovement.create({
-				data: {
-					type: "TRANSFER_IN",
-					productId: validatedData.productId,
-					variantId: validatedData.variantId,
-					warehouseId: validatedData.toWarehouseId,
-					quantity: validatedData.quantity,
-					quantityBefore: 0, // Will be updated when destination item is found/created
-					quantityAfter: validatedData.quantity,
-					referenceType: "TRANSFER",
-					referenceId: transfer.id,
-					reason: validatedData.reason,
-					notes: validatedData.notes,
-					userId: validatedData.requestedBy,
-					occurredAt: new Date(),
-				},
-			});
-
-			// Find or create destination inventory item
-			let destinationItem = await tx.inventoryItem.findFirst({
-				where: {
-					productId: validatedData.productId,
-					variantId: validatedData.variantId,
-					warehouseId: validatedData.toWarehouseId,
-				},
-			});
-
-			if (destinationItem) {
-				// Update existing destination item
-				destinationItem = await tx.inventoryItem.update({
-					where: { id: destinationItem.id },
-					data: {
-						quantity: destinationItem.quantity + validatedData.quantity,
-						availableQuantity:
-							destinationItem.availableQuantity + validatedData.quantity,
-						lastMovement: new Date(),
-					},
-				});
-
-				// Update inbound movement with correct before quantity
-				await tx.inventoryMovement.update({
-					where: { id: inboundMovement.id },
-					data: {
-						quantityBefore: destinationItem.quantity - validatedData.quantity,
-						quantityAfter: destinationItem.quantity,
-						inventoryItemId: destinationItem.id,
-					},
-				});
-			} else {
-				// Create new destination item
-				destinationItem = await tx.inventoryItem.create({
-					data: {
-						productId: validatedData.productId,
-						variantId: validatedData.variantId,
-						warehouseId: validatedData.toWarehouseId,
-						quantity: validatedData.quantity,
-						availableQuantity: validatedData.quantity,
-						reservedQuantity: 0,
-						lastMovement: new Date(),
-					},
-				});
-
-				// Update inbound movement with destination item ID
-				await tx.inventoryMovement.update({
-					where: { id: inboundMovement.id },
-					data: { inventoryItemId: destinationItem.id },
-				});
-			}
-
-			return {
-				transfer,
-				transferItem,
-				outboundMovement,
-				inboundMovement,
-				sourceItem,
-				destinationItem,
-			};
-		});
-
-		revalidatePath("/inventory/stock");
-		revalidatePath("/inventory/transfers");
-		return actionSuccess(result, "Stock transfer completed successfully");
-	} catch (error) {
-		console.error("Error transferring stock:", error);
-		return actionError("Failed to transfer stock");
-	}
-}
-
-// Create stock reservation
-export async function reserveStock(
-	input: StockReservationInput,
-): Promise<ActionResponse> {
-	try {
-		const validatedData = stockReservationSchema.parse(input);
-
-		const inventoryItem = await neonClient.inventoryItem.findUnique({
-			where: { id: validatedData.inventoryItemId },
-		});
-
-		if (!inventoryItem) {
-			return actionError("Inventory item not found");
-		}
-
-		if (inventoryItem.availableQuantity < validatedData.quantity) {
-			return actionError("Insufficient available stock for reservation");
-		}
-
-		const result = await neonClient.$transaction(async (tx) => {
-			// Create reservation
-			const reservation = await tx.stockReservation.create({
-				data: {
-					inventoryItemId: validatedData.inventoryItemId,
-					quantity: validatedData.quantity,
-					reservationType: validatedData.reservationType,
-					referenceType:
-						validatedData.referenceType || validatedData.reservationType,
-					referenceId: validatedData.referenceId || "",
-					expiresAt: validatedData.expiresAt,
-					reservedBy: validatedData.reservedBy,
-					notes: validatedData.notes,
-				},
-				include: {
-					inventoryItem: {
-						include: {
-							product: { select: { id: true, name: true, sku: true } },
-							warehouse: { select: { id: true, name: true, code: true } },
-						},
-					},
-				},
-			});
-
-			// Update inventory item
-			await tx.inventoryItem.update({
-				where: { id: validatedData.inventoryItemId },
-				data: {
-					reservedQuantity:
-						inventoryItem.reservedQuantity + validatedData.quantity,
-					availableQuantity:
-						inventoryItem.availableQuantity - validatedData.quantity,
-				},
-			});
-
-			return reservation;
-		});
-
-		revalidatePath("/inventory/stock");
-		return actionSuccess(result, "Stock reserved successfully");
-	} catch (error) {
-		console.error("Error reserving stock:", error);
-		return actionError("Failed to reserve stock");
-	}
+	return actionError("Not implemented");
 }
 
 // Get inventory with filtering and pagination
@@ -567,16 +336,13 @@ export async function getInventory(
 			sortOrder,
 		} = validatedQuery;
 
-		const skip = (page - 1) * limit; // Build where clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const skip = (page - 1) * limit;
 		const where: any = {};
 
 		if (search) {
 			where.OR = [
 				{ product: { name: { contains: search, mode: "insensitive" } } },
 				{ product: { sku: { contains: search, mode: "insensitive" } } },
-				{ product: { barcode: { contains: search, mode: "insensitive" } } },
-				{ variant: { sku: { contains: search, mode: "insensitive" } } },
 				{ lotNumber: { contains: search, mode: "insensitive" } },
 			];
 		}
@@ -586,29 +352,10 @@ export async function getInventory(
 		if (categoryId) where.product = { categoryId };
 		if (brandId) where.product = { brandId };
 		if (status) where.status = status;
-		if (lowStock) {
-			where.AND = [
-				{ quantity: { gt: 0 } },
-				{
-					OR: [
-						{ quantity: { lte: { product: { minStockLevel: {} } } } },
-						{ quantity: { lte: { product: { reorderPoint: {} } } } },
-					],
-				},
-			];
-		}
 
-		// Build order clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const orderBy: any = {};
 		if (sortBy === "quantity") {
 			orderBy.quantity = sortOrder;
-		} else if (sortBy === "product") {
-			orderBy.product = { name: sortOrder };
-		} else if (sortBy === "warehouse") {
-			orderBy.warehouse = { name: sortOrder };
-		} else if (sortBy === "lastMovement") {
-			orderBy.lastMovement = sortOrder;
 		} else if (sortBy === "createdAt") {
 			orderBy.createdAt = sortOrder;
 		}
@@ -625,15 +372,12 @@ export async function getInventory(
 							id: true,
 							name: true,
 							sku: true,
-							primaryImage: true,
-							minStockLevel: true,
+							minStock: true,
 							reorderPoint: true,
-							categoryName: true,
-							brandName: true,
 						},
 					},
 					variant: {
-						select: { id: true, name: true, sku: true, attributes: true },
+						select: { id: true, name: true, sku: true },
 					},
 					warehouse: {
 						select: { id: true, name: true, code: true },
@@ -678,8 +422,7 @@ export async function getStockMovements(
 			sortOrder,
 		} = validatedQuery;
 
-		const skip = (page - 1) * limit; // Build where clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const skip = (page - 1) * limit;
 		const where: any = {};
 
 		if (productId) where.productId = productId;
@@ -690,15 +433,11 @@ export async function getStockMovements(
 			where.occurredAt = {};
 			if (dateFrom) where.occurredAt.gte = dateFrom;
 			if (dateTo) where.occurredAt.lte = dateTo;
-		} // Build order clause
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		}
+
 		const orderBy: any = {};
 		if (sortBy === "occurredAt") {
 			orderBy.occurredAt = sortOrder;
-		} else if (sortBy === "quantity") {
-			orderBy.quantity = sortOrder;
-		} else if (sortBy === "type") {
-			orderBy.type = sortOrder;
 		}
 
 		const [movements, total] = await Promise.all([
@@ -708,14 +447,18 @@ export async function getStockMovements(
 				skip,
 				take: limit,
 				include: {
-					product: {
-						select: { id: true, name: true, sku: true, primaryImage: true },
-					},
-					variant: {
-						select: { id: true, name: true, sku: true },
-					},
-					warehouse: {
-						select: { id: true, name: true, code: true },
+					inventoryItem: {
+						include: {
+							product: {
+								select: { id: true, name: true, sku: true },
+							},
+							variant: {
+								select: { id: true, name: true, sku: true },
+							},
+							warehouse: {
+								select: { id: true, name: true, code: true },
+							},
+						},
 					},
 				},
 			}),
@@ -752,10 +495,8 @@ export async function getLowStockAlerts(): Promise<ActionResponse> {
 						id: true,
 						name: true,
 						sku: true,
-						primaryImage: true,
-						minStockLevel: true,
+						minStock: true,
 						reorderPoint: true,
-						reorderQuantity: true,
 					},
 				},
 				variant: {
@@ -765,16 +506,14 @@ export async function getLowStockAlerts(): Promise<ActionResponse> {
 					select: { id: true, name: true, code: true },
 				},
 			},
-			orderBy: [{ quantity: "asc" }, { product: { name: "asc" } }],
 		});
 
-		// Filter items that are actually low stock
 		const filteredItems = lowStockItems.filter((item) => {
-			const minLevel = item.product.minStockLevel;
-			const reorderPoint = item.product.reorderPoint;
+			const minStock = item.product.minStock || 0;
+			const reorderPoint = item.product.reorderPoint || 0;
 			return (
-				(minLevel && item.quantity <= minLevel) ||
-				(reorderPoint && item.quantity <= reorderPoint)
+				(minStock > 0 && item.quantity <= minStock) ||
+				(reorderPoint > 0 && item.quantity <= reorderPoint)
 			);
 		});
 

@@ -58,35 +58,37 @@ export async function createProduct(
 			sku: productData.sku,
 			barcode: productData.barcode,
 			slug: productData.slug,
-			categoryName: validatedData.categoryName,
-			brandName: validatedData.brandName,
+			// categoryName: validatedData.categoryName, // Removed
+			// brandName: validatedData.brandName, // Removed
 			// Include categoryId and brandId directly in Product table
-			//hey
 			categoryId: categoryId || null,
 			brandId: brandId || null,
-			weight: productData.weight,
-			dimensions: productData.dimensions || undefined,
-			color: productData.color,
-			size: productData.size,
-			material: productData.material,
+			weightKg: productData.weight, // weight -> weightKg
+			lengthCm: productData.dimensions?.length,
+			widthCm: productData.dimensions?.width,
+			heightCm: productData.dimensions?.height,
+			// dimensions: productData.dimensions || undefined, // Removed
+			// color: productData.color, // Removed
+			// size: productData.size, // Removed
+			// material: productData.material, // Removed
 			costPrice: productData.costPrice,
 			sellingPrice: productData.sellingPrice,
 			wholesalePrice: productData.wholesalePrice,
-			minStockLevel: productData.minStockLevel,
-			maxStockLevel: productData.maxStockLevel,
+			minStock: productData.minStockLevel, // minStockLevel -> minStock
+			// maxStockLevel: productData.maxStockLevel, // Removed
 			reorderPoint: productData.reorderPoint,
-			reorderQuantity: productData.reorderQuantity,
+			// reorderQuantity: productData.reorderQuantity, // Removed
 			status: productData.status,
 			isTrackable: productData.isTrackable,
 			isSerialized: productData.isSerialized,
-			images: productData.images || undefined,
-			primaryImage: productData.primaryImage,
-			metaTitle: productData.metaTitle,
-			metaDescription: productData.metaDescription,
-			tags: productData.tags || undefined,
-			leadTimeSupply: productData.leadTimeSupply,
-			shelfLife: productData.shelfLife,
-			createdBy: productData.createdBy,
+			// images: productData.images || undefined, // Handled via relation
+			// primaryImage: productData.primaryImage, // Handled via relation
+			// metaTitle: productData.metaTitle, // Removed
+			// metaDescription: productData.metaDescription, // Removed
+			// tags: productData.tags || undefined, // Handled via relation
+			// leadTimeSupply: productData.leadTimeSupply, // Removed
+			// shelfLife: productData.shelfLife, // Removed
+			createdById: productData.createdBy, // createdBy -> createdById
 			companyId: productData.companyId, // Now passed from API route
 		};
 
@@ -117,10 +119,11 @@ export async function createProduct(
 						description: validatedData.description || null,
 						slug: validatedData.slug,
 						color: validatedData.color || null,
-						image: validatedData.primaryImage || null,
+						icon: validatedData.primaryImage || null,
 						parentId: null,
-						level: 0,
+						// level: 0, // Removed
 						isActive: true,
+						companyId: productData.companyId, // Added
 					},
 				});
 
@@ -187,10 +190,28 @@ export async function updateProduct(
 		const product = await neonClient.product.update({
 			where: { id },
 			data: {
-				...updateData,
-				dimensions: updateData.dimensions || undefined,
-				images: updateData.images || undefined,
-				tags: updateData.tags || undefined,
+				name: updateData.name,
+				description: updateData.description,
+				sku: updateData.sku,
+				barcode: updateData.barcode,
+				// slug: updateData.slug, // Removed to avoid type error
+				categoryId: updateData.categoryId,
+				brandId: updateData.brandId,
+				weightKg: updateData.weight,
+				lengthCm: updateData.dimensions?.length,
+				widthCm: updateData.dimensions?.width,
+				heightCm: updateData.dimensions?.height,
+				minStock: updateData.minStockLevel,
+				reorderPoint: updateData.reorderPoint,
+				status: updateData.status,
+				isTrackable: updateData.isTrackable,
+				isSerialized: updateData.isSerialized,
+				costPrice: updateData.costPrice,
+				sellingPrice: updateData.sellingPrice,
+				wholesalePrice: updateData.wholesalePrice,
+				// dimensions: updateData.dimensions || undefined,
+				// images: updateData.images || undefined,
+				// tags: updateData.tags || undefined,
 			},
 			include: {
 				variants: true,
@@ -323,7 +344,7 @@ export async function getProducts(
 					inventoryItems: {
 						select: {
 							quantity: true,
-							availableQuantity: true,
+							// availableQuantity: true, // Removed
 							reservedQuantity: true,
 							warehouse: {
 								select: { id: true, name: true, code: true },
@@ -348,7 +369,7 @@ export async function getProducts(
 				0
 			);
 			const availableStock = product.inventoryItems.reduce(
-				(sum, item) => sum + (item.availableQuantity || 0),
+				(sum, item) => sum + ((item.quantity || 0) - (item.reservedQuantity || 0)),
 				0
 			);
 			const reservedStock = product.inventoryItems.reduce(
@@ -362,19 +383,19 @@ export async function getProducts(
 				costPrice: product.costPrice ? Number(product.costPrice) : undefined,
 				sellingPrice: product.sellingPrice ? Number(product.sellingPrice) : undefined,
 				wholesalePrice: product.wholesalePrice ? Number(product.wholesalePrice) : undefined,
-				weight: product.weight ? Number(product.weight) : undefined,
+				weight: product.weightKg ? Number(product.weightKg) : undefined,
 				totalStock,
 				availableStock,
 				reservedStock,
 				// Add category and brand objects for frontend compatibility
-				category: product.categoryId && product.categoryName ? {
-					id: product.categoryId,
-					name: product.categoryName,
-				} : undefined,
-				brand: product.brandId && product.brandName ? {
-					id: product.brandId,
-					name: product.brandName,
-				} : undefined,
+				// category: product.categoryId && product.categoryName ? {
+				// 	id: product.categoryId,
+				// 	name: product.categoryName,
+				// } : undefined,
+				// brand: product.brandId && product.brandName ? {
+				// 	id: product.brandId,
+				// 	name: product.brandName,
+				// } : undefined,
 			};
 		});
 
@@ -417,18 +438,18 @@ export async function getProduct(id: string): Promise<ActionResponse> {
 						warehouse: true,
 					},
 				},
-				suppliers: {
-					include: {
-						supplier: true,
-					},
-				},
-				movements: {
-					orderBy: { occurredAt: "desc" },
-					take: 10,
-					include: {
-						warehouse: true,
-					},
-				},
+				// suppliers: {
+				// 	include: {
+				// 		supplier: true,
+				// 	},
+				// },
+				// movements: {
+				// 	orderBy: { occurredAt: "desc" },
+				// 	take: 10,
+				// 	include: {
+				// 		warehouse: true,
+				// 	},
+				// },
 			},
 		});
 
@@ -593,9 +614,14 @@ export async function bulkUpdateProducts(
 			where: { id: { in: productIds } },
 			data: {
 				...updates,
-				dimensions: updates.dimensions || undefined,
-				images: updates.images || undefined,
-				tags: updates.tags || undefined,
+				weightKg: updates.weight,
+				lengthCm: updates.dimensions?.length,
+				widthCm: updates.dimensions?.width,
+				heightCm: updates.dimensions?.height,
+				minStock: updates.minStockLevel,
+				// dimensions: updates.dimensions || undefined,
+				// images: updates.images || undefined,
+				// tags: updates.tags || undefined,
 			},
 		});
 

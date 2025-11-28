@@ -3,7 +3,6 @@
 import { neonClient } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabaseServer";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { actionError, actionSuccess } from "@/lib/api-utils";
 import {
 	CreateOrderSchema,
@@ -139,7 +138,7 @@ async function validateInventoryAvailability(
 			},
 		});
 
-		if (!inventoryItem || inventoryItem.availableQuantity < item.quantity) {
+		if (!inventoryItem || inventoryItem.quantity - inventoryItem.reservedQuantity < item.quantity) {
 			const product = await neonClient.product.findUnique({
 				where: { id: item.productId },
 				select: { name: true, sku: true },
@@ -147,7 +146,7 @@ async function validateInventoryAvailability(
 
 			unavailableItems.push(
 				`${product?.name || "Unknown"} (${product?.sku || "Unknown SKU"}) - Available: ${
-					inventoryItem?.availableQuantity || 0
+					(inventoryItem?.quantity || 0) - (inventoryItem?.reservedQuantity || 0)
 				}, Required: ${item.quantity}`,
 			);
 		}
@@ -181,9 +180,6 @@ async function reserveInventory(
 					reservedQuantity: {
 						increment: item.quantity,
 					},
-					availableQuantity: {
-						decrement: item.quantity,
-					},
 				},
 			});
 
@@ -191,11 +187,12 @@ async function reserveInventory(
 			await neonClient.stockReservation.create({
 				data: {
 					inventoryItemId: inventoryItem.id,
-					reservationType: "ORDER",
-					referenceType: "Order",
+					productId: item.productId,
+					warehouseId: warehouseId,
+					reservedFor: "ORDER",
 					referenceId: orderId,
 					quantity: item.quantity,
-					reservedBy: userId,
+					createdById: userId,
 					expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
 				},
 			});
@@ -204,18 +201,14 @@ async function reserveInventory(
 			await neonClient.inventoryMovement.create({
 				data: {
 					type: "ADJUSTMENT",
-					subtype: "ORDER_RESERVE",
-					productId: item.productId,
-					variantId: item.variantId,
-					warehouseId,
 					inventoryItemId: inventoryItem.id,
 					quantity: -item.quantity,
-					quantityBefore: inventoryItem.availableQuantity,
-					quantityAfter: inventoryItem.availableQuantity - item.quantity,
+					quantityBefore: inventoryItem.quantity,
+					quantityAfter: inventoryItem.quantity - item.quantity,
 					referenceType: "Order",
 					referenceId: orderId,
 					reason: "Order reservation",
-					userId,
+					createdById: userId,
 				},
 			});
 		}
@@ -263,18 +256,6 @@ export async function createOrder(
 			return actionError("Warehouse not found or not accessible");
 		}
 
-		// Skip inventory availability check - allow orders regardless of stock
-		// const unavailableItems = await validateInventoryAvailability(
-		// 	validatedData.items,
-		// 	validatedData.warehouseId,
-		// );
-
-		// if (unavailableItems.length > 0) {
-		// 	return actionError(
-		// 		`Insufficient inventory for: ${unavailableItems.join(", ")}`,
-		// 	);
-		// }
-
 		// Generate order number
 		const orderNumber = await generateOrderNumber();
 
@@ -299,20 +280,12 @@ export async function createOrder(
 					customerId: validatedData.customerId,
 					warehouseId: validatedData.warehouseId,
 					companyId,
-					type: validatedData.type,
-					channel: validatedData.channel,
-					priority: validatedData.priority,
 					subtotal: new Prisma.Decimal(subtotal),
 					discountAmount: new Prisma.Decimal(totalDiscountAmount),
 					totalAmount: new Prisma.Decimal(finalTotal),
-					requiredDate: validatedData.requiredDate,
-					promisedDate: validatedData.promisedDate,
-					shippingMethod: validatedData.shippingMethod,
 					shippingAddress: validatedData.shippingAddress,
 					notes: validatedData.notes,
-					internalNotes: validatedData.internalNotes,
-					rushOrder: validatedData.rushOrder,
-					createdBy: userId,
+					createdById: userId,
 				},
 			});
 
@@ -334,12 +307,10 @@ export async function createOrder(
 						productId: item.productId,
 						variantId: item.variantId,
 						orderedQty: item.quantity,
-						remainingQty: item.quantity,
 						unitPrice: new Prisma.Decimal(item.unitPrice),
 						totalPrice: new Prisma.Decimal(itemTotal),
-						discountAmount: new Prisma.Decimal(item.discountAmount),
-						productName: product.name,
-						productSku: product.sku,
+						// productName: product.name, // Removed
+						// productSku: product.sku, // Removed
 					},
 				});
 			}
@@ -391,15 +362,25 @@ export async function getOrders(
 		};
 
 		if (validatedFilters.status) {
-			where.status = validatedFilters.status;
-		}
-
-		if (validatedFilters.fulfillmentStatus) {
-			where.fulfillmentStatus = validatedFilters.fulfillmentStatus;
+			where.status = {
+				in: validatedFilters.status === "PENDING" ? ["PENDING"] :
+					validatedFilters.status === "CONFIRMED" ? ["CONFIRMED"] :
+					validatedFilters.status === "PROCESSING" ? ["PROCESSING"] :
+					validatedFilters.status === "SHIPPED" ? ["SHIPPED"] :
+					validatedFilters.status === "DELIVERED" ? ["DELIVERED"] :
+					validatedFilters.status === "CANCELLED" ? ["CANCELLED"] :
+					validatedFilters.status === "RETURNED" ? ["RETURNED"] : undefined
+			};
 		}
 
 		if (validatedFilters.paymentStatus) {
-			where.paymentStatus = validatedFilters.paymentStatus;
+			where.paymentStatus = {
+				in: validatedFilters.paymentStatus === "PENDING" ? ["PENDING"] :
+					validatedFilters.paymentStatus === "PAID" ? ["PAID"] :
+					validatedFilters.paymentStatus === "PARTIALLY_PAID" ? ["PARTIALLY_PAID"] :
+					validatedFilters.paymentStatus === "FAILED" ? ["FAILED"] :
+					validatedFilters.paymentStatus === "REFUNDED" ? ["REFUNDED"] : undefined
+			};
 		}
 
 		if (validatedFilters.customerId) {
@@ -408,18 +389,6 @@ export async function getOrders(
 
 		if (validatedFilters.warehouseId) {
 			where.warehouseId = validatedFilters.warehouseId;
-		}
-
-		if (validatedFilters.type) {
-			where.type = validatedFilters.type;
-		}
-
-		if (validatedFilters.channel) {
-			where.channel = validatedFilters.channel;
-		}
-
-		if (validatedFilters.priority) {
-			where.priority = validatedFilters.priority;
 		}
 
 		if (validatedFilters.dateFrom || validatedFilters.dateTo) {
@@ -458,7 +427,7 @@ export async function getOrders(
 				},
 				{
 					customer: {
-						companyName: {
+						businessName: {
 							contains: validatedFilters.searchTerm,
 							mode: "insensitive",
 						},
@@ -490,15 +459,8 @@ export async function getOrders(
 						id: true,
 						firstName: true,
 						lastName: true,
-						companyName: true,
+						businessName: true,
 						email: true,
-					},
-				},
-				warehouse: {
-					select: {
-						id: true,
-						name: true,
-						code: true,
 					},
 				},
 				items: {
@@ -562,22 +524,12 @@ export async function getOrderById(id: string, context?: ActionContext) {
 			},
 			include: {
 				customer: true,
-				warehouse: true,
 				items: {
 					include: {
 						product: true,
 						variant: true,
 					},
 				},
-				shipments: {
-					include: {
-						packages: true,
-						tracking: {
-							orderBy: { eventDate: "desc" },
-						},
-					},
-				},
-				invoices: true,
 			},
 		});
 
@@ -621,27 +573,23 @@ export async function updateOrderStatus(
 
 		// Prepare update data
 		const updateData: Prisma.OrderUpdateInput = {
-			status: validatedData.status,
+			// status: validatedData.status, // Handle manually to avoid type mismatch
 			updatedAt: new Date(),
 		};
 
-		// Auto-update fulfillment status based on order status
-		if (validatedData.status === "CONFIRMED" && !validatedData.fulfillmentStatus) {
-			updateData.fulfillmentStatus = "PENDING";
-		} else if (validatedData.status === "PROCESSING" && !validatedData.fulfillmentStatus) {
-			updateData.fulfillmentStatus = "PICKING";
-		} else if (validatedData.status === "SHIPPED") {
-			updateData.fulfillmentStatus = "SHIPPED";
-			updateData.shippedDate = validatedData.shippedDate || new Date();
-		} else if (validatedData.status === "DELIVERED") {
-			updateData.fulfillmentStatus = "DELIVERED";
-			updateData.deliveredDate = validatedData.deliveredDate || new Date();
-		} else if (validatedData.fulfillmentStatus) {
-			updateData.fulfillmentStatus = validatedData.fulfillmentStatus;
+		if (validatedData.status === "PENDING" || validatedData.status === "CONFIRMED" || 
+			validatedData.status === "PROCESSING" || validatedData.status === "SHIPPED" || 
+			validatedData.status === "DELIVERED" || validatedData.status === "CANCELLED" || 
+			validatedData.status === "RETURNED") {
+			updateData.status = validatedData.status;
 		}
 
 		if (validatedData.paymentStatus) {
-			updateData.paymentStatus = validatedData.paymentStatus;
+			if (validatedData.paymentStatus === "PENDING" || validatedData.paymentStatus === "PAID" ||
+				validatedData.paymentStatus === "PARTIALLY_PAID" || validatedData.paymentStatus === "FAILED" ||
+				validatedData.paymentStatus === "REFUNDED") {
+				updateData.paymentStatus = validatedData.paymentStatus;
+			}
 		}
 
 		if (validatedData.trackingNumber) {
@@ -658,7 +606,6 @@ export async function updateOrderStatus(
 			data: updateData,
 			include: {
 				customer: true,
-				warehouse: true,
 				items: true,
 			},
 		});
@@ -668,7 +615,6 @@ export async function updateOrderStatus(
 			// Release reserved inventory
 			const reservations = await neonClient.stockReservation.findMany({
 				where: {
-					referenceType: "Order",
 					referenceId: data.orderId,
 					status: "ACTIVE",
 				},
@@ -681,9 +627,6 @@ export async function updateOrderStatus(
 					data: {
 						reservedQuantity: {
 							decrement: reservation.quantity,
-						},
-						availableQuantity: {
-							increment: reservation.quantity,
 						},
 					},
 				});
@@ -701,9 +644,6 @@ export async function updateOrderStatus(
 				await neonClient.inventoryMovement.create({
 					data: {
 						type: "ADJUSTMENT",
-						subtype: "ORDER_CANCEL",
-						productId: order.items[0]?.productId || "",
-						warehouseId: order.warehouseId,
 						inventoryItemId: reservation.inventoryItemId,
 						quantity: reservation.quantity,
 						quantityBefore: 0, // Will be updated by trigger
@@ -711,7 +651,7 @@ export async function updateOrderStatus(
 						referenceType: "Order",
 						referenceId: data.orderId,
 						reason: "Order cancellation - inventory release",
-						userId,
+						createdById: userId,
 					},
 				});
 			}
@@ -911,13 +851,9 @@ export async function getOrderAnalytics(context?: ActionContext) {
 					id: true,
 					orderNumber: true,
 					orderDate: true,
-					requiredDate: true,
-					promisedDate: true,
-					priority: true,
-					fulfillmentStatus: true,
 					customer: {
 						select: {
-							companyName: true,
+							businessName: true,
 							firstName: true,
 							lastName: true,
 						},
@@ -925,13 +861,11 @@ export async function getOrderAnalytics(context?: ActionContext) {
 					items: {
 						select: {
 							orderedQty: true,
-							remainingQty: true,
+							shippedQty: true,
 						},
 					},
 				},
 				orderBy: [
-					{ requiredDate: "asc" },
-					{ promisedDate: "asc" },
 					{ orderDate: "asc" },
 				],
 				take: 10,
@@ -939,7 +873,6 @@ export async function getOrderAnalytics(context?: ActionContext) {
 			neonClient.orderItem.aggregate({
 				_sum: {
 					orderedQty: true,
-					remainingQty: true,
 					shippedQty: true,
 				},
 				where: {
@@ -952,7 +885,7 @@ export async function getOrderAnalytics(context?: ActionContext) {
 				where: {
 					...baseWhere,
 					paymentStatus: {
-						in: ["PENDING", "PROCESSING", "PARTIALLY_PAID", "FAILED"],
+						in: ["PENDING", "PARTIALLY_PAID", "FAILED"],
 					},
 				},
 			}),
@@ -965,8 +898,6 @@ export async function getOrderAnalytics(context?: ActionContext) {
 				},
 				select: {
 					deliveredDate: true,
-					promisedDate: true,
-					requiredDate: true,
 					shippedDate: true,
 				},
 			}),
@@ -1012,7 +943,7 @@ export async function getOrderAnalytics(context?: ActionContext) {
 					},
 					select: {
 						id: true,
-						companyName: true,
+						businessName: true,
 						firstName: true,
 						lastName: true,
 						status: true,
@@ -1023,7 +954,7 @@ export async function getOrderAnalytics(context?: ActionContext) {
 		const topCustomers = topCustomersRaw.map((entry) => {
 			const customer = customers.find((c) => c.id === entry.customerId);
 			const displayName =
-				customer?.companyName ||
+				customer?.businessName ||
 				[customer?.firstName, customer?.lastName]
 					.filter(Boolean)
 					.join(" ") ||
@@ -1047,39 +978,33 @@ export async function getOrderAnalytics(context?: ActionContext) {
 					0,
 				);
 				const remainingItems = items.reduce(
-					(acc, item) => acc + (item.remainingQty ?? 0),
+					(acc, item) => acc + ((item.orderedQty || 0) - (item.shippedQty || 0)),
 					0,
 				);
 				const customerName =
-					order.customer?.companyName ||
+					order.customer?.businessName ||
 					[order.customer?.firstName, order.customer?.lastName]
 						.filter(Boolean)
 						.join(" ") ||
 					"Customer";
-				const eta = order.promisedDate ?? order.requiredDate ?? null;
+				const eta = null;
 
 				return {
 					orderId: order.id,
 					orderNumber: order.orderNumber,
 					customer: customerName,
-					eta: eta ? eta.toISOString() : null,
+					eta: eta,
 					items: totalItems,
 					remainingItems,
-					priority: order.priority,
-					status: order.fulfillmentStatus,
+					priority: "NORMAL", // Default since priority removed
+					status: "PENDING", // Default since fulfillmentStatus removed
 				};
-			})
-			.sort((a, b) => {
-				if (a.eta && b.eta) return a.eta.localeCompare(b.eta);
-				if (a.eta) return -1;
-				if (b.eta) return 1;
-				return 0;
 			})
 			.slice(0, 5);
 
 		const totalOrderedQty = Number(orderItemAggregate._sum?.orderedQty ?? 0);
-		const totalRemainingQty = Number(orderItemAggregate._sum?.remainingQty ?? 0);
 		const totalShippedQty = Number(orderItemAggregate._sum?.shippedQty ?? 0);
+		const totalRemainingQty = totalOrderedQty - totalShippedQty;
 
 		const backorderRate =
 			totalOrderedQty > 0 ? totalRemainingQty / totalOrderedQty : 0;
@@ -1089,8 +1014,7 @@ export async function getOrderAnalytics(context?: ActionContext) {
 			if (!order.deliveredDate) {
 				return false;
 			}
-			const targetDate =
-				order.promisedDate ?? order.requiredDate ?? order.shippedDate;
+			const targetDate = order.shippedDate;
 			if (!targetDate) {
 				return true;
 			}

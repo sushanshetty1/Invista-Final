@@ -69,35 +69,43 @@ export async function createSupplier(
 		}
 
 		const validatedData = createSupplierSchema.parse(inputData);
+		const { status, ...otherData } = validatedData;
 
 		const supplier = await neonClient.supplier.create({
 			data: {
-				...validatedData,
-				companyId, // Use the provided or retrieved company ID
-				billingAddress: validatedData.billingAddress,
-				shippingAddress: validatedData.shippingAddress,
-				certifications: validatedData.certifications,
+				...otherData,
+				companyId,
+				address1: validatedData.billingAddress?.street,
+				address2: undefined,
+				city: validatedData.billingAddress?.city,
+				state: validatedData.billingAddress?.state,
+				postalCode: validatedData.billingAddress?.zipCode,
+				country: validatedData.billingAddress?.country,
+				createdById: "system",
+				status:
+					status === "PENDING_APPROVAL"
+						? "ACTIVE"
+						: status === "BLACKLISTED"
+							? "SUSPENDED"
+							: status,
 			},
 			include: {
-				products: {
+				productSuppliers: {
 					include: {
 						product: {
 							select: { id: true, name: true, sku: true },
 						},
 					},
 				},
-				contacts: true,
 			},
 		});
 
 		revalidatePath("/inventory/suppliers");
-		return actionSuccess(supplier, "Supplier created successfully");
+		revalidatePath(`/inventory/suppliers/${supplier.id}`);
+		return actionSuccess(supplier, "Supplier updated successfully");
 	} catch (error) {
-		console.error("Error creating supplier:", error);
-		if (error instanceof Error) {
-			return actionError(error.message);
-		}
-		return actionError("Failed to create supplier");
+		console.error("Error updating supplier:", error);
+		return actionError("Failed to update supplier");
 	}
 }
 
@@ -107,7 +115,7 @@ export async function updateSupplier(
 ): Promise<ActionResponse> {
 	try {
 		const validatedData = updateSupplierSchema.parse(input);
-		const { id, ...updateData } = validatedData;
+		const { id, status, ...updateData } = validatedData;
 
 		// Check if supplier exists
 		const existingSupplier = await neonClient.supplier.findUnique({
@@ -122,19 +130,27 @@ export async function updateSupplier(
 			where: { id },
 			data: {
 				...updateData,
-				billingAddress: updateData.billingAddress,
-				shippingAddress: updateData.shippingAddress,
-				certifications: updateData.certifications,
+				address1: updateData.billingAddress?.street,
+				address2: undefined,
+				city: updateData.billingAddress?.city,
+				state: updateData.billingAddress?.state,
+				postalCode: updateData.billingAddress?.zipCode,
+				country: updateData.billingAddress?.country,
+				status:
+					status === "PENDING_APPROVAL"
+						? "ACTIVE"
+						: status === "BLACKLISTED"
+							? "SUSPENDED"
+							: status,
 			},
 			include: {
-				products: {
+				productSuppliers: {
 					include: {
 						product: {
 							select: { id: true, name: true, sku: true },
 						},
 					},
 				},
-				contacts: true,
 			},
 		});
 
@@ -154,7 +170,7 @@ export async function deleteSupplier(id: string): Promise<ActionResponse> {
 		const existingSupplier = await neonClient.supplier.findUnique({
 			where: { id },
 			include: {
-				products: true,
+				productSuppliers: true,
 				purchaseOrders: true,
 			},
 		});
@@ -164,7 +180,7 @@ export async function deleteSupplier(id: string): Promise<ActionResponse> {
 		}
 
 		// Check if supplier has active relationships
-		if (existingSupplier.products.length > 0) {
+		if (existingSupplier.productSuppliers.length > 0) {
 			return actionError("Cannot delete supplier with associated products");
 		}
 
@@ -235,20 +251,20 @@ export async function getSuppliers(
 				skip,
 				take: limit,
 				include: {
-					products: {
+					productSuppliers: {
 						include: {
 							product: {
 								select: { id: true, name: true, sku: true },
 							},
 						},
 					},
-					contacts: {
-						where: { isPrimary: true },
-						take: 1,
-					},
+					// contacts: { // Removed
+					// 	where: { isPrimary: true },
+					// 	take: 1,
+					// },
 					_count: {
 						select: {
-							products: true,
+							productSuppliers: true,
 							purchaseOrders: true,
 						},
 					},
@@ -280,14 +296,14 @@ export async function getSupplier(id: string): Promise<ActionResponse> {
 		const supplier = await neonClient.supplier.findUnique({
 			where: { id },
 			include: {
-				products: {
+				productSuppliers: {
 					include: {
 						product: {
-							select: { id: true, name: true, sku: true, primaryImage: true },
+							select: { id: true, name: true, sku: true }, // primaryImage removed from Product
 						},
 					},
 				},
-				contacts: true,
+				// contacts: true, // Removed
 				purchaseOrders: {
 					orderBy: { createdAt: "desc" },
 					take: 10,
@@ -301,7 +317,7 @@ export async function getSupplier(id: string): Promise<ActionResponse> {
 				},
 				_count: {
 					select: {
-						products: true,
+						productSuppliers: true,
 						purchaseOrders: true,
 					},
 				},
@@ -453,123 +469,7 @@ export async function deleteProductSupplier(
 }
 
 // Create supplier contact
-export async function createSupplierContact(
-	input: SupplierContactInput,
-): Promise<ActionResponse> {
-	try {
-		const validatedData = supplierContactSchema.parse(input);
-
-		// Check if supplier exists
-		const supplier = await neonClient.supplier.findUnique({
-			where: { id: validatedData.supplierId },
-		});
-
-		if (!supplier) {
-			return actionError("Supplier not found");
-		}
-
-		// If this is set as primary, remove primary from other contacts
-		if (validatedData.isPrimary) {
-			await neonClient.supplierContact.updateMany({
-				where: {
-					supplierId: validatedData.supplierId,
-					isPrimary: true,
-				},
-				data: { isPrimary: false },
-			});
-		}
-
-		const contact = await neonClient.supplierContact.create({
-			data: validatedData,
-			include: {
-				supplier: {
-					select: { id: true, name: true, code: true },
-				},
-			},
-		});
-
-		revalidatePath("/inventory/suppliers");
-		revalidatePath(`/inventory/suppliers/${validatedData.supplierId}`);
-		return actionSuccess(contact, "Supplier contact created successfully");
-	} catch (error) {
-		console.error("Error creating supplier contact:", error);
-		return actionError("Failed to create supplier contact");
-	}
-}
-
-// Update supplier contact
-export async function updateSupplierContact(
-	input: UpdateSupplierContactInput,
-): Promise<ActionResponse> {
-	try {
-		const validatedData = updateSupplierContactSchema.parse(input);
-		const { id, ...updateData } = validatedData;
-
-		// Check if contact exists
-		const existingContact = await neonClient.supplierContact.findUnique({
-			where: { id },
-			include: { supplier: true },
-		});
-
-		if (!existingContact) {
-			return actionError("Supplier contact not found");
-		}
-
-		// If this is set as primary, remove primary from other contacts
-		if (updateData.isPrimary) {
-			await neonClient.supplierContact.updateMany({
-				where: {
-					supplierId: existingContact.supplierId,
-					isPrimary: true,
-					id: { not: id },
-				},
-				data: { isPrimary: false },
-			});
-		}
-
-		const contact = await neonClient.supplierContact.update({
-			where: { id },
-			data: updateData,
-			include: {
-				supplier: {
-					select: { id: true, name: true, code: true },
-				},
-			},
-		});
-
-		revalidatePath("/inventory/suppliers");
-		revalidatePath(`/inventory/suppliers/${existingContact.supplierId}`);
-		return actionSuccess(contact, "Supplier contact updated successfully");
-	} catch (error) {
-		console.error("Error updating supplier contact:", error);
-		return actionError("Failed to update supplier contact");
-	}
-}
-
-// Delete supplier contact
-export async function deleteSupplierContact(
-	id: string,
-): Promise<ActionResponse> {
-	try {
-		// Check if contact exists
-		const existingContact = await neonClient.supplierContact.findUnique({
-			where: { id },
-			include: { supplier: true },
-		});
-
-		if (!existingContact) {
-			return actionError("Supplier contact not found");
-		}
-
-		await neonClient.supplierContact.delete({
-			where: { id },
-		});
-
-		revalidatePath("/inventory/suppliers");
-		revalidatePath(`/inventory/suppliers/${existingContact.supplierId}`);
-		return actionSuccess(null, "Supplier contact deleted successfully");
-	} catch (error) {
-		console.error("Error deleting supplier contact:", error);
-		return actionError("Failed to delete supplier contact");
-	}
-}
+// SupplierContact functions removed as model does not exist
+export async function createSupplierContact(input: any) { return { success: false, error: "Not implemented" }; }
+export async function updateSupplierContact(input: any) { return { success: false, error: "Not implemented" }; }
+export async function deleteSupplierContact(id: string) { return { success: false, error: "Not implemented" }; }
