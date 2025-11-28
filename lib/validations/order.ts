@@ -1,24 +1,6 @@
 import { z } from "zod";
 
-// Enums from Prisma schema
-export const OrderTypeEnum = z.enum([
-	"SALES",
-	"RETURN",
-	"EXCHANGE",
-	"SAMPLE",
-	"REPLACEMENT",
-]);
-
-export const OrderChannelEnum = z.enum([
-	"DIRECT",
-	"ONLINE",
-	"PHONE",
-	"EMAIL",
-	"RETAIL",
-	"WHOLESALE",
-	"B2B_PORTAL",
-]);
-
+// Enums matching Prisma schema exactly
 export const OrderStatusEnum = z.enum([
 	"PENDING",
 	"CONFIRMED",
@@ -27,42 +9,17 @@ export const OrderStatusEnum = z.enum([
 	"DELIVERED",
 	"CANCELLED",
 	"RETURNED",
-	"COMPLETED",
-]);
-
-export const FulfillmentStatusEnum = z.enum([
-	"PENDING",
-	"PICKING",
-	"PACKED",
-	"SHIPPED",
-	"DELIVERED",
-	"CANCELLED",
 ]);
 
 export const PaymentStatusEnum = z.enum([
 	"PENDING",
-	"PROCESSING",
 	"PAID",
 	"PARTIALLY_PAID",
-	"REFUNDED",
-	"CANCELLED",
 	"FAILED",
+	"REFUNDED",
 ]);
 
-export const OrderPriorityEnum = z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]);
-
-export const OrderItemStatusEnum = z.enum([
-	"PENDING",
-	"RESERVED",
-	"PICKING",
-	"PICKED",
-	"PACKED",
-	"SHIPPED",
-	"DELIVERED",
-	"CANCELLED",
-]);
-
-// Order Item Schema
+// Order Item Schema - matching Prisma OrderItem model
 export const OrderItemSchema = z.object({
 	productId: z.string().uuid("Product ID must be a valid UUID"),
 	variantId: z.string().uuid("Variant ID must be a valid UUID").optional(),
@@ -78,123 +35,71 @@ export const OrderItemSchema = z.object({
 		.default(0),
 });
 
-// Create Order Schema
-export const CreateOrderSchema = z
-	.object({
-		customerId: z.string().uuid("Customer ID must be a valid UUID"),
-		warehouseId: z.string().uuid("Warehouse ID must be a valid UUID"),
-		type: OrderTypeEnum.default("SALES"),
-		channel: OrderChannelEnum.default("DIRECT"),
-		priority: OrderPriorityEnum.default("NORMAL"),
-		requiredDate: z
-			.string()
-			.datetime("Invalid date format")
-			.or(z.date())
-			.optional()
-			.transform((val) => (val ? new Date(val) : undefined)),
-		promisedDate: z
-			.string()
-			.datetime("Invalid date format")
-			.or(z.date())
-			.optional()
-			.transform((val) => (val ? new Date(val) : undefined)),
-		shippingMethod: z.string().max(100).optional(),
-		shippingAddress: z.string().max(1000).optional(),
-		notes: z.string().max(1000).optional(),
-		internalNotes: z.string().max(1000).optional(),
-		rushOrder: z.boolean().default(false),
-		items: z
-			.array(OrderItemSchema)
-			.min(1, "Order must contain at least one item")
-			.max(100, "Order cannot contain more than 100 items"),
-	})
-	.refine(
-		(data) => {
-			// If requiredDate is provided, it should not be in the past (allow same day)
-			if (data.requiredDate) {
-				const now = new Date();
-				// Set to start of today to allow same-day orders
-				const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-				const reqDate = new Date(data.requiredDate);
-				const reqDay = new Date(reqDate.getFullYear(), reqDate.getMonth(), reqDate.getDate());
-				return reqDay >= today;
-			}
-			return true;
-		},
-		{
-			message: "Required date cannot be in the past",
-			path: ["requiredDate"],
-		},
-	);
+// Create Order Schema - matching Prisma Order model
+export const CreateOrderSchema = z.object({
+	customerId: z.string().uuid("Customer ID must be a valid UUID"),
+	warehouseId: z.string().uuid("Warehouse ID must be a valid UUID").optional().nullable(),
+	shippingAddress: z.any().optional().nullable(), // JSON field in Prisma
+	trackingNumber: z.string().max(100).optional().nullable(),
+	carrier: z.string().max(100).optional().nullable(),
+	notes: z.string().max(1000).optional().nullable(),
+	items: z
+		.array(OrderItemSchema)
+		.min(1, "Order must contain at least one item")
+		.max(100, "Order cannot contain more than 100 items"),
+});
 
-// Update Order Schema
+// Update Order Schema - matching Prisma Order model
 export const UpdateOrderSchema = z.object({
 	customerId: z.string().uuid("Customer ID must be a valid UUID").optional(),
-	warehouseId: z.string().uuid("Warehouse ID must be a valid UUID").optional(),
-	type: OrderTypeEnum.optional(),
-	channel: OrderChannelEnum.optional(),
+	warehouseId: z.string().uuid("Warehouse ID must be a valid UUID").optional().nullable(),
 	status: OrderStatusEnum.optional(),
-	fulfillmentStatus: FulfillmentStatusEnum.optional(),
 	paymentStatus: PaymentStatusEnum.optional(),
-	priority: OrderPriorityEnum.optional(),
-	requiredDate: z
-		.string()
-		.datetime("Invalid date format")
-		.or(z.date())
-		.optional()
-		.transform((val) => (val ? new Date(val) : undefined)),
-	promisedDate: z
-		.string()
-		.datetime("Invalid date format")
-		.or(z.date())
-		.optional()
-		.transform((val) => (val ? new Date(val) : undefined)),
 	shippedDate: z
 		.string()
 		.datetime("Invalid date format")
 		.or(z.date())
 		.optional()
-		.transform((val) => (val ? new Date(val) : undefined)),
+		.nullable()
+		.transform((val) => (val ? new Date(val) : null)),
 	deliveredDate: z
 		.string()
 		.datetime("Invalid date format")
 		.or(z.date())
 		.optional()
-		.transform((val) => (val ? new Date(val) : undefined)),
-	shippingMethod: z.string().max(100).optional(),
-	trackingNumber: z.string().max(100).optional(),
-	carrier: z.string().max(100).optional(),
-	shippingAddress: z.string().max(1000).optional(),
-	notes: z.string().max(1000).optional(),
-	internalNotes: z.string().max(1000).optional(),
-	rushOrder: z.boolean().optional(),
+		.nullable()
+		.transform((val) => (val ? new Date(val) : null)),
+	trackingNumber: z.string().max(100).optional().nullable(),
+	carrier: z.string().max(100).optional().nullable(),
+	shippingAddress: z.any().optional().nullable(), // JSON field in Prisma
+	notes: z.string().max(1000).optional().nullable(),
 });
 
-// Update Order Status Schema
+// Update Order Status Schema - for status updates
 export const UpdateOrderStatusSchema = z.object({
 	status: OrderStatusEnum,
-	fulfillmentStatus: FulfillmentStatusEnum.optional(),
 	paymentStatus: PaymentStatusEnum.optional(),
 	shippedDate: z
 		.string()
 		.datetime("Invalid date format")
 		.or(z.date())
 		.optional()
-		.transform((val) => (val ? new Date(val) : undefined)),
+		.nullable()
+		.transform((val) => (val ? new Date(val) : null)),
 	deliveredDate: z
 		.string()
 		.datetime("Invalid date format")
 		.or(z.date())
 		.optional()
-		.transform((val) => (val ? new Date(val) : undefined)),
-	trackingNumber: z.string().max(100).optional(),
-	carrier: z.string().max(100).optional(),
+		.nullable()
+		.transform((val) => (val ? new Date(val) : null)),
+	trackingNumber: z.string().max(100).optional().nullable(),
+	carrier: z.string().max(100).optional().nullable(),
 });
 
-// Order Filter Schema
+// Order Filter Schema - for querying orders
 export const OrderFilterSchema = z.object({
 	status: OrderStatusEnum.optional(),
-	fulfillmentStatus: FulfillmentStatusEnum.optional(),
 	paymentStatus: PaymentStatusEnum.optional(),
 	customerId: z.string().uuid().optional(),
 	warehouseId: z.string().uuid().optional(),
@@ -211,9 +116,6 @@ export const OrderFilterSchema = z.object({
 		.optional()
 		.transform((val) => (val ? new Date(val) : undefined)),
 	searchTerm: z.string().max(100).optional(),
-	type: OrderTypeEnum.optional(),
-	channel: OrderChannelEnum.optional(),
-	priority: OrderPriorityEnum.optional(),
 	page: z.coerce.number().int().positive().default(1),
 	limit: z.coerce.number().int().positive().max(100).default(10),
 });
