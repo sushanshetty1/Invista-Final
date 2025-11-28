@@ -509,7 +509,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\SHAUN RODRIGUES\\OneDrive\\Desktop\\cybersprinters\\Invista\\prisma\\generated\\supabase",
+      "value": "C:\\Users\\sam\\Desktop\\invi\\prisma\\generated\\supabase",
       "fromEnvVar": null
     },
     "config": {
@@ -527,7 +527,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\SHAUN RODRIGUES\\OneDrive\\Desktop\\cybersprinters\\Invista\\prisma\\schema-supabase.prisma",
+    "sourceFilePath": "C:\\Users\\sam\\Desktop\\invi\\prisma\\schema-supabase.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -541,6 +541,7 @@ const config = {
     "supabaseDb"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "supabaseDb": {
       "url": {
