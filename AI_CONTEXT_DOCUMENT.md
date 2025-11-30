@@ -2,9 +2,9 @@
 
 > **Purpose:** This document provides complete context for any AI assistant (Claude, GPT, etc.) to understand the project state and continue work seamlessly.
 > 
-> **Last Updated:** November 28, 2025 (Session 3 - Backend Complete)
+> **Last Updated:** November 30, 2025 (Session 4 - UserSession & LoginHistory Implemented)
 > **Updated By:** Claude Opus 4.5 (GitHub Copilot)
-> **Status:** ✅ ALL BACKEND FIXED! Only frontend files remain (~56 errors in app/suppliers/add/page.tsx)
+> **Status:** ✅ ALL BACKEND FIXED! Session tracking now functional. Only frontend files remain (~57 errors)
 
 ---
 
@@ -186,17 +186,135 @@ All backend files are now fixed with **ZERO TypeScript errors**.
 
 ### Priority 3: Frontend Files (OPTIONAL)
 
-The only remaining errors (~56) are in frontend files:
+The only remaining errors (~57) are in frontend files:
 
 | File | Errors | Issue |
 |------|--------|-------|
-| `app/suppliers/add/page.tsx` | ~56 | Uses old supplier schema fields (companyType, billingAddress, etc.) |
+| `app/suppliers/add/page.tsx` | ~57 | Uses old supplier schema fields (companyType, billingAddress, etc.) |
 
 These are **UI forms** that reference fields no longer in the supplier schema. They need to be updated to match the new simplified supplier schema.
 
 ### Priority 4: Cleanup
 
 - Delete `lib/actions/orders-new.ts` (duplicate file)
+
+---
+
+## 🔐 SESSION 4: UserSession & LoginHistory Implementation
+
+> **Date:** November 30, 2025
+> **Status:** ✅ COMPLETE
+
+### What Was Implemented
+
+Made the `UserSession` and `LoginHistory` tables in Supabase fully functional with database protection mechanisms.
+
+### New Files Created
+
+| File | Purpose |
+|------|---------|
+| `lib/session-utils.ts` | Shared utilities: IP extraction, UA parsing, rate limiting, cleanup trigger |
+| `lib/session-manager.ts` | UserSession CRUD: create, update activity (debounced), revoke, cleanup |
+| `app/api/auth/sessions/route.ts` | Sessions API: GET user sessions, POST create, DELETE revoke |
+| `app/api/auth/cleanup/route.ts` | Manual cleanup endpoint (backup for cron) |
+
+### Files Updated
+
+| File | Changes |
+|------|---------|
+| `lib/login-history.ts` | Re-enabled with rate limiting (1/user/60s) + fire-and-forget |
+| `app/api/auth/login-history/route.ts` | Re-enabled with cleanup trigger (Option C hybrid) |
+| `contexts/AuthContext.tsx` | Added session creation on login, revocation on logout, `logoutAllDevices()` |
+
+### Database Protection Mechanisms
+
+| Protection | Implementation |
+|------------|----------------|
+| **Rate Limiting** | Max 1 login log per user per 60 seconds |
+| **Fire-and-Forget** | Login history writes don't block login flow |
+| **5-Day Retention** | Auto-delete old records via cleanup |
+| **Hybrid Cleanup (Option C)** | Triggers every 100 logins OR every 24 hours |
+| **Debounced Activity** | Session `lastActivity` updates max once per 5 minutes |
+| **Non-Blocking Writes** | All logging wrapped in try-catch, failures logged but don't break auth |
+
+### Data Flow
+
+```
+User Login (success)
+    ├── Create LoginHistory record (fire-and-forget, rate limited)
+    ├── Create UserSession record
+    └── Update User.lastLoginAt
+
+User Activity (every 5 min max)
+    └── Update UserSession.lastActivity (debounced)
+
+User Logout
+    └── Set UserSession.isActive = false, isRevoked = true
+
+Cleanup (automatic - Option C hybrid)
+    ├── Triggers: every 100 logins OR 24 hours since last cleanup
+    ├── Delete LoginHistory where attemptedAt < 5 days ago
+    └── Delete expired/revoked UserSession records
+```
+
+### Column Mapping
+
+#### LoginHistory Table
+| Column | Value Source |
+|--------|--------------|
+| `userId` | From Supabase auth session |
+| `successful` | `true`/`false` from auth result |
+| `failReason` | Error message (null on success) |
+| `ipAddress` | `x-forwarded-for` or `x-real-ip` header |
+| `userAgent` | `user-agent` header |
+| `location` | `null` (geolocation skipped) |
+| `attemptedAt` | Auto `now()` |
+
+#### UserSession Table
+| Column | Value Source |
+|--------|--------------|
+| `userId` | From Supabase auth session |
+| `token` | Supabase access token or generated UUID |
+| `ipAddress` | From request headers |
+| `userAgent` | Raw user-agent string |
+| `deviceType` | Parsed: "desktop", "mobile", "tablet" |
+| `browser` | Parsed: "Chrome", "Safari", etc. |
+| `lastActivity` | Updated every 5 min (debounced) |
+| `expiresAt` | Login time + 6 hours |
+| `isActive` | `true` initially, `false` on logout |
+| `isRevoked` | `false` initially, `true` on explicit revoke |
+
+### New AuthContext Methods
+
+```typescript
+// Available in useAuth() hook
+const { 
+  currentSessionId,     // Current session ID (if any)
+  logoutAllDevices,     // Revoke all sessions except current
+  // ... existing methods
+} = useAuth();
+```
+
+### Manual Cleanup (if needed)
+
+```bash
+# Check pending cleanup count
+GET /api/auth/cleanup
+
+# Run cleanup manually  
+POST /api/auth/cleanup
+
+# With secret (for cron jobs)
+POST /api/auth/cleanup
+Authorization: Bearer YOUR_CLEANUP_SECRET
+```
+
+### Environment Variable (Optional)
+
+```bash
+# Add to .env.local for cron job authentication
+CLEANUP_SECRET=your-secret-key-here
+```
 
 ---
 
@@ -234,13 +352,23 @@ Invista/
 │   │   ├── supplier.ts         # ✅ Fixed (added lowercase aliases)
 │   │   ├── product.ts          # ✅ OK
 │   │   └── ...
+│   ├── session-utils.ts        # ✅ NEW (Session 4) - IP/UA parsing, rate limiting
+│   ├── session-manager.ts      # ✅ NEW (Session 4) - UserSession CRUD
+│   ├── login-history.ts        # ✅ UPDATED (Session 4) - Re-enabled with protection
 │   ├── chat-query-handlers.ts  # ✅ Fixed
 │   └── ...
 ├── app/
 │   ├── api/                    # ✅ ALL FIXED
+│   │   ├── auth/
+│   │   │   ├── sessions/route.ts    # ✅ NEW (Session 4) - Session management API
+│   │   │   ├── cleanup/route.ts     # ✅ NEW (Session 4) - Manual cleanup API
+│   │   │   └── login-history/route.ts # ✅ UPDATED (Session 4) - Re-enabled
+│   │   └── ...
 │   ├── suppliers/
 │   │   └── add/page.tsx        # ⚠️ Frontend - needs schema update
 │   └── ...
+├── contexts/
+│   └── AuthContext.tsx         # ✅ UPDATED (Session 4) - Session integration
 └── ...
 ```
 
@@ -634,12 +762,16 @@ npx prisma db push --schema=prisma/schema-supabase.prisma
 | Lib/Prisma | 4 | 4 | 0 |
 | Lib/Actions | 10 | 9 | 1 (delete) |
 | Lib/Chat Query Handlers | 1 | 1 | 0 |
+| Session/Auth Utils | 4 | 4 | 0 |
 | Frontend | 1 | 0 | 1 |
 | **Backend Total** | **184** | **184** | **0** |
 
 ### ✅ All Backend Files Fixed!
 
-Session 3 completed all backend fixes. Only remaining work:
+- **Session 3:** Completed all backend schema fixes
+- **Session 4:** Implemented UserSession & LoginHistory tables with database protection
+
+Only remaining work:
 1. Delete `lib/actions/orders-new.ts` (duplicate file)
 2. (Optional) Fix frontend `app/suppliers/add/page.tsx`
 
@@ -650,8 +782,10 @@ Session 3 completed all backend fixes. Only remaining work:
 1. **Neon Schema:** `prisma/schema-neon.prisma`
 2. **Supabase Schema:** `prisma/schema-supabase.prisma`
 3. **Prisma Clients:** `lib/prisma/index.ts`
-4. **This Context:** `AI_CONTEXT_DOCUMENT.md`
-5. **Table Pathway:** `TABLE_CREATION_PATHWAY.md`
+4. **Session Manager:** `lib/session-manager.ts`
+5. **Session Utils:** `lib/session-utils.ts`
+6. **This Context:** `AI_CONTEXT_DOCUMENT.md`
+7. **Table Pathway:** `TABLE_CREATION_PATHWAY.md`
 
 ---
 
