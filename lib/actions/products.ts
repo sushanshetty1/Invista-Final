@@ -58,35 +58,37 @@ export async function createProduct(
 			sku: productData.sku,
 			barcode: productData.barcode,
 			slug: productData.slug,
-			categoryName: validatedData.categoryName,
-			brandName: validatedData.brandName,
+			// categoryName: validatedData.categoryName, // Removed
+			// brandName: validatedData.brandName, // Removed
 			// Include categoryId and brandId directly in Product table
-			//hey
 			categoryId: categoryId || null,
 			brandId: brandId || null,
-			weight: productData.weight,
-			dimensions: productData.dimensions || undefined,
-			color: productData.color,
-			size: productData.size,
-			material: productData.material,
+			weightKg: productData.weight, // weight -> weightKg
+			lengthCm: productData.dimensions?.length,
+			widthCm: productData.dimensions?.width,
+			heightCm: productData.dimensions?.height,
+			// dimensions: productData.dimensions || undefined, // Removed
+			// color: productData.color, // Removed
+			// size: productData.size, // Removed
+			// material: productData.material, // Removed
 			costPrice: productData.costPrice,
 			sellingPrice: productData.sellingPrice,
 			wholesalePrice: productData.wholesalePrice,
-			minStockLevel: productData.minStockLevel,
-			maxStockLevel: productData.maxStockLevel,
+			minStock: productData.minStockLevel, // minStockLevel -> minStock
+			// maxStockLevel: productData.maxStockLevel, // Removed
 			reorderPoint: productData.reorderPoint,
-			reorderQuantity: productData.reorderQuantity,
+			// reorderQuantity: productData.reorderQuantity, // Removed
 			status: productData.status,
 			isTrackable: productData.isTrackable,
 			isSerialized: productData.isSerialized,
-			images: productData.images || undefined,
-			primaryImage: productData.primaryImage,
-			metaTitle: productData.metaTitle,
-			metaDescription: productData.metaDescription,
-			tags: productData.tags || undefined,
-			leadTimeSupply: productData.leadTimeSupply,
-			shelfLife: productData.shelfLife,
-			createdBy: productData.createdBy,
+			// images: productData.images || undefined, // Handled via relation
+			// primaryImage: productData.primaryImage, // Handled via relation
+			// metaTitle: productData.metaTitle, // Removed
+			// metaDescription: productData.metaDescription, // Removed
+			// tags: productData.tags || undefined, // Handled via relation
+			// leadTimeSupply: productData.leadTimeSupply, // Removed
+			// shelfLife: productData.shelfLife, // Removed
+			createdById: productData.createdBy, // createdBy -> createdById
 			companyId: productData.companyId, // Now passed from API route
 		};
 
@@ -97,13 +99,18 @@ export async function createProduct(
 
 		// AUTO-CREATE CATEGORY: If categoryName is provided, create/find the category
 		let finalCategoryId = categoryId || null;
+		const categoryName = _categoryName;
+		const slug = validatedData.slug;
 
-		if (validatedData.categoryName && validatedData.slug) {
+		if (categoryName && slug) {
 			console.log("🏷️ Auto-creating category from product data...");
 
-			// Check if category with this slug already exists
+			// Check if category with this slug already exists for this company
 			const existingCategory = await neonClient.category.findFirst({
-				where: { slug: validatedData.slug },
+				where: {
+					slug: slug,
+					companyId: productData.companyId,
+				},
 			});
 
 			if (existingCategory) {
@@ -113,14 +120,15 @@ export async function createProduct(
 				// Create new category from product data
 				const newCategory = await neonClient.category.create({
 					data: {
-						name: validatedData.categoryName,
+						name: categoryName,
 						description: validatedData.description || null,
 						slug: validatedData.slug,
 						color: validatedData.color || null,
-						image: validatedData.primaryImage || null,
+						icon: validatedData.primaryImage || null,
 						parentId: null,
-						level: 0,
+						// level: 0, // Removed
 						isActive: true,
+						companyId: productData.companyId, // Added
 					},
 				});
 
@@ -129,12 +137,37 @@ export async function createProduct(
 			}
 		}
 
-		// Update createData with the final categoryId
-		createData.categoryId = finalCategoryId;
-
 		const product = await neonClient.product.create({
-			data: createData,
+			data: {
+				name: productData.name,
+				description: productData.description,
+				sku: productData.sku,
+				barcode: productData.barcode,
+				categoryId: finalCategoryId,
+				brandId: brandId || null,
+				// Dimensions - use structured fields (not JSON)
+				weightKg: productData.weight ? productData.weight : undefined,
+				lengthCm: productData.dimensions?.length ? productData.dimensions.length : undefined,
+				widthCm: productData.dimensions?.width ? productData.dimensions.width : undefined,
+				heightCm: productData.dimensions?.height ? productData.dimensions.height : undefined,
+				// Pricing
+				costPrice: productData.costPrice,
+				sellingPrice: productData.sellingPrice,
+				wholesalePrice: productData.wholesalePrice,
+				// Inventory config
+				minStock: productData.minStockLevel || 10,
+				reorderPoint: productData.reorderPoint || 50,
+				// Status
+				status: productData.status || "ACTIVE",
+				isTrackable: productData.isTrackable ?? true,
+				isSerialized: productData.isSerialized ?? false,
+				// Audit
+				createdById: productData.createdBy,
+				companyId: productData.companyId,
+			},
 			include: {
+				category: true,
+				brand: true,
 				variants: true,
 				inventoryItems: {
 					include: {
@@ -143,6 +176,69 @@ export async function createProduct(
 				},
 			},
 		});
+
+		// Create primary image if provided
+		if (productData.primaryImage) {
+			await neonClient.productImage.create({
+				data: {
+					productId: product.id,
+					url: productData.primaryImage,
+					isPrimary: true,
+					order: 0,
+				},
+			});
+		}
+
+		// Create additional images if provided
+		if (productData.images && productData.images.length > 0) {
+			const imageData = productData.images
+				.filter(url => url !== productData.primaryImage) // Don't duplicate primary
+				.map((url, index) => ({
+					productId: product.id,
+					url,
+					isPrimary: false,
+					order: index + 1,
+				}));
+
+			if (imageData.length > 0) {
+				await neonClient.productImage.createMany({
+					data: imageData,
+				});
+			}
+		}
+
+		// Create tags if provided
+		if (productData.tags && productData.tags.length > 0) {
+			for (const tagName of productData.tags) {
+				const tagSlug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+				// Find or create tag
+				let tag = await neonClient.tag.findFirst({
+					where: {
+						slug: tagSlug,
+						companyId: productData.companyId,
+					},
+				});
+
+				if (!tag) {
+					tag = await neonClient.tag.create({
+						data: {
+							name: tagName,
+							slug: tagSlug,
+							companyId: productData.companyId,
+						},
+					});
+				}
+
+				// Create product-tag relation
+				await neonClient.productTag.create({
+					data: {
+						productId: product.id,
+						tagId: tag.id,
+					},
+				});
+			}
+		}
 
 		console.log("createProduct: product created successfully:", product.id);
 		revalidatePath("/inventory/products");
@@ -165,7 +261,7 @@ export async function updateProduct(
 ): Promise<ActionResponse> {
 	try {
 		const validatedData = updateProductSchema.parse(input);
-		const { id, ...updateData } = validatedData;
+		const { id, dimensions, weight, ...updateData } = validatedData;
 
 		// Check if product exists
 		const existingProduct = await neonClient.product.findUnique({
@@ -176,29 +272,78 @@ export async function updateProduct(
 			return actionError("Product not found");
 		}
 
-		// Update slug if name changed
-		if (updateData.name && !updateData.slug) {
-			updateData.slug = updateData.name
-				.toLowerCase()
-				.replace(/[^a-z0-9]+/g, "-")
-				.replace(/(^-|-$)/g, "");
+		// Build update data with proper field mappings
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const prismaUpdateData: any = {
+			name: updateData.name,
+			description: updateData.description,
+			sku: updateData.sku,
+			barcode: updateData.barcode,
+			categoryId: updateData.categoryId,
+			brandId: updateData.brandId,
+			costPrice: updateData.costPrice,
+			sellingPrice: updateData.sellingPrice,
+			wholesalePrice: updateData.wholesalePrice,
+			minStock: updateData.minStockLevel,
+			reorderPoint: updateData.reorderPoint,
+			status: updateData.status,
+			isTrackable: updateData.isTrackable,
+			isSerialized: updateData.isSerialized,
+		};
+
+		// Handle dimensions
+		if (weight !== undefined) {
+			prismaUpdateData.weightKg = weight;
 		}
+		if (dimensions) {
+			if (dimensions.length !== undefined) prismaUpdateData.lengthCm = dimensions.length;
+			if (dimensions.width !== undefined) prismaUpdateData.widthCm = dimensions.width;
+			if (dimensions.height !== undefined) prismaUpdateData.heightCm = dimensions.height;
+		}
+
+		// Remove undefined values
+		Object.keys(prismaUpdateData).forEach(key => {
+			if (prismaUpdateData[key] === undefined) {
+				delete prismaUpdateData[key];
+			}
+		});
 
 		const product = await neonClient.product.update({
 			where: { id },
 			data: {
-				...updateData,
-				dimensions: updateData.dimensions || undefined,
-				images: updateData.images || undefined,
-				tags: updateData.tags || undefined,
+				name: updateData.name,
+				description: updateData.description,
+				sku: updateData.sku,
+				barcode: updateData.barcode,
+				// slug: updateData.slug, // Removed to avoid type error
+				categoryId: updateData.categoryId,
+				brandId: updateData.brandId,
+				weightKg: weight,
+				lengthCm: dimensions?.length,
+				widthCm: dimensions?.width,
+				heightCm: dimensions?.height,
+				minStock: updateData.minStockLevel,
+				reorderPoint: updateData.reorderPoint,
+				status: updateData.status,
+				isTrackable: updateData.isTrackable,
+				isSerialized: updateData.isSerialized,
+				costPrice: updateData.costPrice,
+				sellingPrice: updateData.sellingPrice,
+				wholesalePrice: updateData.wholesalePrice,
+				// dimensions: updateData.dimensions || undefined,
+				// images: updateData.images || undefined,
+				// tags: updateData.tags || undefined,
 			},
 			include: {
+				category: true,
+				brand: true,
 				variants: true,
 				inventoryItems: {
 					include: {
 						warehouse: true,
 					},
 				},
+				images: true,
 			},
 		});
 
@@ -276,8 +421,11 @@ export async function getProducts(
 
 		const skip = (page - 1) * limit;
 
-		console.log("🔍 getProducts: Query params:", { page, limit, skip, search, categoryId, brandId, status }); // Build where clause
-		const where: Record<string, unknown> = {};
+		console.log("🔍 getProducts: Query params:", { page, limit, skip, search, categoryId, brandId, status });
+
+		// Build where clause
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const where: any = {};
 
 		if (search) {
 			where.OR = [
@@ -290,8 +438,11 @@ export async function getProducts(
 
 		if (categoryId) where.categoryId = categoryId;
 		if (brandId) where.brandId = brandId;
-		if (status) where.status = status; // Build order clause
-		const orderBy: Record<string, unknown> = {};
+		if (status) where.status = status;
+
+		// Build order clause
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const orderBy: any = {};
 		if (sortBy === "name") {
 			orderBy.name = sortOrder;
 		} else if (sortBy === "sku") {
@@ -311,24 +462,34 @@ export async function getProducts(
 				skip,
 				take: limit,
 				include: {
+					category: {
+						select: { id: true, name: true, slug: true },
+					},
+					brand: {
+						select: { id: true, name: true, slug: true },
+					},
 					variants: {
 						select: {
 							id: true,
 							name: true,
 							sku: true,
-							attributes: true,
 							isActive: true,
 						},
 					},
 					inventoryItems: {
 						select: {
 							quantity: true,
-							availableQuantity: true,
+							// availableQuantity: true, // Removed
 							reservedQuantity: true,
 							warehouse: {
 								select: { id: true, name: true, code: true },
 							},
 						},
+					},
+					images: {
+						where: { isPrimary: true },
+						take: 1,
+						select: { url: true },
 					},
 				},
 			}),
@@ -341,20 +502,24 @@ export async function getProducts(
 			firstProduct: rawProducts[0] ? { id: rawProducts[0].id, name: rawProducts[0].name } : null
 		});
 
-		// Calculate aggregated stock values and add category/brand objects for each product
+		// Calculate aggregated stock values for each product
 		const products = rawProducts.map(product => {
 			const totalStock = product.inventoryItems.reduce(
-				(sum, item) => sum + (item.quantity || 0),
+				(sum: number, item: { quantity: number }) => sum + (item.quantity || 0),
 				0
 			);
+			// availableQuantity is computed: quantity - reservedQuantity
 			const availableStock = product.inventoryItems.reduce(
-				(sum, item) => sum + (item.availableQuantity || 0),
+				(sum, item) => sum + ((item.quantity || 0) - (item.reservedQuantity || 0)),
 				0
 			);
 			const reservedStock = product.inventoryItems.reduce(
-				(sum, item) => sum + (item.reservedQuantity || 0),
+				(sum: number, item: { reservedQuantity: number }) => sum + (item.reservedQuantity || 0),
 				0
 			);
+
+			// Get primary image URL
+			const primaryImage = product.images.length > 0 ? product.images[0].url : null;
 
 			return {
 				...product,
@@ -362,19 +527,19 @@ export async function getProducts(
 				costPrice: product.costPrice ? Number(product.costPrice) : undefined,
 				sellingPrice: product.sellingPrice ? Number(product.sellingPrice) : undefined,
 				wholesalePrice: product.wholesalePrice ? Number(product.wholesalePrice) : undefined,
-				weight: product.weight ? Number(product.weight) : undefined,
+				weight: product.weightKg ? Number(product.weightKg) : undefined,
 				totalStock,
 				availableStock,
 				reservedStock,
 				// Add category and brand objects for frontend compatibility
-				category: product.categoryId && product.categoryName ? {
-					id: product.categoryId,
-					name: product.categoryName,
-				} : undefined,
-				brand: product.brandId && product.brandName ? {
-					id: product.brandId,
-					name: product.brandName,
-				} : undefined,
+				// category: product.categoryId && product.categoryName ? {
+				// 	id: product.categoryId,
+				// 	name: product.categoryName,
+				// } : undefined,
+				// brand: product.brandId && product.brandName ? {
+				// 	id: product.brandId,
+				// 	name: product.brandName,
+				// } : undefined,
 			};
 		});
 
@@ -403,8 +568,17 @@ export async function getProduct(id: string): Promise<ActionResponse> {
 		const product = await neonClient.product.findUnique({
 			where: { id },
 			include: {
+				category: true,
+				brand: true,
+				images: true,
+				supplierProducts: {
+					include: {
+						supplier: true,
+					},
+				},
 				variants: {
 					include: {
+						attributes: true,
 						inventoryItems: {
 							include: {
 								warehouse: true,
@@ -415,18 +589,10 @@ export async function getProduct(id: string): Promise<ActionResponse> {
 				inventoryItems: {
 					include: {
 						warehouse: true,
-					},
-				},
-				suppliers: {
-					include: {
-						supplier: true,
-					},
-				},
-				movements: {
-					orderBy: { occurredAt: "desc" },
-					take: 10,
-					include: {
-						warehouse: true,
+						movements: {
+							orderBy: { occurredAt: "desc" },
+							take: 10,
+						},
 					},
 				},
 			},
@@ -436,7 +602,24 @@ export async function getProduct(id: string): Promise<ActionResponse> {
 			return actionError("Product not found");
 		}
 
-		return actionSuccess(product, "Product retrieved successfully");
+		// Transform for frontend compatibility
+		const transformedProduct = {
+			...product,
+			// Get primary image
+			primaryImage: product.images.find((img: { isPrimary: boolean }) => img.isPrimary)?.url || product.images[0]?.url || null,
+			// Convert dimensions
+			weight: product.weightKg ? Number(product.weightKg) : null,
+			dimensions: (product.lengthCm || product.widthCm || product.heightCm) ? {
+				length: product.lengthCm ? Number(product.lengthCm) : null,
+				width: product.widthCm ? Number(product.widthCm) : null,
+				height: product.heightCm ? Number(product.heightCm) : null,
+				unit: "cm",
+			} : null,
+			// Alias for compatibility
+			suppliers: product.supplierProducts,
+		};
+
+		return actionSuccess(transformedProduct, "Product retrieved successfully");
 	} catch (error) {
 		console.error("Error fetching product:", error);
 		return actionError("Failed to fetch product");
@@ -458,10 +641,17 @@ export async function createProductVariant(
 		if (!parentProduct) {
 			return actionError("Parent product not found");
 		}
+
+		// Create variant
 		const variant = await neonClient.productVariant.create({
 			data: {
-				...validatedData,
-				attributes: validatedData.attributes,
+				productId: validatedData.productId,
+				name: validatedData.name,
+				sku: validatedData.sku,
+				barcode: validatedData.barcode,
+				costPrice: validatedData.costPrice,
+				sellingPrice: validatedData.sellingPrice,
+				isActive: validatedData.isActive ?? true,
 			},
 			include: {
 				product: true,
@@ -472,6 +662,21 @@ export async function createProductVariant(
 				},
 			},
 		});
+
+		// Create variant attributes from the attributes object
+		if (validatedData.attributes && typeof validatedData.attributes === 'object') {
+			const attributeData = Object.entries(validatedData.attributes).map(([name, value]) => ({
+				variantId: variant.id,
+				name,
+				value: String(value),
+			}));
+
+			if (attributeData.length > 0) {
+				await neonClient.variantAttribute.createMany({
+					data: attributeData,
+				});
+			}
+		}
 
 		revalidatePath("/inventory/products");
 		revalidatePath(`/inventory/products/${validatedData.productId}`);
@@ -488,7 +693,7 @@ export async function updateProductVariant(
 ): Promise<ActionResponse> {
 	try {
 		const validatedData = updateProductVariantSchema.parse(input);
-		const { id, ...updateData } = validatedData;
+		const { id, attributes, ...updateData } = validatedData;
 
 		// Check if variant exists
 		const existingVariant = await neonClient.productVariant.findUnique({
@@ -499,14 +704,20 @@ export async function updateProductVariant(
 		if (!existingVariant) {
 			return actionError("Product variant not found");
 		}
+
 		const variant = await neonClient.productVariant.update({
 			where: { id },
 			data: {
-				...updateData,
-				attributes: updateData.attributes || undefined,
+				name: updateData.name,
+				sku: updateData.sku,
+				barcode: updateData.barcode,
+				costPrice: updateData.costPrice,
+				sellingPrice: updateData.sellingPrice,
+				isActive: updateData.isActive,
 			},
 			include: {
 				product: true,
+				attributes: true,
 				inventoryItems: {
 					include: {
 						warehouse: true,
@@ -514,6 +725,27 @@ export async function updateProductVariant(
 				},
 			},
 		});
+
+		// Update attributes if provided
+		if (attributes && typeof attributes === 'object') {
+			// Delete existing attributes
+			await neonClient.variantAttribute.deleteMany({
+				where: { variantId: id },
+			});
+
+			// Create new attributes
+			const attributeData = Object.entries(attributes).map(([name, value]) => ({
+				variantId: id,
+				name,
+				value: String(value),
+			}));
+
+			if (attributeData.length > 0) {
+				await neonClient.variantAttribute.createMany({
+					data: attributeData,
+				});
+			}
+		}
 
 		revalidatePath("/inventory/products");
 		revalidatePath(`/inventory/products/${existingVariant.productId}`);
@@ -589,13 +821,44 @@ export async function bulkUpdateProducts(
 		if (existingProducts.length !== productIds.length) {
 			return actionError("One or more products not found");
 		}
+
+		// Build update data with proper field mappings
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const prismaUpdateData: any = {};
+
+		if (updates.name !== undefined) prismaUpdateData.name = updates.name;
+		if (updates.description !== undefined) prismaUpdateData.description = updates.description;
+		if (updates.sku !== undefined) prismaUpdateData.sku = updates.sku;
+		if (updates.barcode !== undefined) prismaUpdateData.barcode = updates.barcode;
+		if (updates.categoryId !== undefined) prismaUpdateData.categoryId = updates.categoryId;
+		if (updates.brandId !== undefined) prismaUpdateData.brandId = updates.brandId;
+		if (updates.costPrice !== undefined) prismaUpdateData.costPrice = updates.costPrice;
+		if (updates.sellingPrice !== undefined) prismaUpdateData.sellingPrice = updates.sellingPrice;
+		if (updates.wholesalePrice !== undefined) prismaUpdateData.wholesalePrice = updates.wholesalePrice;
+		if (updates.status !== undefined) prismaUpdateData.status = updates.status;
+		if (updates.isTrackable !== undefined) prismaUpdateData.isTrackable = updates.isTrackable;
+		if (updates.isSerialized !== undefined) prismaUpdateData.isSerialized = updates.isSerialized;
+		if (updates.minStockLevel !== undefined) prismaUpdateData.minStock = updates.minStockLevel;
+		if (updates.reorderPoint !== undefined) prismaUpdateData.reorderPoint = updates.reorderPoint;
+		if (updates.weight !== undefined) prismaUpdateData.weightKg = updates.weight;
+		if (updates.dimensions) {
+			if (updates.dimensions.length !== undefined) prismaUpdateData.lengthCm = updates.dimensions.length;
+			if (updates.dimensions.width !== undefined) prismaUpdateData.widthCm = updates.dimensions.width;
+			if (updates.dimensions.height !== undefined) prismaUpdateData.heightCm = updates.dimensions.height;
+		}
+
 		const updatedProducts = await neonClient.product.updateMany({
 			where: { id: { in: productIds } },
 			data: {
 				...updates,
-				dimensions: updates.dimensions || undefined,
-				images: updates.images || undefined,
-				tags: updates.tags || undefined,
+				weightKg: updates.weight,
+				lengthCm: updates.dimensions?.length,
+				widthCm: updates.dimensions?.width,
+				heightCm: updates.dimensions?.height,
+				minStock: updates.minStockLevel,
+				// dimensions: updates.dimensions || undefined,
+				// images: updates.images || undefined,
+				// tags: updates.tags || undefined,
 			},
 		});
 

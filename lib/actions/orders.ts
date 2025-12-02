@@ -5,564 +5,1039 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabaseServer";
 import { actionError, actionSuccess } from "@/lib/api-utils";
 import {
-    CreateOrderSchema,
-    UpdateOrderStatusSchema,
-    OrderFilterSchema,
-    type CreateOrderInput,
-    type UpdateOrderStatusInput,
-    type OrderFilterInput,
+	CreateOrderSchema,
+	UpdateOrderStatusSchema,
+	OrderFilterSchema,
+	type CreateOrderInput,
+	type UpdateOrderStatusInput,
+	type OrderFilterInput,
 } from "@/lib/validations/order";
 import { Prisma } from "../../prisma/generated/neon";
 
 type ActionContext = {
-    userId?: string;
-    companyId?: string;
+	userId?: string;
+	companyId?: string;
 };
 
 type ResolvedActionContext = {
-    userId: string;
-    companyId: string;
+	userId: string;
+	companyId: string;
 };
 
 async function resolveActionContext(
-    context: ActionContext = {},
+	context: ActionContext = {},
 ): Promise<ResolvedActionContext | { error: string }> {
-    let userId = context.userId;
+	let userId = context.userId;
 
-    if (!userId) {
-        try {
-            const supabase = await createClient();
-            const {
-                data: { user },
-                error: sessionError,
-            } = await supabase.auth.getUser();
+	if (!userId) {
+		try {
+			const supabase = await createClient();
+			const {
+				data: { user },
+				error: sessionError,
+			} = await supabase.auth.getUser();
 
-            if (sessionError || !user?.id) {
-                return { error: "Authentication required" };
-            }
+			if (sessionError || !user?.id) {
+				return { error: "Authentication required" };
+			}
 
-            userId = user.id;
-        } catch (error) {
-            console.error("[resolveActionContext] Exception during auth:", error);
-            return { error: "Authentication required" };
-        }
-    }
+			userId = user.id;
+		} catch (error) {
+			console.error("[resolveActionContext] Exception during auth:", error);
+			return { error: "Authentication required" };
+		}
+	}
 
-    let companyId = context.companyId;
+	let companyId = context.companyId;
 
-    if (!companyId) {
-        try {
-            const supabase = await createClient();
+	if (!companyId) {
+		try {
+			const supabase = await createClient();
 
-            const { data: companyUser, error: companyError } = await supabase
-                .from("company_users")
-                .select("companyId")
-                .eq("userId", userId)
-                .eq("isActive", true)
-                .single();
+			const { data: companyUser, error: companyError } = await supabase
+				.from("company_users")
+				.select("companyId")
+				.eq("userId", userId)
+				.eq("isActive", true)
+				.single();
 
-            if (companyUser) {
-                companyId = companyUser.companyId;
-            } else {
-                const { data: ownedCompany, error: ownedError } = await supabase
-                    .from("companies")
-                    .select("id")
-                    .eq("createdBy", userId)
-                    .eq("isActive", true)
-                    .single();
+			if (companyUser) {
+				companyId = companyUser.companyId;
+			} else {
+				const { data: ownedCompany, error: ownedError } = await supabase
+					.from("companies")
+					.select("id")
+					.eq("createdBy", userId)
+					.eq("isActive", true)
+					.single();
 
-                if (ownedCompany) {
-                    companyId = ownedCompany.id;
-                } else {
-                    console.error("[resolveActionContext] No company found:", {
-                        userId,
-                        companyUserError: companyError?.message,
-                        ownedCompanyError: ownedError?.message,
-                    });
-                    return { error: "User not associated with any company" };
-                }
-            }
-        } catch (error) {
-            console.error("[resolveActionContext] Exception during company lookup:", error);
-            return { error: "User not associated with any company" };
-        }
-    }
+				if (ownedCompany) {
+					companyId = ownedCompany.id;
+				} else {
+					console.error("[resolveActionContext] No company found:", {
+						userId,
+						companyUserError: companyError?.message,
+						ownedCompanyError: ownedError?.message,
+					});
+					return { error: "User not associated with any company" };
+				}
+			}
+		} catch (error) {
+			console.error("[resolveActionContext] Exception during company lookup:", error);
+			return { error: "User not associated with any company" };
+		}
+	}
 
-    if (!companyId) {
-        return { error: "User not associated with any company" };
-    }
+	if (!companyId) {
+		return { error: "User not associated with any company" };
+	}
 
-    return { userId, companyId };
+	return { userId, companyId };
 }
 
 // Generate unique order number
 async function generateOrderNumber(): Promise<string> {
-    const year = new Date().getFullYear();
-    const lastOrder = await neonClient.order.findFirst({
-        where: {
-            orderNumber: {
-                startsWith: `ORD-${year}-`,
-            },
-        },
-        orderBy: {
-            orderNumber: "desc",
-        },
-    });
+	const year = new Date().getFullYear();
+	const lastOrder = await neonClient.order.findFirst({
+		where: {
+			orderNumber: {
+				startsWith: `ORD-${year}-`,
+			},
+		},
+		orderBy: {
+			orderNumber: "desc",
+		},
+	});
 
-    let nextNumber = 1;
-    if (lastOrder) {
-        const lastNumber = parseInt(lastOrder.orderNumber.split("-")[2]);
-        nextNumber = lastNumber + 1;
-    }
+	let nextNumber = 1;
+	if (lastOrder) {
+		const lastNumber = parseInt(lastOrder.orderNumber.split("-")[2]);
+		nextNumber = lastNumber + 1;
+	}
 
-    return `ORD-${year}-${nextNumber.toString().padStart(4, "0")}`;
+	return `ORD-${year}-${nextNumber.toString().padStart(4, "0")}`;
+}
+
+// Validate inventory availability
+async function validateInventoryAvailability(
+	items: CreateOrderInput["items"],
+	warehouseId: string,
+) {
+	const unavailableItems: string[] = [];
+
+	for (const item of items) {
+		const inventoryItem = await neonClient.inventoryItem.findFirst({
+			where: {
+				productId: item.productId,
+				variantId: item.variantId || null,
+				warehouseId,
+				status: "AVAILABLE",
+			},
+		});
+
+		if (!inventoryItem || inventoryItem.quantity - inventoryItem.reservedQuantity < item.quantity) {
+			const product = await neonClient.product.findUnique({
+				where: { id: item.productId },
+				select: { name: true, sku: true },
+			});
+
+			unavailableItems.push(
+				`${product?.name || "Unknown"} (${product?.sku || "Unknown SKU"}) - Available: ${(inventoryItem?.quantity || 0) - (inventoryItem?.reservedQuantity || 0)
+				}, Required: ${item.quantity}`,
+			);
+		}
+	}
+
+	return unavailableItems;
+}
+
+// Reserve inventory for order
+async function reserveInventory(
+	orderId: string,
+	items: CreateOrderInput["items"],
+	warehouseId: string,
+	userId: string,
+) {
+	for (const item of items) {
+		const inventoryItem = await neonClient.inventoryItem.findFirst({
+			where: {
+				productId: item.productId,
+				variantId: item.variantId || null,
+				warehouseId,
+				status: "AVAILABLE",
+			},
+		});
+
+		if (inventoryItem) {
+			// Update inventory item to reserve quantity
+			await neonClient.inventoryItem.update({
+				where: { id: inventoryItem.id },
+				data: {
+					reservedQuantity: {
+						increment: item.quantity,
+					},
+				},
+			});
+
+			// Create stock reservation record
+			await neonClient.stockReservation.create({
+				data: {
+					inventoryItemId: inventoryItem.id,
+					productId: item.productId,
+					warehouseId: warehouseId,
+					reservedFor: "ORDER",
+					referenceId: orderId,
+					quantity: item.quantity,
+					createdById: userId,
+					expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+				},
+			});
+
+			// Create inventory movement record
+			await neonClient.inventoryMovement.create({
+				data: {
+					type: "ADJUSTMENT",
+					inventoryItemId: inventoryItem.id,
+					quantity: -item.quantity,
+					quantityBefore: inventoryItem.quantity,
+					quantityAfter: inventoryItem.quantity - item.quantity,
+					referenceType: "Order",
+					referenceId: orderId,
+					reason: "Order reservation",
+					createdById: userId,
+				},
+			});
+		}
+	}
 }
 
 // Create a new order
 export async function createOrder(
-    data: CreateOrderInput,
-    context?: ActionContext,
+	data: CreateOrderInput,
+	context?: ActionContext,
 ) {
-    try {
-        const resolvedContext = await resolveActionContext(context);
-        if ("error" in resolvedContext) {
-            return actionError(resolvedContext.error);
-        }
-        const { userId, companyId } = resolvedContext;
+	try {
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
+		}
+		const { userId, companyId } = resolvedContext;
 
-        // Validate input data
-        const validatedData = CreateOrderSchema.parse(data);
+		// Validate input data
+		const validatedData = CreateOrderSchema.parse(data);
 
-        // Validate customer exists and belongs to company
-        const customer = await neonClient.customer.findFirst({
-            where: {
-                id: validatedData.customerId,
-                companyId,
-            },
-        });
+		// Validate customer exists and belongs to company
+		const customer = await neonClient.customer.findFirst({
+			where: {
+				id: validatedData.customerId,
+				companyId,
+			},
+		});
 
-        if (!customer) {
-            return actionError("Customer not found or not accessible");
-        }
+		if (!customer) {
+			return actionError("Customer not found or not accessible");
+		}
 
-        // Validate warehouse if provided
-        if (validatedData.warehouseId) {
-            const supabase = await createClient();
-            const { data: warehouse, error: warehouseError } = await supabase
-                .from("company_locations")
-                .select("id, name, isActive")
-                .eq("id", validatedData.warehouseId)
-                .eq("companyId", companyId)
-                .eq("isActive", true)
-                .single();
+		// Validate warehouse if provided
+		if (validatedData.warehouseId) {
+			const supabase = await createClient();
+			const { data: warehouse, error: warehouseError } = await supabase
+				.from("company_locations")
+				.select("id, name, isActive")
+				.eq("id", validatedData.warehouseId)
+				.eq("companyId", companyId)
+				.eq("isActive", true)
+				.single();
 
-            if (warehouseError || !warehouse) {
-                return actionError("Warehouse not found or not accessible");
-            }
-        }
+			if (warehouseError || !warehouse) {
+				return actionError("Warehouse not found or not accessible");
+			}
+		}
 
-        // Generate order number
-        const orderNumber = await generateOrderNumber();
+		// Generate order number
+		const orderNumber = await generateOrderNumber();
 
-        // Calculate totals
-        let subtotal = 0;
-        let totalDiscountAmount = 0;
+		// Calculate totals
+		let subtotal = 0;
+		let totalDiscountAmount = 0;
 
-        validatedData.items.forEach((item) => {
-            const itemTotal = item.quantity * item.unitPrice;
-            subtotal += itemTotal;
-            totalDiscountAmount += item.discountAmount;
-        });
+		validatedData.items.forEach((item) => {
+			const itemTotal = item.quantity * item.unitPrice;
+			subtotal += itemTotal;
+			totalDiscountAmount += item.discountAmount;
+		});
 
-        const finalTotal = subtotal - totalDiscountAmount;
+		const finalTotal = subtotal - totalDiscountAmount;
 
-        // Start transaction
-        const result = await neonClient.$transaction(async (tx) => {
-            // Create order
-            const order = await tx.order.create({
-                data: {
-                    orderNumber,
-                    customerId: validatedData.customerId,
-                    warehouseId: validatedData.warehouseId,
-                    companyId,
-                    subtotal: new Prisma.Decimal(subtotal),
-                    discountAmount: new Prisma.Decimal(totalDiscountAmount),
-                    totalAmount: new Prisma.Decimal(finalTotal),
-                    shippingAddress: validatedData.shippingAddress,
-                    trackingNumber: validatedData.trackingNumber,
-                    carrier: validatedData.carrier,
-                    notes: validatedData.notes,
-                    createdById: userId,
-                },
-            });
+		// Start transaction
+		const result = await neonClient.$transaction(async (tx) => {
+			// Create order
+			const order = await tx.order.create({
+				data: {
+					orderNumber,
+					customerId: validatedData.customerId,
+					warehouseId: validatedData.warehouseId,
+					companyId,
+					subtotal: new Prisma.Decimal(subtotal),
+					discountAmount: new Prisma.Decimal(totalDiscountAmount),
+					totalAmount: new Prisma.Decimal(finalTotal),
+					shippingAddress: validatedData.shippingAddress,
+					notes: validatedData.notes,
+					createdById: userId,
+				},
+			});
 
-            // Create order items
-            for (const item of validatedData.items) {
-                const product = await tx.product.findUnique({
-                    where: { id: item.productId },
-                });
+			// Create order items
+			for (const item of validatedData.items) {
+				const product = await tx.product.findUnique({
+					where: { id: item.productId },
+				});
 
-                if (!product) {
-                    throw new Error(`Product with ID ${item.productId} not found`);
-                }
+				if (!product) {
+					throw new Error(`Product with ID ${item.productId} not found`);
+				}
 
-                const itemTotal = item.quantity * item.unitPrice - item.discountAmount;
+				const itemTotal = item.quantity * item.unitPrice - item.discountAmount;
 
-                await tx.orderItem.create({
-                    data: {
-                        orderId: order.id,
-                        productId: item.productId,
-                        variantId: item.variantId,
-                        orderedQty: item.quantity,
-                        shippedQty: 0,
-                        unitPrice: new Prisma.Decimal(item.unitPrice),
-                        totalPrice: new Prisma.Decimal(itemTotal),
-                    },
-                });
-            }
+				await tx.orderItem.create({
+					data: {
+						orderId: order.id,
+						productId: item.productId,
+						variantId: item.variantId,
+						orderedQty: item.quantity,
+						unitPrice: new Prisma.Decimal(item.unitPrice),
+						totalPrice: new Prisma.Decimal(itemTotal),
+						// productName: product.name, // Removed
+						// productSku: product.sku, // Removed
+					},
+				});
+			}
 
-            return order;
-        });
+			return order;
+		});
 
-        revalidatePath("/orders");
-        return actionSuccess(result);
-    } catch (error) {
-        console.error("Error creating order:", error);
-        if (error instanceof Error) {
-            return actionError(error.message);
-        }
-        return actionError("Failed to create order");
-    }
+		revalidatePath("/orders");
+		return actionSuccess(result);
+	} catch (error) {
+		console.error("Error creating order:", error);
+		if (error instanceof Error) {
+			return actionError(error.message);
+		}
+		return actionError("Failed to create order");
+	}
 }
 
 // Get all orders with filters and pagination
 export async function getOrders(
-    filters: Partial<OrderFilterInput> = {},
-    context?: ActionContext,
+	filters: Partial<OrderFilterInput> = {},
+	context?: ActionContext,
 ) {
-    try {
-        const validatedFilters = OrderFilterSchema.parse({
-            page: 1,
-            limit: 10,
-            ...filters,
-        });
+	try {
+		const validatedFilters = OrderFilterSchema.parse({
+			page: 1,
+			limit: 10,
+			...filters,
+		});
 
-        const resolvedContext = await resolveActionContext(context);
-        if ("error" in resolvedContext) {
-            return actionError(resolvedContext.error);
-        }
-        const { companyId } = resolvedContext;
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
+		}
+		const { companyId } = resolvedContext;
 
-        // Build where clause
-        const where: Prisma.OrderWhereInput = {
-            companyId,
-        };
+		// Build where clause
+		const where: Prisma.OrderWhereInput = {
+			companyId,
+		};
 
-        if (validatedFilters.status) {
-            where.status = validatedFilters.status;
-        }
+		if (validatedFilters.status) {
+			where.status = {
+				in: validatedFilters.status === "PENDING" ? ["PENDING"] :
+					validatedFilters.status === "CONFIRMED" ? ["CONFIRMED"] :
+						validatedFilters.status === "PROCESSING" ? ["PROCESSING"] :
+							validatedFilters.status === "SHIPPED" ? ["SHIPPED"] :
+								validatedFilters.status === "DELIVERED" ? ["DELIVERED"] :
+									validatedFilters.status === "CANCELLED" ? ["CANCELLED"] :
+										validatedFilters.status === "RETURNED" ? ["RETURNED"] : undefined
+			};
+		}
 
-        if (validatedFilters.paymentStatus) {
-            where.paymentStatus = validatedFilters.paymentStatus;
-        }
+		if (validatedFilters.paymentStatus) {
+			where.paymentStatus = {
+				in: validatedFilters.paymentStatus === "PENDING" ? ["PENDING"] :
+					validatedFilters.paymentStatus === "PAID" ? ["PAID"] :
+						validatedFilters.paymentStatus === "PARTIALLY_PAID" ? ["PARTIALLY_PAID"] :
+							validatedFilters.paymentStatus === "FAILED" ? ["FAILED"] :
+								validatedFilters.paymentStatus === "REFUNDED" ? ["REFUNDED"] : undefined
+			};
+		}
 
-        if (validatedFilters.customerId) {
-            where.customerId = validatedFilters.customerId;
-        }
+		if (validatedFilters.customerId) {
+			where.customerId = validatedFilters.customerId;
+		}
 
-        if (validatedFilters.warehouseId) {
-            where.warehouseId = validatedFilters.warehouseId;
-        }
+		if (validatedFilters.warehouseId) {
+			where.warehouseId = validatedFilters.warehouseId;
+		}
 
-        if (validatedFilters.dateFrom || validatedFilters.dateTo) {
-            where.orderDate = {};
-            if (validatedFilters.dateFrom) {
-                where.orderDate.gte = validatedFilters.dateFrom;
-            }
-            if (validatedFilters.dateTo) {
-                where.orderDate.lte = validatedFilters.dateTo;
-            }
-        }
+		if (validatedFilters.dateFrom || validatedFilters.dateTo) {
+			where.orderDate = {};
+			if (validatedFilters.dateFrom) {
+				where.orderDate.gte = validatedFilters.dateFrom;
+			}
+			if (validatedFilters.dateTo) {
+				where.orderDate.lte = validatedFilters.dateTo;
+			}
+		}
 
-        if (validatedFilters.searchTerm) {
-            where.OR = [
-                {
-                    orderNumber: {
-                        contains: validatedFilters.searchTerm,
-                        mode: "insensitive",
-                    },
-                },
-                {
-                    customer: {
-                        firstName: {
-                            contains: validatedFilters.searchTerm,
-                            mode: "insensitive",
-                        },
-                    },
-                },
-                {
-                    customer: {
-                        lastName: {
-                            contains: validatedFilters.searchTerm,
-                            mode: "insensitive",
-                        },
-                    },
-                },
-                {
-                    customer: {
-                        businessName: {
-                            contains: validatedFilters.searchTerm,
-                            mode: "insensitive",
-                        },
-                    },
-                },
-                {
-                    customer: {
-                        email: {
-                            contains: validatedFilters.searchTerm,
-                            mode: "insensitive",
-                        },
-                    },
-                },
-            ];
-        }
+		if (validatedFilters.searchTerm) {
+			where.OR = [
+				{
+					orderNumber: {
+						contains: validatedFilters.searchTerm,
+						mode: "insensitive",
+					},
+				},
+				{
+					customer: {
+						firstName: {
+							contains: validatedFilters.searchTerm,
+							mode: "insensitive",
+						},
+					},
+				},
+				{
+					customer: {
+						lastName: {
+							contains: validatedFilters.searchTerm,
+							mode: "insensitive",
+						},
+					},
+				},
+				{
+					customer: {
+						businessName: {
+							contains: validatedFilters.searchTerm,
+							mode: "insensitive",
+						},
+					},
+				},
+				{
+					customer: {
+						email: {
+							contains: validatedFilters.searchTerm,
+							mode: "insensitive",
+						},
+					},
+				},
+			];
+		}
 
-        // Calculate pagination
-        const skip = (validatedFilters.page - 1) * validatedFilters.limit;
+		// Calculate pagination
+		const skip = (validatedFilters.page - 1) * validatedFilters.limit;
 
-        // Get total count for pagination
-        const totalCount = await neonClient.order.count({ where });
+		// Get total count for pagination
+		const totalCount = await neonClient.order.count({ where });
 
-        // Get orders
-        const orders = await neonClient.order.findMany({
-            where,
-            include: {
-                customer: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        businessName: true,
-                        email: true,
-                    },
-                },
-                items: {
-                    include: {
-                        product: {
-                            select: {
-                                id: true,
-                                name: true,
-                                sku: true,
-                            },
-                        },
-                        variant: {
-                            select: {
-                                id: true,
-                                name: true,
-                                sku: true,
-                            },
-                        },
-                    },
-                },
-            },
-            orderBy: {
-                orderDate: "desc",
-            },
-            skip,
-            take: validatedFilters.limit,
-        });
+		// Get orders
+		const orders = await neonClient.order.findMany({
+			where,
+			include: {
+				customer: {
+					select: {
+						id: true,
+						firstName: true,
+						lastName: true,
+						businessName: true,
+						email: true,
+					},
+				},
+				items: {
+					include: {
+						product: {
+							select: {
+								id: true,
+								name: true,
+								sku: true,
+							},
+						},
+						variant: {
+							select: {
+								id: true,
+								name: true,
+								sku: true,
+							},
+						},
+					},
+				},
+			},
+			orderBy: {
+				orderDate: "desc",
+			},
+			skip,
+			take: validatedFilters.limit,
+		});
 
-        const totalPages = Math.ceil(totalCount / validatedFilters.limit);
+		const totalPages = Math.ceil(totalCount / validatedFilters.limit);
 
-        return actionSuccess({
-            orders,
-            pagination: {
-                page: validatedFilters.page,
-                limit: validatedFilters.limit,
-                totalCount,
-                totalPages,
-                hasNext: validatedFilters.page < totalPages,
-                hasPrev: validatedFilters.page > 1,
-            },
-        });
-    } catch (error) {
-        console.error("Error fetching orders:", error);
-        return actionError("Failed to fetch orders");
-    }
+		return actionSuccess({
+			orders,
+			pagination: {
+				page: validatedFilters.page,
+				limit: validatedFilters.limit,
+				totalCount,
+				totalPages,
+				hasNext: validatedFilters.page < totalPages,
+				hasPrev: validatedFilters.page > 1,
+			},
+		});
+	} catch (error) {
+		console.error("Error fetching orders:", error);
+		return actionError("Failed to fetch orders");
+	}
 }
 
 // Get order by ID
 export async function getOrderById(id: string, context?: ActionContext) {
-    try {
-        const resolvedContext = await resolveActionContext(context);
-        if ("error" in resolvedContext) {
-            return actionError(resolvedContext.error);
-        }
-        const { companyId } = resolvedContext;
+	try {
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
+		}
+		const { companyId } = resolvedContext;
 
-        const order = await neonClient.order.findFirst({
-            where: {
-                id,
-                companyId,
-            },
-            include: {
-                customer: true,
-                items: {
-                    include: {
-                        product: true,
-                        variant: true,
-                    },
-                },
-            },
-        });
+		const order = await neonClient.order.findFirst({
+			where: {
+				id,
+				companyId,
+			},
+			include: {
+				customer: true,
+				items: {
+					include: {
+						product: true,
+						variant: true,
+					},
+				},
+			},
+		});
 
-        if (!order) {
-            return actionError("Order not found");
-        }
+		if (!order) {
+			return actionError("Order not found");
+		}
 
-        return actionSuccess(order);
-    } catch (error) {
-        console.error("Error fetching order:", error);
-        return actionError("Failed to fetch order");
-    }
+		return actionSuccess(order);
+	} catch (error) {
+		console.error("Error fetching order:", error);
+		return actionError("Failed to fetch order");
+	}
 }
 
 // Update order status
 export async function updateOrderStatus(
-    data: UpdateOrderStatusInput & { orderId: string },
-    context?: ActionContext,
+	data: UpdateOrderStatusInput & { orderId: string },
+	context?: ActionContext,
 ) {
-    try {
-        const validatedData = UpdateOrderStatusSchema.parse(data);
+	try {
+		const validatedData = UpdateOrderStatusSchema.parse(data);
 
-        const resolvedContext = await resolveActionContext(context);
-        if ("error" in resolvedContext) {
-            return actionError(resolvedContext.error);
-        }
-        const { userId, companyId } = resolvedContext;
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
+		}
+		const { userId, companyId } = resolvedContext;
 
-        // Get current order
-        const currentOrder = await neonClient.order.findFirst({
-            where: {
-                id: data.orderId,
-                companyId,
-            },
-        });
+		// Get current order
+		const currentOrder = await neonClient.order.findFirst({
+			where: {
+				id: data.orderId,
+				companyId,
+			},
+		});
 
-        if (!currentOrder) {
-            return actionError("Order not found");
-        }
+		if (!currentOrder) {
+			return actionError("Order not found");
+		}
 
-        // Prepare update data
-        const updateData: Prisma.OrderUpdateInput = {
-            status: validatedData.status,
-            updatedAt: new Date(),
-        };
+		// Prepare update data
+		const updateData: Prisma.OrderUpdateInput = {
+			// status: validatedData.status, // Handle manually to avoid type mismatch
+			updatedAt: new Date(),
+		};
 
-        // Auto-update dates based on status
-        if (validatedData.status === "SHIPPED") {
-            updateData.shippedDate = validatedData.shippedDate || new Date();
-        } else if (validatedData.status === "DELIVERED") {
-            updateData.deliveredDate = validatedData.deliveredDate || new Date();
-        }
+		if (validatedData.status === "PENDING" || validatedData.status === "CONFIRMED" ||
+			validatedData.status === "PROCESSING" || validatedData.status === "SHIPPED" ||
+			validatedData.status === "DELIVERED" || validatedData.status === "CANCELLED" ||
+			validatedData.status === "RETURNED") {
+			updateData.status = validatedData.status;
+		}
 
-        if (validatedData.paymentStatus) {
-            updateData.paymentStatus = validatedData.paymentStatus;
-        }
+		if (validatedData.paymentStatus) {
+			if (validatedData.paymentStatus === "PENDING" || validatedData.paymentStatus === "PAID" ||
+				validatedData.paymentStatus === "PARTIALLY_PAID" || validatedData.paymentStatus === "FAILED" ||
+				validatedData.paymentStatus === "REFUNDED") {
+				updateData.paymentStatus = validatedData.paymentStatus;
+			}
+		}
 
-        if (validatedData.trackingNumber) {
-            updateData.trackingNumber = validatedData.trackingNumber;
-        }
+		if (validatedData.trackingNumber) {
+			updateData.trackingNumber = validatedData.trackingNumber;
+		}
 
-        if (validatedData.carrier) {
-            updateData.carrier = validatedData.carrier;
-        }
+		if (validatedData.carrier) {
+			updateData.carrier = validatedData.carrier;
+		}
 
-        // Update order
-        const order = await neonClient.order.update({
-            where: { id: data.orderId },
-            data: updateData,
-            include: {
-                customer: true,
-                items: true,
-            },
-        });
+		// Update order
+		const order = await neonClient.order.update({
+			where: { id: data.orderId },
+			data: updateData,
+			include: {
+				customer: true,
+				items: true,
+			},
+		});
 
-        revalidatePath("/orders");
-        return actionSuccess(order);
-    } catch (error) {
-        console.error("Error updating order status:", error);
-        if (error instanceof Error) {
-            return actionError(error.message);
-        }
-        return actionError("Failed to update order status");
-    }
+		// Handle inventory movements based on status changes
+		if (validatedData.status === "CANCELLED" && currentOrder.status !== "CANCELLED") {
+			// Release reserved inventory
+			const reservations = await neonClient.stockReservation.findMany({
+				where: {
+					referenceId: data.orderId,
+					status: "ACTIVE",
+				},
+			});
+
+			for (const reservation of reservations) {
+				// Update inventory item
+				await neonClient.inventoryItem.update({
+					where: { id: reservation.inventoryItemId },
+					data: {
+						reservedQuantity: {
+							decrement: reservation.quantity,
+						},
+					},
+				});
+
+				// Update reservation status
+				await neonClient.stockReservation.update({
+					where: { id: reservation.id },
+					data: {
+						status: "CANCELLED",
+						releasedAt: new Date(),
+					},
+				});
+
+				// Create inventory movement
+				await neonClient.inventoryMovement.create({
+					data: {
+						type: "ADJUSTMENT",
+						inventoryItemId: reservation.inventoryItemId,
+						quantity: reservation.quantity,
+						quantityBefore: 0, // Will be updated by trigger
+						quantityAfter: reservation.quantity,
+						referenceType: "Order",
+						referenceId: data.orderId,
+						reason: "Order cancellation - inventory release",
+						createdById: userId,
+					},
+				});
+			}
+		}
+
+		revalidatePath("/orders");
+		return actionSuccess(order);
+	} catch (error) {
+		console.error("Error updating order status:", error);
+		if (error instanceof Error) {
+			return actionError(error.message);
+		}
+		return actionError("Failed to update order status");
+	}
 }
 
 // Get order statistics
 export async function getOrderStats(context?: ActionContext) {
-    try {
-        const resolvedContext = await resolveActionContext(context);
-        if ("error" in resolvedContext) {
-            return actionError(resolvedContext.error);
-        }
-        const { companyId } = resolvedContext;
+	try {
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
+		}
+		const { companyId } = resolvedContext;
 
-        const where: Prisma.OrderWhereInput = {
-            companyId,
-        };
+		const where: Prisma.OrderWhereInput = {
+			companyId,
+		};
 
-        const [totalOrders, pendingOrders, shippedOrders, deliveredOrders, revenueResult] =
-            await Promise.all([
-                neonClient.order.count({ where }),
-                neonClient.order.count({
-                    where: {
-                        ...where,
-                        status: {
-                            in: ["PENDING", "CONFIRMED", "PROCESSING"],
-                        },
-                    },
-                }),
-                neonClient.order.count({
-                    where: {
-                        ...where,
-                        status: "SHIPPED",
-                    },
-                }),
-                neonClient.order.count({
-                    where: {
-                        ...where,
-                        status: "DELIVERED",
-                    },
-                }),
-                neonClient.order.aggregate({
-                    _sum: {
-                        totalAmount: true,
-                    },
-                    where: {
-                        ...where,
-                        status: {
-                            notIn: ["CANCELLED"],
-                        },
-                    },
-                }),
-            ]);
+		const [totalOrders, pendingOrders, shippedOrders, deliveredOrders, revenueResult] =
+			await Promise.all([
+				neonClient.order.count({ where }),
+				neonClient.order.count({
+					where: {
+						...where,
+						status: {
+							in: ["PENDING", "CONFIRMED", "PROCESSING"],
+						},
+					},
+				}),
+				neonClient.order.count({
+					where: {
+						...where,
+						status: "SHIPPED",
+					},
+				}),
+				neonClient.order.count({
+					where: {
+						...where,
+						status: "DELIVERED",
+					},
+				}),
+				neonClient.order.aggregate({
+					_sum: {
+						totalAmount: true,
+					},
+					where: {
+						...where,
+						status: {
+							notIn: ["CANCELLED"],
+						},
+					},
+				}),
+			]);
 
-        const totalRevenue = Number(revenueResult._sum.totalAmount) || 0;
-        const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+		const totalRevenue = Number(revenueResult._sum.totalAmount) || 0;
+		const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-        return actionSuccess({
-            stats: {
-                totalOrders,
-                pendingOrders,
-                shippedOrders,
-                deliveredOrders,
-                totalRevenue,
-                averageOrderValue,
-            },
-        });
-    } catch (error) {
-        console.error("Error fetching order statistics:", error);
-        return actionError("Failed to fetch order statistics");
-    }
+		return actionSuccess({
+			stats: {
+				totalOrders,
+				pendingOrders,
+				shippedOrders,
+				deliveredOrders,
+				totalRevenue,
+				averageOrderValue,
+			},
+		});
+	} catch (error) {
+		console.error("Error fetching order statistics:", error);
+		return actionError("Failed to fetch order statistics");
+	}
+}
+
+export async function getOrderAnalytics(context?: ActionContext) {
+	try {
+		const resolvedContext = await resolveActionContext(context);
+		if ("error" in resolvedContext) {
+			return actionError(resolvedContext.error);
+		}
+		const { companyId } = resolvedContext;
+
+		const baseWhere: Prisma.OrderWhereInput = {
+			companyId,
+		};
+
+		const now = new Date();
+		const trendStart = new Date(now);
+		trendStart.setDate(trendStart.getDate() - 30);
+
+		const [
+			totalOrders,
+			pendingOrders,
+			shippedOrders,
+			deliveredOrdersCount,
+			revenueAggregate,
+			recentOrders,
+			topCustomersRaw,
+			upcomingOrders,
+			orderItemAggregate,
+			pendingPaymentCount,
+			deliveredOrdersForTiming,
+			awaitingShipmentCount,
+		] = await Promise.all([
+			neonClient.order.count({ where: baseWhere }),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					status: {
+						in: ["PENDING", "CONFIRMED", "PROCESSING"],
+					},
+				},
+			}),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					status: "SHIPPED",
+				},
+			}),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					status: "DELIVERED",
+				},
+			}),
+			neonClient.order.aggregate({
+				_sum: {
+					totalAmount: true,
+				},
+				where: {
+					...baseWhere,
+					status: {
+						notIn: ["CANCELLED"],
+					},
+				},
+			}),
+			neonClient.order.findMany({
+				where: {
+					...baseWhere,
+					orderDate: {
+						gte: trendStart,
+					},
+					status: {
+						notIn: ["CANCELLED"],
+					},
+				},
+				select: {
+					orderDate: true,
+					totalAmount: true,
+				},
+				orderBy: {
+					orderDate: "asc",
+				},
+			}),
+			neonClient.order.groupBy({
+				by: ["customerId"],
+				where: {
+					...baseWhere,
+					status: {
+						notIn: ["CANCELLED"],
+					},
+				},
+				_sum: {
+					totalAmount: true,
+				},
+				_count: {
+					_all: true,
+				},
+				_max: {
+					orderDate: true,
+				},
+				orderBy: {
+					_sum: {
+						totalAmount: "desc",
+					},
+				},
+				take: 5,
+			}),
+			neonClient.order.findMany({
+				where: {
+					...baseWhere,
+					status: {
+						in: ["CONFIRMED", "PROCESSING", "SHIPPED"],
+					},
+				},
+				select: {
+					id: true,
+					orderNumber: true,
+					orderDate: true,
+					customer: {
+						select: {
+							businessName: true,
+							firstName: true,
+							lastName: true,
+						},
+					},
+					items: {
+						select: {
+							orderedQty: true,
+							shippedQty: true,
+						},
+					},
+				},
+				orderBy: [
+					{ orderDate: "asc" },
+				],
+				take: 10,
+			}),
+			neonClient.orderItem.aggregate({
+				_sum: {
+					orderedQty: true,
+					shippedQty: true,
+				},
+				where: {
+					order: {
+						companyId,
+					},
+				},
+			}),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					paymentStatus: {
+						in: ["PENDING", "PARTIALLY_PAID", "FAILED"],
+					},
+				},
+			}),
+			neonClient.order.findMany({
+				where: {
+					...baseWhere,
+					deliveredDate: {
+						not: null,
+					},
+				},
+				select: {
+					deliveredDate: true,
+					shippedDate: true,
+				},
+			}),
+			neonClient.order.count({
+				where: {
+					...baseWhere,
+					status: {
+						in: ["CONFIRMED", "PROCESSING"],
+					},
+				},
+			}),
+		]);
+
+		const totalRevenue = Number(revenueAggregate._sum.totalAmount ?? 0);
+		const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+		const fulfillmentEfficiency =
+			totalOrders > 0 ? (deliveredOrdersCount + shippedOrders) / totalOrders : 0;
+
+		const revenueTrendMap = new Map<string, { revenue: number; orders: number }>();
+		recentOrders.forEach((order) => {
+			const dateKey = order.orderDate.toISOString().slice(0, 10);
+			const current = revenueTrendMap.get(dateKey) || { revenue: 0, orders: 0 };
+			current.revenue += Number(order.totalAmount ?? 0);
+			current.orders += 1;
+			revenueTrendMap.set(dateKey, current);
+		});
+
+		const revenueTrend = Array.from(revenueTrendMap.entries())
+			.sort(([a], [b]) => (a > b ? 1 : -1))
+			.map(([date, values]) => ({
+				date,
+				revenue: values.revenue,
+				orders: values.orders,
+			}));
+
+		const customerIds = topCustomersRaw.map((entry) => entry.customerId);
+		const customers = customerIds.length
+			? await neonClient.customer.findMany({
+				where: {
+					id: {
+						in: customerIds,
+					},
+				},
+				select: {
+					id: true,
+					businessName: true,
+					firstName: true,
+					lastName: true,
+					status: true,
+				},
+			})
+			: [];
+
+		const topCustomers = topCustomersRaw.map((entry) => {
+			const customer = customers.find((c) => c.id === entry.customerId);
+			const displayName =
+				customer?.businessName ||
+				[customer?.firstName, customer?.lastName]
+					.filter(Boolean)
+					.join(" ") ||
+				"Unknown customer";
+
+			return {
+				customerId: entry.customerId,
+				name: displayName,
+				orders: entry._count?._all ?? 0,
+				spend: Number(entry._sum?.totalAmount ?? 0),
+				lastOrder: entry._max?.orderDate?.toISOString() ?? null,
+				status: customer?.status ?? null,
+			};
+		});
+
+		const upcomingFulfillment = upcomingOrders
+			.map((order) => {
+				const items = order.items || [];
+				const totalItems = items.reduce(
+					(acc, item) => acc + (item.orderedQty ?? 0),
+					0,
+				);
+				const remainingItems = items.reduce(
+					(acc, item) => acc + ((item.orderedQty || 0) - (item.shippedQty || 0)),
+					0,
+				);
+				const customerName =
+					order.customer?.businessName ||
+					[order.customer?.firstName, order.customer?.lastName]
+						.filter(Boolean)
+						.join(" ") ||
+					"Customer";
+				const eta = null;
+
+				return {
+					orderId: order.id,
+					orderNumber: order.orderNumber,
+					customer: customerName,
+					eta: eta,
+					items: totalItems,
+					remainingItems,
+					priority: "NORMAL", // Default since priority removed
+					status: "PENDING", // Default since fulfillmentStatus removed
+				};
+			})
+			.slice(0, 5);
+
+		const totalOrderedQty = Number(orderItemAggregate._sum?.orderedQty ?? 0);
+		const totalShippedQty = Number(orderItemAggregate._sum?.shippedQty ?? 0);
+		const totalRemainingQty = totalOrderedQty - totalShippedQty;
+
+		const backorderRate =
+			totalOrderedQty > 0 ? totalRemainingQty / totalOrderedQty : 0;
+
+		const onTimeDeliveryBase = deliveredOrdersForTiming.length;
+		const onTimeDeliveryCount = deliveredOrdersForTiming.filter((order) => {
+			if (!order.deliveredDate) {
+				return false;
+			}
+			const targetDate = order.shippedDate;
+			if (!targetDate) {
+				return true;
+			}
+			return order.deliveredDate <= targetDate;
+		}).length;
+		const onTimeDeliveryRate =
+			onTimeDeliveryBase > 0 ? onTimeDeliveryCount / onTimeDeliveryBase : 0;
+
+		return actionSuccess({
+			stats: {
+				totalOrders,
+				pendingOrders,
+				shippedOrders,
+				deliveredOrders: deliveredOrdersCount,
+				totalRevenue,
+				averageOrderValue,
+				pendingPayments: pendingPaymentCount,
+				fulfillmentEfficiency,
+			},
+			revenueTrend,
+			topCustomers,
+			upcomingFulfillment,
+			operations: {
+				backorderRate,
+				onTimeDeliveryRate,
+				pendingPaymentCount,
+				awaitingShipmentCount,
+				shippedItemsRatio:
+					totalOrderedQty > 0 ? totalShippedQty / totalOrderedQty : 0,
+				totalOrderedQty,
+				totalRemainingQty,
+			},
+		});
+	} catch (error) {
+		console.error("Error fetching order analytics:", error);
+		return actionError("Failed to fetch order analytics");
+	}
 }

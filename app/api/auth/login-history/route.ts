@@ -1,122 +1,139 @@
+/**
+ * Login History API Route
+ * ============================================================================
+ * POST: Log a login attempt
+ * - Rate limited by IP (10 requests per minute)
+ * - Triggers cleanup every 100 logins OR every 24 hours
+ * - 5-day retention policy
+ * ============================================================================
+ */
+
 import { type NextRequest, NextResponse } from "next/server";
-// import { supabaseClient } from "@/lib/prisma"; // DISABLED
+import { supabaseClient } from "@/lib/prisma";
+import {
+    getClientIP,
+    parseUserAgent,
+    isRateLimited,
+    shouldRunCleanup,
+    getRetentionCutoff,
+} from "@/lib/session-utils";
 
-export async function POST(_request: NextRequest) {
-    // DISABLED: This endpoint is temporarily disabled to prevent system overload
-    return NextResponse.json(
-        {
-            success: true,
-            message: "Login history logging is temporarily disabled",
-        },
-        { status: 200 },
-    );
+// ============================================================================
+// CLEANUP FUNCTION
+// ============================================================================
 
-    /* DISABLED CODE - Uncomment to re-enable
+/**
+ * Delete login history records older than 5 days
+ * Runs in background (fire-and-forget)
+ */
+async function cleanupOldLoginHistory(): Promise<void> {
     try {
+        const cutoffDate = getRetentionCutoff(5); // 5 days ago
+
+        const result = await supabaseClient.loginHistory.deleteMany({
+            where: {
+                attemptedAt: { lt: cutoffDate },
+            },
+        });
+
+        if (result.count > 0) {
+            console.log(`🧹 Cleaned up ${result.count} old login history records`);
+        }
+    } catch (error) {
+        // Log but don't throw - cleanup is non-critical
+        console.error("❌ Error cleaning up login history:", error);
+    }
+}
+
+// ============================================================================
+// POST: LOG LOGIN ATTEMPT
+// ============================================================================
+
+export async function POST(request: NextRequest) {
+    try {
+        // Extract request metadata
+        const headers = request.headers;
+        const ipAddress = getClientIP(headers);
+        const userAgent = headers.get("user-agent") || null;
+
+        // Rate limiting by IP (10 requests per minute)
+        if (isRateLimited(`login_history_ip_${ipAddress}`, 10, 60 * 1000)) {
+            return NextResponse.json(
+                { success: false, error: "Rate limited" },
+                { status: 429 }
+            );
+        }
+
+        // Parse request body
         const body = await request.json();
         const { userId, successful, failReason, email } = body;
 
-        // Extract request metadata
-        const ipAddress =
-            request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-            request.headers.get("x-real-ip") ||
-            "unknown";
-
-        const userAgent = request.headers.get("user-agent") || "unknown";
-
-        // Parse device type from user agent
-        const deviceType = getDeviceType(userAgent);
-
-        // Get approximate location (you can integrate with IP geolocation service later)
-        const location = await getLocationFromIP(ipAddress);
-
-        // Create login history record
-        const loginHistoryData: {
-            userId: string | null;
-            successful: boolean;
-            failReason: string | null;
-            ipAddress: string;
-            userAgent: string;
-            location: string | null;
-            deviceType: string;
-            attemptedAt: string;
-        } = {
-            userId: userId || null,
-            successful,
-            failReason: failReason || null,
-            ipAddress,
-            userAgent,
-            location,
-            deviceType,
-            attemptedAt: new Date().toISOString(),
-        };
-
-        // If login failed and no userId, we might need to look it up by email
-        if (!userId && email && !successful) {
-            const userData = await supabaseClient.user.findUnique({
-                where: { email },
-                select: { id: true },
-            });
-            if (userData) {
-                loginHistoryData.userId = userData.id;
+        // Determine userId - if not provided but email is, try to find user
+        let resolvedUserId = userId;
+        if (!resolvedUserId && email) {
+            try {
+                const user = await supabaseClient.user.findUnique({
+                    where: { email },
+                    select: { id: true },
+                });
+                if (user) {
+                    resolvedUserId = user.id;
+                }
+            } catch {
+                // Ignore - user lookup failed, continue without userId
             }
         }
 
-        // Only log if we have a userId
-        if (loginHistoryData.userId) {
-            const loginHistory = await supabaseClient.loginHistory.create({
-                data: {
-                    userId: loginHistoryData.userId,
-                    successful: loginHistoryData.successful,
-                    failReason: loginHistoryData.failReason,
-                    ipAddress: loginHistoryData.ipAddress,
-                    userAgent: loginHistoryData.userAgent,
-                    location: loginHistoryData.location,
-                    deviceType: loginHistoryData.deviceType,
-                    attemptedAt: loginHistoryData.attemptedAt,
-                },
-            });
-
-            console.log("✅ Login history logged:", {
-                userId: loginHistory.userId,
-                successful: loginHistory.successful,
-                ipAddress: loginHistory.ipAddress,
-                deviceType: loginHistory.deviceType,
-            });
-
-            // Update user's last login info on successful login
-            if (successful) {
-                await supabaseClient.user.update({
-                    where: { id: loginHistoryData.userId },
-                    data: {
-                        lastLoginAt: new Date(),
-                        lastLoginIp: ipAddress,
-                        failedLoginCount: 0, // Reset failed login count on success
-                    },
-                });
-            } else {
-                // Increment failed login count
-                await supabaseClient.user.update({
-                    where: { id: loginHistoryData.userId },
-                    data: {
-                        failedLoginCount: { increment: 1 },
-                    },
-                });
-            }
-
+        // Must have a userId to log
+        if (!resolvedUserId) {
+            // For failed logins without user, still return success
+            // We just don't log them to avoid orphan records
             return NextResponse.json({
                 success: true,
-                loginHistoryId: loginHistory.id,
+                message: "No user found, login attempt not logged",
             });
         }
 
-        return NextResponse.json(
-            {
-                success: false,
-                error: "No userId available for logging",
+        // Parse user agent for device info
+        const { browser, deviceType } = parseUserAgent(userAgent);
+
+        // Create login history record
+        const loginHistory = await supabaseClient.loginHistory.create({
+            data: {
+                userId: resolvedUserId,
+                successful,
+                failReason: failReason || null,
+                ipAddress,
+                userAgent,
+                location: null, // Skip geolocation for now
             },
-            { status: 400 },
-        );
+        });
+
+        console.log(`✅ Login logged: ${successful ? "SUCCESS" : "FAILED"} for user ${resolvedUserId} from ${ipAddress} (${browser}/${deviceType})`);
+
+        // Update user's lastLoginAt on successful login
+        if (successful) {
+            try {
+                await supabaseClient.user.update({
+                    where: { id: resolvedUserId },
+                    data: { lastLoginAt: new Date() },
+                });
+            } catch (error) {
+                // Non-critical - log but don't fail
+                console.error("Failed to update lastLoginAt:", error);
+            }
+        }
+
+        // Check if we should run cleanup (Option C - hybrid)
+        if (shouldRunCleanup()) {
+            // Fire-and-forget cleanup
+            cleanupOldLoginHistory().catch(console.error);
+        }
+
+        return NextResponse.json({
+            success: true,
+            loginHistoryId: loginHistory.id,
+        });
     } catch (error) {
         console.error("❌ Error logging login history:", error);
         return NextResponse.json(
@@ -124,8 +141,65 @@ export async function POST(_request: NextRequest) {
                 success: false,
                 error: error instanceof Error ? error.message : "Unknown error",
             },
-            { status: 500 },
+            { status: 500 }
         );
     }
-    */
+}
+
+// ============================================================================
+// GET: FETCH LOGIN HISTORY FOR USER
+// ============================================================================
+
+export async function GET(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const userId = searchParams.get("userId");
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, error: "userId is required" },
+                { status: 400 }
+            );
+        }
+
+        // Rate limiting by IP
+        const ipAddress = getClientIP(request.headers);
+        if (isRateLimited(`login_history_get_${ipAddress}`, 30, 60 * 1000)) {
+            return NextResponse.json(
+                { success: false, error: "Rate limited" },
+                { status: 429 }
+            );
+        }
+
+        const history = await supabaseClient.loginHistory.findMany({
+            where: { userId },
+            orderBy: { attemptedAt: "desc" },
+            take: Math.min(limit, 100), // Max 100 records
+            select: {
+                id: true,
+                successful: true,
+                failReason: true,
+                ipAddress: true,
+                userAgent: true,
+                location: true,
+                attemptedAt: true,
+            },
+        });
+
+        return NextResponse.json({
+            success: true,
+            history,
+            count: history.length,
+        });
+    } catch (error) {
+        console.error("❌ Error fetching login history:", error);
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : "Unknown error",
+            },
+            { status: 500 }
+        );
+    }
 }

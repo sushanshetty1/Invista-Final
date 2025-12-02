@@ -4,12 +4,15 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
-	throw new Error(
-		"Missing Supabase environment variables for admin client. Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.",
+	console.warn(
+		"Missing Supabase environment variables for admin client. Using placeholders for build.",
 	);
 }
 
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+const url = supabaseUrl || "https://placeholder.supabase.co";
+const key = supabaseServiceRoleKey || "placeholder-key";
+
+export const supabaseAdmin = createClient(url, key, {
 	auth: {
 		persistSession: false,
 		autoRefreshToken: false,

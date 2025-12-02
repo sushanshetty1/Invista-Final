@@ -5,9 +5,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-	throw new Error(
-		"Missing Supabase environment variables. Please check your .env.local file.",
+	console.warn(
+		"Missing Supabase environment variables. Using placeholders for build.",
 	);
 }
 
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+const url = supabaseUrl || "https://placeholder.supabase.co";
+const key = supabaseAnonKey || "placeholder-key";
+
+export const supabase = createBrowserClient(url, key);

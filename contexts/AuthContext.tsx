@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { dataPreloader } from "@/hooks/use-data-preloader";
@@ -10,6 +10,7 @@ type AuthContextType = {
 	loading: boolean;
 	userType: "company" | "individual" | null;
 	hasCompanyAccess: boolean;
+	currentSessionId: string | null;
 	signUp: (email: string, password: string) => Promise<any>;
 	login: (email: string, password: string) => Promise<any>;
 	signInWithGoogle: () => Promise<any>;
@@ -18,6 +19,7 @@ type AuthContextType = {
 	deleteAccount: () => Promise<any>;
 	checkUserAccess: () => Promise<void>;
 	refreshAccess: () => Promise<void>;
+	logoutAllDevices: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,12 +31,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		null,
 	);
 	const [hasCompanyAccess, setHasCompanyAccess] = useState(false);
+	const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 	const router = useRouter();
 
 	// Add debouncing to prevent multiple rapid access checks
 	const [lastAccessCheck, setLastAccessCheck] = useState<number>(0);
 	const [isCheckingAccess, setIsCheckingAccess] = useState(false);
 	const ACCESS_CHECK_DEBOUNCE = 2000; // 2 seconds
+
+	// Session creation helper (fire-and-forget)
+	const createUserSession = async (userId: string, token?: string) => {
+		try {
+			const response = await fetch("/api/auth/sessions", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ userId, supabaseToken: token }),
+			});
+			const data = await response.json();
+			if (data.success && data.sessionId) {
+				setCurrentSessionId(data.sessionId);
+				if (typeof window !== "undefined") {
+					localStorage.setItem(`invista_session_id_${userId}`, data.sessionId);
+				}
+			}
+		} catch (error) {
+			console.error("Failed to create session (non-blocking):", error);
+		}
+	};
+
+	// Session revocation helper
+	const revokeCurrentSession = async (userId: string) => {
+		try {
+			const sessionId = currentSessionId ||
+				(typeof window !== "undefined"
+					? localStorage.getItem(`invista_session_id_${userId}`)
+					: null);
+
+			if (sessionId) {
+				await fetch(`/api/auth/sessions?sessionId=${sessionId}`, {
+					method: "DELETE",
+				});
+				if (typeof window !== "undefined") {
+					localStorage.removeItem(`invista_session_id_${userId}`);
+				}
+			}
+		} catch (error) {
+			console.error("Failed to revoke session (non-blocking):", error);
+		}
+	};
 
 	const checkUserAccess = async () => {
 		if (!user?.email || !user?.id) {
@@ -257,6 +301,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 										email: session.user.email || "",
 										successful: true,
 									});
+									// Create UserSession record for OAuth login
+									createUserSession(session.user.id, session.access_token);
 								}
 
 								// Handle Google sign-in user creation
@@ -357,6 +403,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				if (typeof window !== "undefined") {
 					localStorage.setItem(`invista_login_time_${result.data.user.id}`, Date.now().toString());
 				}
+				// Create UserSession record (fire-and-forget)
+				createUserSession(result.data.user.id, result.data.session?.access_token);
 			} else if (result.error) {
 				// Failed login - try to get userId by email
 				await logLoginAttempt({
@@ -401,10 +449,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			setUser(null);
 			setUserType(null);
 			setHasCompanyAccess(false);
+			setCurrentSessionId(null);
+
+			// Revoke UserSession record (fire-and-forget)
+			if (prevUserId) {
+				revokeCurrentSession(prevUserId);
+			}
 
 			// Clear localStorage flags ASAP
 			if (typeof window !== "undefined" && prevUserId) {
 				localStorage.removeItem(`invista_has_access_${prevUserId}`);
+				localStorage.removeItem(`invista_login_time_${prevUserId}`);
+				localStorage.removeItem(`invista_session_id_${prevUserId}`);
 			}
 
 			// Clear prefetched caches
@@ -425,6 +481,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			router.replace("/");
 		} finally {
 			logoutInFlightRef.current = false;
+		}
+	};
+
+	const logoutAllDevices = async () => {
+		if (!user?.id) return;
+
+		try {
+			console.log("AuthContext - Logging out from all devices");
+
+			// Revoke all sessions except current (optional: remove exceptSessionId to revoke all)
+			const currentSession = currentSessionId ||
+				(typeof window !== "undefined"
+					? localStorage.getItem(`invista_session_id_${user.id}`)
+					: null);
+
+			await fetch(`/api/auth/sessions?userId=${user.id}&revokeAll=true&exceptSessionId=${currentSession || ""}`, {
+				method: "DELETE",
+			});
+
+			console.log("AuthContext - All other sessions revoked");
+		} catch (error) {
+			console.error("AuthContext - Error logging out all devices:", error);
 		}
 	};
 
@@ -500,6 +578,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				loading,
 				userType,
 				hasCompanyAccess,
+				currentSessionId,
 				signUp,
 				login,
 				signInWithGoogle,
@@ -508,6 +587,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				deleteAccount,
 				checkUserAccess,
 				refreshAccess,
+				logoutAllDevices,
 			}}
 		>
 			{children}

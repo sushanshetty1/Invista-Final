@@ -83,3 +83,9 @@ export type UpdateSupplierInput = z.infer<typeof UpdateSupplierSchema>;
 export type SupplierFilterInput = z.infer<typeof SupplierFilterSchema>;
 export type ProductSupplierInput = z.infer<typeof ProductSupplierSchema>;
 export type UpdateProductSupplierInput = z.infer<typeof UpdateProductSupplierSchema>;
+
+// Lowercase aliases for backwards compatibility
+export const createSupplierSchema = CreateSupplierSchema;
+export const updateSupplierSchema = UpdateSupplierSchema;
+export const supplierFilterSchema = SupplierFilterSchema;
+export const baseSupplierSchema = CreateSupplierSchema;

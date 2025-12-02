@@ -37,14 +37,14 @@ export async function PATCH(
 		// Create Supabase server client
 		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-		
+
 		if (!supabaseUrl || !supabaseAnonKey) {
 			return NextResponse.json(
 				{ error: "Server configuration error" },
 				{ status: 500 },
 			);
 		}
-		
+
 		const cookieStore = await cookies();
 		const supabase = createServerClient(
 			supabaseUrl,
@@ -79,10 +79,7 @@ export async function PATCH(
 		const { id } = await context.params;
 		const body = await request.json();
 
-		const result = await updateSupplier({
-			id,
-			...body,
-		});
+		const result = await updateSupplier(id, body);
 
 		if (!result.success) {
 			return NextResponse.json({ error: result.error }, { status: 400 });
@@ -106,14 +103,14 @@ export async function DELETE(
 		// Create Supabase server client
 		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-		
+
 		if (!supabaseUrl || !supabaseAnonKey) {
 			return NextResponse.json(
 				{ error: "Server configuration error" },
 				{ status: 500 },
 			);
 		}
-		
+
 		const cookieStore = await cookies();
 		const supabase = createServerClient(
 			supabaseUrl,
