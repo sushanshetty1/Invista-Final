@@ -62,34 +62,25 @@ interface Order {
 	customer: {
 		firstName?: string;
 		lastName?: string;
-		companyName?: string;
+		businessName?: string;
 		email?: string;
 	};
 	status:
-		| "PENDING"
-		| "CONFIRMED"
-		| "PROCESSING"
-		| "SHIPPED"
-		| "DELIVERED"
-		| "CANCELLED";
-	fulfillmentStatus:
-		| "PENDING"
-		| "PICKING"
-		| "PACKED"
-		| "SHIPPED"
-		| "DELIVERED"
-		| "CANCELLED";
+	| "PENDING"
+	| "CONFIRMED"
+	| "PROCESSING"
+	| "SHIPPED"
+	| "DELIVERED"
+	| "CANCELLED"
+	| "RETURNED";
 	paymentStatus:
-		| "PENDING"
-		| "AUTHORIZED"
-		| "PAID"
-		| "PARTIALLY_PAID"
-		| "REFUNDED"
-		| "FAILED";
+	| "PENDING"
+	| "PAID"
+	| "PARTIALLY_PAID"
+	| "REFUNDED"
+	| "FAILED";
 	totalAmount: number;
-	currency: string;
 	orderDate: string;
-	requiredDate?: string;
 	shippedDate?: string;
 	deliveredDate?: string;
 	items: OrderItem[];
@@ -97,13 +88,14 @@ interface Order {
 
 interface OrderItem {
 	id: string;
-	productName: string;
-	productSku: string;
+	product: {
+		name: string;
+		sku: string;
+	};
 	orderedQty: number;
 	shippedQty: number;
 	unitPrice: number;
 	totalPrice: number;
-	status: string;
 }
 
 interface OrderStats {
@@ -139,7 +131,6 @@ export default function OrdersPage() {
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [statusFilter, setStatusFilter] = useState<string>("all");
-	const [fulfillmentFilter, setFulfillmentFilter] = useState<string>("all");
 	const [paymentFilter, setPaymentFilter] = useState<string>("all");
 	const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
 	// Load orders and reorder suggestions
@@ -171,11 +162,11 @@ export default function OrdersPage() {
 
 			setOrders(ordersData.orders || []);
 			setFilteredOrders(ordersData.orders || []);
-			
+
 			if (ordersData.pagination) {
 				setPagination(ordersData.pagination);
 			}
-			
+
 			setStats(
 				statsData.stats || {
 					totalOrders: 0,
@@ -214,7 +205,7 @@ export default function OrdersPage() {
 					order.customer.lastName
 						?.toLowerCase()
 						.includes(searchTerm.toLowerCase()) ||
-					order.customer.companyName
+					order.customer.businessName
 						?.toLowerCase()
 						.includes(searchTerm.toLowerCase()) ||
 					order.customer.email
@@ -227,16 +218,12 @@ export default function OrdersPage() {
 			filtered = filtered.filter((order) => order.status === statusFilter);
 		}
 
-		if (fulfillmentFilter !== "all") {
-			filtered = filtered.filter((order) => order.fulfillmentStatus === fulfillmentFilter);
-		}
-
 		if (paymentFilter !== "all") {
 			filtered = filtered.filter((order) => order.paymentStatus === paymentFilter);
 		}
 
 		setFilteredOrders(filtered);
-	}, [orders, searchTerm, statusFilter, fulfillmentFilter, paymentFilter]);
+	}, [orders, searchTerm, statusFilter, paymentFilter]);
 	const getStatusBadge = (status: string) => {
 		type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 		const statusConfig: Record<
@@ -253,12 +240,12 @@ export default function OrdersPage() {
 			SHIPPED: { variant: "default", icon: Truck },
 			DELIVERED: { variant: "default", icon: Package },
 			CANCELLED: { variant: "destructive", icon: XCircle },
-			
+
 			// Fulfillment Status
 			UNFULFILLED: { variant: "secondary", icon: Clock },
 			PARTIAL: { variant: "outline", icon: Package },
 			FULFILLED: { variant: "default", icon: CheckCircle },
-			
+
 			// Payment Status
 			UNPAID: { variant: "secondary", icon: Clock },
 			PARTIAL_PAYMENT: { variant: "outline", icon: DollarSign },
@@ -325,409 +312,370 @@ export default function OrdersPage() {
 	}
 	return (
 		<DashboardGuard>
-		<div className="min-h-screen bg-background pt-20">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-				<div className="space-y-6">
-					{/* Header */}
-					<div className="flex items-center justify-between">
-						<div>
-							<h1 className="text-3xl font-bold tracking-tight">
-								Order Management
-							</h1>
-							<p className="text-muted-foreground">
-								Manage customer orders, track fulfillment, and process shipments
-							</p>
-						</div>
-						<div className="flex gap-2">
-							<Button variant="outline" asChild>
-								<Link href="/orders/fulfillment">
-									<Package className="mr-2 h-4 w-4" />
-									Fulfillment
-								</Link>
-							</Button>
-							<Button asChild>
-								<Link href="/orders/create">
-									<Plus className="mr-2 h-4 w-4" />
-									New Order
-								</Link>
-							</Button>
-						</div>
-					</div>
-
-					{/* Stats Cards */}
-					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
-									Total Orders
-								</CardTitle>
-								<Users className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">{stats.totalOrders}</div>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
-									Pending Orders
-								</CardTitle>
-								<Clock className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">{stats.pendingOrders}</div>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
-									Shipped Orders
-								</CardTitle>
-								<Truck className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">{stats.shippedOrders}</div>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
-									Delivered Orders
-								</CardTitle>
-								<Package className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">{stats.deliveredOrders}</div>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
-									Total Revenue
-								</CardTitle>
-								<DollarSign className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									${stats.totalRevenue.toFixed(2)}
-								</div>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
-									Average Order
-								</CardTitle>
-								<BarChart3 className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									${stats.averageOrderValue.toFixed(2)}
-								</div>
-							</CardContent>
-						</Card>
-					</div>
-
-					{/* Filters and Search */}
-					<Card>
-						<CardHeader>
-							<CardTitle>Orders</CardTitle>
-							<CardDescription>
-								View and manage all customer orders
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 mb-6">
-								<div className="flex-1">
-									<div className="relative">
-										<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-										<Input
-											placeholder="Search orders..."
-											value={searchTerm}
-											onChange={(e) => setSearchTerm(e.target.value)}
-											className="pl-8"
-										/>
-									</div>
-								</div>
-								<div className="flex space-x-2">
-									<Select value={statusFilter} onValueChange={setStatusFilter}>
-										<SelectTrigger className="w-[180px]">
-											<Filter className="mr-2 h-4 w-4" />
-											<SelectValue placeholder="Order Status" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="all">All Statuses</SelectItem>
-											<SelectItem value="PENDING">Pending</SelectItem>
-											<SelectItem value="CONFIRMED">Confirmed</SelectItem>
-											<SelectItem value="PROCESSING">Processing</SelectItem>
-											<SelectItem value="SHIPPED">Shipped</SelectItem>
-											<SelectItem value="DELIVERED">Delivered</SelectItem>
-											<SelectItem value="CANCELLED">Cancelled</SelectItem>
-											<SelectItem value="RETURNED">Returned</SelectItem>
-											<SelectItem value="COMPLETED">Completed</SelectItem>
-										</SelectContent>
-									</Select>
-
-									<Select value={fulfillmentFilter} onValueChange={setFulfillmentFilter}>
-										<SelectTrigger className="w-[180px]">
-											<SelectValue placeholder="Fulfillment" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="all">All Fulfillment</SelectItem>
-											<SelectItem value="PENDING">Pending</SelectItem>
-											<SelectItem value="PICKING">Picking</SelectItem>
-											<SelectItem value="PACKED">Packed</SelectItem>
-											<SelectItem value="SHIPPED">Shipped</SelectItem>
-											<SelectItem value="DELIVERED">Delivered</SelectItem>
-											<SelectItem value="CANCELLED">Cancelled</SelectItem>
-										</SelectContent>
-									</Select>
-
-									<Select value={paymentFilter} onValueChange={setPaymentFilter}>
-										<SelectTrigger className="w-[180px]">
-											<SelectValue placeholder="Payment" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="all">All Payments</SelectItem>
-											<SelectItem value="PENDING">Pending</SelectItem>
-											<SelectItem value="PROCESSING">Processing</SelectItem>
-											<SelectItem value="PAID">Paid</SelectItem>
-											<SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
-											<SelectItem value="REFUNDED">Refunded</SelectItem>
-											<SelectItem value="CANCELLED">Cancelled</SelectItem>
-											<SelectItem value="FAILED">Failed</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
+			<div className="min-h-screen bg-background pt-20">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+					<div className="space-y-6">
+						{/* Header */}
+						<div className="flex items-center justify-between">
+							<div>
+								<h1 className="text-3xl font-bold tracking-tight">
+									Order Management
+								</h1>
+								<p className="text-muted-foreground">
+									Manage customer orders, track fulfillment, and process shipments
+								</p>
 							</div>
+							<div className="flex gap-2">
+								<Button variant="outline" asChild>
+									<Link href="/orders/fulfillment">
+										<Package className="mr-2 h-4 w-4" />
+										Fulfillment
+									</Link>
+								</Button>
+								<Button asChild>
+									<Link href="/orders/create">
+										<Plus className="mr-2 h-4 w-4" />
+										New Order
+									</Link>
+								</Button>
+							</div>
+						</div>
 
-							{/* Orders Table */}
-							<div className="rounded-md border">
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Order Number</TableHead>
-											<TableHead>Customer</TableHead>
-											<TableHead>Status</TableHead>
-											<TableHead>Payment</TableHead>
-											<TableHead>Total</TableHead>
-											<TableHead>Order Date</TableHead>
-											<TableHead>Required Date</TableHead>
-											<TableHead className="text-right">Actions</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{filteredOrders.map((order) => (
-											<TableRow key={order.id}>
-												<TableCell className="font-medium">
-													{order.orderNumber}
-												</TableCell>
-												<TableCell>
-													<div>
-														<div className="font-medium">
-															{order.customer.companyName ||
-																`${order.customer.firstName} ${order.customer.lastName}`}
-														</div>
-														<div className="text-sm text-muted-foreground">
-															{order.customer.email}
-														</div>
-													</div>
-												</TableCell>
-												<TableCell>{getStatusBadge(order.status)}</TableCell>
-												<TableCell>
-													{getStatusBadge(order.paymentStatus)}
-												</TableCell>
-												<TableCell>
-													{order.currency} {Number(order.totalAmount).toFixed(2)}
-												</TableCell>
-												<TableCell>
-													{format(new Date(order.orderDate), "MMM dd, yyyy")}
-												</TableCell>
-												<TableCell>
-													{order.requiredDate
-														? format(
-																new Date(order.requiredDate),
-																"MMM dd, yyyy",
-															)
-														: "-"}
-												</TableCell>
-												<TableCell className="text-right">
-													<div className="flex items-center justify-end gap-2">
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => viewOrderDetails(order)}
-														>
-															<Eye className="h-4 w-4" />
-														</Button>
-														<Button variant="ghost" size="sm">
-															<Edit className="h-4 w-4" />
-														</Button>
-													</div>
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-								
-								{/* Pagination Info */}
-								{pagination.totalCount > 0 && (
-									<div className="flex items-center justify-between px-2 py-4">
-										<div className="text-sm text-muted-foreground">
-											Showing {Math.min(pagination.limit, filteredOrders.length)} of {pagination.totalCount} orders
+						{/* Stats Cards */}
+						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+							<Card>
+								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+									<CardTitle className="text-sm font-medium">
+										Total Orders
+									</CardTitle>
+									<Users className="h-4 w-4 text-muted-foreground" />
+								</CardHeader>
+								<CardContent>
+									<div className="text-2xl font-bold">{stats.totalOrders}</div>
+								</CardContent>
+							</Card>
+
+							<Card>
+								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+									<CardTitle className="text-sm font-medium">
+										Pending Orders
+									</CardTitle>
+									<Clock className="h-4 w-4 text-muted-foreground" />
+								</CardHeader>
+								<CardContent>
+									<div className="text-2xl font-bold">{stats.pendingOrders}</div>
+								</CardContent>
+							</Card>
+
+							<Card>
+								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+									<CardTitle className="text-sm font-medium">
+										Shipped Orders
+									</CardTitle>
+									<Truck className="h-4 w-4 text-muted-foreground" />
+								</CardHeader>
+								<CardContent>
+									<div className="text-2xl font-bold">{stats.shippedOrders}</div>
+								</CardContent>
+							</Card>
+
+							<Card>
+								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+									<CardTitle className="text-sm font-medium">
+										Delivered Orders
+									</CardTitle>
+									<Package className="h-4 w-4 text-muted-foreground" />
+								</CardHeader>
+								<CardContent>
+									<div className="text-2xl font-bold">{stats.deliveredOrders}</div>
+								</CardContent>
+							</Card>
+
+							<Card>
+								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+									<CardTitle className="text-sm font-medium">
+										Total Revenue
+									</CardTitle>
+									<DollarSign className="h-4 w-4 text-muted-foreground" />
+								</CardHeader>
+								<CardContent>
+									<div className="text-2xl font-bold">
+										${stats.totalRevenue.toFixed(2)}
+									</div>
+								</CardContent>
+							</Card>
+
+							<Card>
+								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+									<CardTitle className="text-sm font-medium">
+										Average Order
+									</CardTitle>
+									<BarChart3 className="h-4 w-4 text-muted-foreground" />
+								</CardHeader>
+								<CardContent>
+									<div className="text-2xl font-bold">
+										${stats.averageOrderValue.toFixed(2)}
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+
+						{/* Filters and Search */}
+						<Card>
+							<CardHeader>
+								<CardTitle>Orders</CardTitle>
+								<CardDescription>
+									View and manage all customer orders
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 mb-6">
+									<div className="flex-1">
+										<div className="relative">
+											<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+											<Input
+												placeholder="Search orders..."
+												value={searchTerm}
+												onChange={(e) => setSearchTerm(e.target.value)}
+												className="pl-8"
+											/>
 										</div>
 									</div>
-								)}
-							</div>
-						</CardContent>
-					</Card>
-
-					{/* Order Detail Dialog */}
-					<Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
-						<DialogContent className="max-w-4xl">
-							<DialogHeader>
-								<DialogTitle>
-									Order Details - {selectedOrder?.orderNumber}
-								</DialogTitle>
-							</DialogHeader>
-							{selectedOrder && (
-								<div className="space-y-6">
-									{/* Order Overview */}
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-										<Card>
-											<CardHeader>
-												<CardTitle className="text-lg">
-													Order Information
-												</CardTitle>
-											</CardHeader>
-											<CardContent className="space-y-2">
-												<div className="flex justify-between">
-													<span className="text-muted-foreground">Status:</span>
-													{getStatusBadge(selectedOrder.status)}
-												</div>
-												<div className="flex justify-between">
-													<span className="text-muted-foreground">
-														Payment:
-													</span>
-													{getStatusBadge(selectedOrder.paymentStatus)}
-												</div>
-												<div className="flex justify-between">
-													<span className="text-muted-foreground">
-														Fulfillment:
-													</span>
-													{getStatusBadge(selectedOrder.fulfillmentStatus)}
-												</div>
-												<div className="flex justify-between">
-													<span className="text-muted-foreground">Total:</span>
-													<span className="font-medium">
-														{selectedOrder.currency}{" "}
-														{selectedOrder.totalAmount.toFixed(2)}
-													</span>
-												</div>
-											</CardContent>
-										</Card>
-
-										<Card>
-											<CardHeader>
-												<CardTitle className="text-lg">
-													Customer Information
-												</CardTitle>
-											</CardHeader>
-											<CardContent className="space-y-2">
-												<div className="flex justify-between">
-													<span className="text-muted-foreground">Name:</span>
-													<span>
-														{selectedOrder.customer.companyName ||
-															`${selectedOrder.customer.firstName} ${selectedOrder.customer.lastName}`}
-													</span>
-												</div>
-												<div className="flex justify-between">
-													<span className="text-muted-foreground">Email:</span>
-													<span>{selectedOrder.customer.email}</span>
-												</div>
-											</CardContent>
-										</Card>
-									</div>
-
-									{/* Order Items */}
-									<Card>
-										<CardHeader>
-											<CardTitle className="text-lg">Order Items</CardTitle>
-										</CardHeader>
-										<CardContent>
-											<Table>
-												<TableHeader>
-													<TableRow>
-														<TableHead>Product</TableHead>
-														<TableHead>SKU</TableHead>
-														<TableHead>Ordered</TableHead>
-														<TableHead>Shipped</TableHead>
-														<TableHead>Unit Price</TableHead>
-														<TableHead>Total</TableHead>
-														<TableHead>Status</TableHead>
-													</TableRow>
-												</TableHeader>
-												<TableBody>
-													{selectedOrder.items.map((item) => (
-														<TableRow key={item.id}>
-															<TableCell className="font-medium">
-																{item.productName}
-															</TableCell>
-															<TableCell>{item.productSku}</TableCell>
-															<TableCell>{item.orderedQty}</TableCell>
-															<TableCell>{item.shippedQty}</TableCell>
-															<TableCell>
-																{selectedOrder.currency}{" "}
-																{item.unitPrice.toFixed(2)}
-															</TableCell>
-															<TableCell>
-																{selectedOrder.currency}{" "}
-																{item.totalPrice.toFixed(2)}
-															</TableCell>
-															<TableCell>
-																{getStatusBadge(item.status)}
-															</TableCell>
-														</TableRow>
-													))}
-												</TableBody>
-											</Table>
-										</CardContent>
-									</Card>
-
-									{/* Status Update Actions */}
-									<div className="flex justify-end space-x-2">
-										<Select
-											value={selectedOrder.status}
-											onValueChange={(value) =>
-												updateOrderStatus(selectedOrder.id, value)
-											}
-										>
-											<SelectTrigger className="w-[200px]">
-												<SelectValue />
+									<div className="flex space-x-2">
+										<Select value={statusFilter} onValueChange={setStatusFilter}>
+											<SelectTrigger className="w-[180px]">
+												<Filter className="mr-2 h-4 w-4" />
+												<SelectValue placeholder="Order Status" />
 											</SelectTrigger>
 											<SelectContent>
+												<SelectItem value="all">All Statuses</SelectItem>
 												<SelectItem value="PENDING">Pending</SelectItem>
 												<SelectItem value="CONFIRMED">Confirmed</SelectItem>
 												<SelectItem value="PROCESSING">Processing</SelectItem>
 												<SelectItem value="SHIPPED">Shipped</SelectItem>
 												<SelectItem value="DELIVERED">Delivered</SelectItem>
 												<SelectItem value="CANCELLED">Cancelled</SelectItem>
+												<SelectItem value="RETURNED">Returned</SelectItem>
+												<SelectItem value="COMPLETED">Completed</SelectItem>
 											</SelectContent>
 										</Select>
-										<Button variant="outline">Send Notification</Button>
+
+										<Select value={paymentFilter} onValueChange={setPaymentFilter}>
+											<SelectTrigger className="w-[180px]">
+												<SelectValue placeholder="Payment" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">All Payments</SelectItem>
+												<SelectItem value="PENDING">Pending</SelectItem>
+												<SelectItem value="PAID">Paid</SelectItem>
+												<SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
+												<SelectItem value="REFUNDED">Refunded</SelectItem>
+												<SelectItem value="FAILED">Failed</SelectItem>
+											</SelectContent>
+										</Select>
 									</div>
 								</div>
-							)}{" "}
-						</DialogContent>
-					</Dialog>
+
+								{/* Orders Table */}
+								<div className="rounded-md border">
+									<Table>
+										<TableHeader>
+											<TableRow>
+												<TableHead>Order Number</TableHead>
+												<TableHead>Customer</TableHead>
+												<TableHead>Status</TableHead>
+												<TableHead>Payment</TableHead>
+												<TableHead>Total</TableHead>
+												<TableHead>Order Date</TableHead>
+												<TableHead className="text-right">Actions</TableHead>
+											</TableRow>
+										</TableHeader>
+										<TableBody>
+											{filteredOrders.map((order) => (
+												<TableRow key={order.id}>
+													<TableCell className="font-medium">
+														{order.orderNumber}
+													</TableCell>
+													<TableCell>
+														<div>
+															<div className="font-medium">
+																{order.customer.businessName ||
+																	`${order.customer.firstName} ${order.customer.lastName}`}
+															</div>
+															<div className="text-sm text-muted-foreground">
+																{order.customer.email}
+															</div>
+														</div>
+													</TableCell>
+													<TableCell>{getStatusBadge(order.status)}</TableCell>
+													<TableCell>
+														{getStatusBadge(order.paymentStatus)}
+													</TableCell>
+													<TableCell>
+														USD {Number(order.totalAmount).toFixed(2)}
+													</TableCell>
+													<TableCell>
+														{format(new Date(order.orderDate), "MMM dd, yyyy")}
+													</TableCell>
+													<TableCell className="text-right">
+														<div className="flex items-center justify-end gap-2">
+															<Button
+																variant="ghost"
+																size="sm"
+																onClick={() => viewOrderDetails(order)}
+															>
+																<Eye className="h-4 w-4" />
+															</Button>
+															<Button variant="ghost" size="sm">
+																<Edit className="h-4 w-4" />
+															</Button>
+														</div>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+
+									{/* Pagination Info */}
+									{pagination.totalCount > 0 && (
+										<div className="flex items-center justify-between px-2 py-4">
+											<div className="text-sm text-muted-foreground">
+												Showing {Math.min(pagination.limit, filteredOrders.length)} of {pagination.totalCount} orders
+											</div>
+										</div>
+									)}
+								</div>
+							</CardContent>
+						</Card>
+
+						{/* Order Detail Dialog */}
+						<Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
+							<DialogContent className="max-w-4xl">
+								<DialogHeader>
+									<DialogTitle>
+										Order Details - {selectedOrder?.orderNumber}
+									</DialogTitle>
+								</DialogHeader>
+								{selectedOrder && (
+									<div className="space-y-6">
+										{/* Order Overview */}
+										<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+											<Card>
+												<CardHeader>
+													<CardTitle className="text-lg">
+														Order Information
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-2">
+													<div className="flex justify-between">
+														<span className="text-muted-foreground">Status:</span>
+														{getStatusBadge(selectedOrder.status)}
+													</div>
+													<div className="flex justify-between">
+														<span className="text-muted-foreground">
+															Payment:
+														</span>
+														{getStatusBadge(selectedOrder.paymentStatus)}
+													</div>
+													<div className="flex justify-between">
+														<span className="text-muted-foreground">Total:</span>
+														<span className="font-medium">
+															USD {selectedOrder.totalAmount.toFixed(2)}
+														</span>
+													</div>
+												</CardContent>
+											</Card>
+
+											<Card>
+												<CardHeader>
+													<CardTitle className="text-lg">
+														Customer Information
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="space-y-2">
+													<div className="flex justify-between">
+														<span className="text-muted-foreground">Name:</span>
+														<span>
+															{selectedOrder.customer.businessName ||
+																`${selectedOrder.customer.firstName} ${selectedOrder.customer.lastName}`}
+														</span>
+													</div>
+													<div className="flex justify-between">
+														<span className="text-muted-foreground">Email:</span>
+														<span>{selectedOrder.customer.email}</span>
+													</div>
+												</CardContent>
+											</Card>
+										</div>
+
+										{/* Order Items */}
+										<Card>
+											<CardHeader>
+												<CardTitle className="text-lg">Order Items</CardTitle>
+											</CardHeader>
+											<CardContent>
+												<Table>
+													<TableHeader>
+														<TableRow>
+															<TableHead>Product</TableHead>
+															<TableHead>SKU</TableHead>
+															<TableHead>Ordered</TableHead>
+															<TableHead>Shipped</TableHead>
+															<TableHead>Unit Price</TableHead>
+															<TableHead>Total</TableHead>
+														</TableRow>
+													</TableHeader>
+													<TableBody>
+														{selectedOrder.items.map((item) => (
+															<TableRow key={item.id}>
+																<TableCell className="font-medium">
+																	{item.product.name}
+																</TableCell>
+																<TableCell>{item.product.sku}</TableCell>
+																<TableCell>{item.orderedQty}</TableCell>
+																<TableCell>{item.shippedQty}</TableCell>
+																<TableCell>
+																	USD {item.unitPrice.toFixed(2)}
+																</TableCell>
+																<TableCell>
+																	USD {item.totalPrice.toFixed(2)}
+																</TableCell>
+															</TableRow>
+														))}
+													</TableBody>
+												</Table>
+											</CardContent>
+										</Card>
+
+										{/* Status Update Actions */}
+										<div className="flex justify-end space-x-2">
+											<Select
+												value={selectedOrder.status}
+												onValueChange={(value) =>
+													updateOrderStatus(selectedOrder.id, value)
+												}
+											>
+												<SelectTrigger className="w-[200px]">
+													<SelectValue />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="PENDING">Pending</SelectItem>
+													<SelectItem value="CONFIRMED">Confirmed</SelectItem>
+													<SelectItem value="PROCESSING">Processing</SelectItem>
+													<SelectItem value="SHIPPED">Shipped</SelectItem>
+													<SelectItem value="DELIVERED">Delivered</SelectItem>
+													<SelectItem value="CANCELLED">Cancelled</SelectItem>
+												</SelectContent>
+											</Select>
+											<Button variant="outline">Send Notification</Button>
+										</div>
+									</div>
+								)}{" "}
+							</DialogContent>
+						</Dialog>
+					</div>
 				</div>
 			</div>
-		</div>
 		</DashboardGuard>
 	);
 }

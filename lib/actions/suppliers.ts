@@ -55,7 +55,7 @@ async function resolveActionContext(
 			const supabase = await createClient();
 
 			const { data: companyUser, error: companyError } = await supabase
-				.from("company_users")
+				.from("company_members")
 				.select("companyId")
 				.eq("userId", userId)
 				.eq("isActive", true)
@@ -67,7 +67,7 @@ async function resolveActionContext(
 				const { data: ownedCompany, error: ownedError } = await supabase
 					.from("companies")
 					.select("id")
-					.eq("createdBy", userId)
+					.eq("createdById", userId)
 					.eq("isActive", true)
 					.single();
 

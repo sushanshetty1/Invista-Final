@@ -1,49 +1,37 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateOrderStatus } from "@/lib/actions/orders";
+import { UpdateOrderStatusSchema } from "@/lib/validations/order";
 
+// PATCH /api/orders/[id]/status
 export async function PATCH(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> },
+	{ params }: { params: { id: string } },
 ) {
 	try {
-		const { id } = await params;
-		const {
-			status,
-			fulfillmentStatus,
-			paymentStatus,
-			shippedDate,
-			deliveredDate,
-			trackingNumber,
-			carrier,
-		} = await request.json();
+		const { id } = params;
+		const body = await request.json();
 
-		if (!status) {
-			return NextResponse.json(
-				{ error: "Status is required" },
-				{ status: 400 },
-			);
-		}
+		// Validate request body
+		const validatedData = UpdateOrderStatusSchema.parse(body);
 
-		const updateData = {
+		const result = await updateOrderStatus({
 			orderId: id,
-			status,
-			...(fulfillmentStatus && { fulfillmentStatus }),
-			...(paymentStatus && { paymentStatus }),
-			...(shippedDate && { shippedDate: new Date(shippedDate) }),
-			...(deliveredDate && { deliveredDate: new Date(deliveredDate) }),
-			...(trackingNumber && { trackingNumber }),
-			...(carrier && { carrier }),
-		};
-
-		const result = await updateOrderStatus(updateData);
+			...validatedData,
+		});
 
 		if (!result.success) {
 			return NextResponse.json({ error: result.error }, { status: 400 });
 		}
 
-		return NextResponse.json({ order: result.data });
+		return NextResponse.json(result.data);
 	} catch (error) {
-		console.error("Error updating order status:", error);
+		console.error("Update order status API error:", error);
+		if (error instanceof Error && error.name === "ZodError") {
+			return NextResponse.json(
+				{ error: "Invalid request data", details: error.message },
+				{ status: 400 },
+			);
+		}
 		return NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },

@@ -3,22 +3,19 @@ import { getOrderById } from "@/lib/actions/orders";
 
 // GET /api/orders/[id]
 export async function GET(
-	_request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> },
+	request: NextRequest,
+	{ params }: { params: { id: string } },
 ) {
 	try {
-		const { id } = await params;
+		const { id } = params;
 
 		const result = await getOrderById(id);
 
 		if (!result.success) {
-			return NextResponse.json(
-				{ error: result.error },
-				{ status: result.error === "Order not found" ? 404 : 400 },
-			);
+			return NextResponse.json({ error: result.error }, { status: 404 });
 		}
 
-		return NextResponse.json({ order: result.data });
+		return NextResponse.json(result.data);
 	} catch (error) {
 		console.error("Get order API error:", error);
 		return NextResponse.json(

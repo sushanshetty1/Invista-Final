@@ -9,11 +9,11 @@ export async function GET(request: NextRequest) {
 
 		const filters: Record<string, unknown> = {};
 
-		// Add string filters
+		// Add string filters (only fields that exist in Prisma schema)
 		const stringFilters = [
-			"status", "fulfillmentStatus", "paymentStatus", 
-			"customerId", "warehouseId", "type", "channel", 
-			"priority", "searchTerm", "dateFrom", "dateTo"
+			"status", "paymentStatus",
+			"customerId", "warehouseId",
+			"searchTerm", "dateFrom", "dateTo"
 		];
 
 		stringFilters.forEach(filter => {
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		
+
 		// Validate request body
 		const validatedData = CreateOrderSchema.parse(body);
 
